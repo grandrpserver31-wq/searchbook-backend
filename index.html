@@ -226,7 +226,15 @@
 
     </div>
 
+    <!-- EmailJS SDK যোগ করা হলো -->
+    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
+
     <script>
+        // EmailJS Initialization (Apnar Public Key boshan)
+        (function() {
+            emailjs.init("h6LFqyZ36jEtQ4Wq_"); // <--- Apnar Public Key ekhane boshaben
+        })();
+
         // প্যানেল চেঞ্জ করার ফাংশন
         function switchPanel(panelId) {
             document.querySelectorAll('.panel, .active-panel').forEach(p => {
@@ -237,32 +245,112 @@
             document.getElementById(panelId).classList.add('active-panel');
         }
 
-        // এখানে রিয়েল API রিকোয়েস্ট যাবে তোর Render ব্যাকএন্ডে (সার্চ বুকের আসল অ্যালগরিদমে)
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
+        // ১. রেজিস্ট্রেশনের সময় OTP পাঠানোর ফাংশন
         function sendRegistrationOTP() {
-            alert("This will talk to your Render backend to send a real email OTP!");
-            switchPanel('otp-panel');
+            const email = document.getElementById('reg-email').value;
+            const name = document.getElementById('reg-name').value;
+
+            if (!email || !name) {
+                alert("Please fill in your name and email first.");
+                return;
+            }
+
+            // ৬ ডিজিটের র‍্যান্ডম OTP তৈরি করা
+            const otp = Math.floor(100000 + Math.random() * 900000);
+            
+            // OTP ta global variable e save kore rakhchi jate verify korar somoy milate pari
+            window.currentOTP = otp; 
+
+            // EmailJS Template Parameters
+            const templateParams = {
+                to_name: name,
+                to_email: email,
+                otp_code: otp,
+                message: "Your Searchbook verification code is: " + otp
+            };
+
+            // EmailJS diye email pathano
+            emailjs.send('service_xyf1vsg', 'template_cwbp2l1', templateParams)
+                .then(function(response) {
+                    console.log('SUCCESS!', response.status, response.text);
+                    alert("OTP sent successfully to " + email);
+                    switchPanel('otp-panel');
+                }, function(error) {
+                    console.log('FAILED...', error);
+                    alert("Failed to send OTP. Please try again. Error: " + JSON.stringify(error));
+                });
         }
 
+        // ২. OTP ভেরিফাই করে একাউন্ট তৈরি করা
         function verifyOTPAndCreateAccount() {
-            alert("Account created successfully! Welcome to Searchbook.");
-            switchPanel('login-panel');
+            const enteredOTP = document.getElementById('reg-otp').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+            const name = document.getElementById('reg-name').value;
+            const username = document.getElementById('reg-username').value;
+
+            if (enteredOTP == window.currentOTP) {
+                // OTP thik ache, ekhon backend e data pathate hobe
+                // (Apnar server.js er /register API te pathate hobe)
+                alert("OTP Verified! Account created successfully. Welcome to Searchbook.");
+                
+                // Note: Ekhane apni fetch() diye apnar Render backend e data pathaben
+                // Example:
+                /*
+                fetch(BACKEND_URL + '/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ name, username, email, password })
+                })
+                .then(res => res.json())
+                .then(data => {
+                    alert(data.message);
+                    switchPanel('login-panel');
+                });
+                */
+                
+                switchPanel('login-panel');
+            } else {
+                alert("Invalid OTP! Please check your email and try again.");
+            }
         }
 
         function handleLogin() {
             alert("Checking credentials on Render backend... Triggering 2FA.");
-            // যদি 2FA অন থাকে, তাহলে 2FA প্যানেলে নিবে
             switchPanel('twofa-panel');
         }
 
         function verify2FA() {
             alert("2FA Code verified! Redirecting to Searchbook Feed...");
-            // লগইন সফল হলে সার্চ বুকের মেইন ফিডে (যেখানে অ্যালগরিদম কাজ করবে) রিডাইরেক্ট হবে
         }
 
+        // ৩. পাসওয়ার্ড রিসেটের সময় OTP পাঠানোর ফাংশন
         function sendResetOTP() {
-            alert("Reset code sent to your email via Render Backend!");
+            const email = document.getElementById('reset-email').value;
+            
+            if (!email) {
+                alert("Please enter your email address.");
+                return;
+            }
+
+            const otp = Math.floor(100000 + Math.random() * 900000);
+            window.currentResetOTP = otp;
+
+            const templateParams = {
+                to_email: email,
+                otp_code: otp,
+                message: "Your Searchbook password reset code is: " + otp
+            };
+
+            // Password Reset Template ID use korte hobe (Apnar screenshot e template_0v1cidr chilo)
+            emailjs.send('service_xyf1vsg', 'template_0v1cidr', templateParams)
+                .then(function(response) {
+                    alert("Password reset code sent to " + email);
+                }, function(error) {
+                    alert("Failed to send reset code. Error: " + JSON.stringify(error));
+                });
         }
     </script>
 </body>
