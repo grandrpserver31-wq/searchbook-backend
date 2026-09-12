@@ -222,8 +222,8 @@
 
         // রেজিস্ট্রেশন OTP পাঠানোর ফাংশন
         async function sendRegistrationOTP() {
-            const email = document.getElementById('reg-email').value;
-            const name = document.getElementById('reg-name').value;
+            const email = document.getElementById('reg-email').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
 
             if (!email || !name) {
                 alert("Please fill in your name and email first.");
@@ -253,9 +253,9 @@
 
         // OTP verify kore account create
         async function verifyOTPAndCreateAccount() {
-            const enteredOTP = document.getElementById('reg-otp').value;
-            const username = document.getElementById('reg-username').value;
-            const email = document.getElementById('reg-email').value;
+            const enteredOTP = document.getElementById('reg-otp').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const email = document.getElementById('reg-email').value.trim();
             const password = document.getElementById('reg-password').value;
 
             if (!enteredOTP) {
@@ -265,6 +265,11 @@
 
             if (enteredOTP != window.currentOTP) {
                 alert("Invalid OTP! Please check your email and try again.");
+                return;
+            }
+
+            if (!username || !email || !password) {
+                alert("Please fill in all fields (username, email, password).");
                 return;
             }
 
@@ -288,9 +293,9 @@
             }
         }
 
-        // লগইন (2FA chara)
+        // লগইন
         async function handleLogin() {
-            const email = document.getElementById('login-email').value;
+            const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
 
             if (!email || !password) {
@@ -319,7 +324,7 @@
 
         // Password reset OTP pathano
         async function sendResetOTP() {
-            const email = document.getElementById('reset-email').value;
+            const email = document.getElementById('reset-email').value.trim();
             
             if (!email) {
                 alert("Please enter your email address.");
