@@ -58,9 +58,7 @@
             border: 1px solid var(--border-color);
         }
 
-        .input-group {
-            margin-bottom: 15px;
-        }
+        .input-group { margin-bottom: 15px; }
 
         .input-group input {
             width: 100%;
@@ -91,9 +89,7 @@
             transition: 0.2s;
         }
 
-        .btn-primary:hover {
-            background: #166fe5;
-        }
+        .btn-primary:hover { background: #166fe5; }
 
         .btn-success {
             background: #42b72a;
@@ -103,9 +99,7 @@
             display: block;
         }
 
-        .btn-success:hover {
-            background: #36a420;
-        }
+        .btn-success:hover { background: #36a420; }
 
         .divider {
             border-bottom: 1px solid var(--border-color);
@@ -122,9 +116,7 @@
             cursor: pointer;
         }
 
-        .link-text:hover {
-            text-decoration: underline;
-        }
+        .link-text:hover { text-decoration: underline; }
 
         .panel { display: none; }
         .active-panel { display: block; }
@@ -142,7 +134,6 @@
     <div class="container">
         <h1 class="logo-text">Searchbook</h1>
 
-        <!-- লগইন প্যানেল -->
         <div id="login-panel" class="card active-panel">
             <div class="input-group">
                 <input type="email" id="login-email" placeholder="Email address">
@@ -152,17 +143,13 @@
             </div>
             <button class="btn-primary" onclick="handleLogin()">Log In</button>
             <span class="link-text" onclick="switchPanel('forgot-panel')">Forgotten password?</span>
-            
             <div class="divider"></div>
-            
             <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
         </div>
 
-        <!-- রেজিস্টার প্যানেল -->
         <div id="register-panel" class="card panel">
             <h2 class="header-title">Create a new account</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">It's quick and easy.</p>
-            
             <div class="input-group">
                 <input type="text" id="reg-name" placeholder="Full Name">
             </div>
@@ -175,12 +162,10 @@
             <div class="input-group">
                 <input type="password" id="reg-password" placeholder="New password">
             </div>
-            
             <button class="btn-primary btn-success" onclick="sendRegistrationOTP()">Sign Up & Send OTP</button>
             <span class="link-text" onclick="switchPanel('login-panel')">Already have an account?</span>
         </div>
 
-        <!-- OTP ভেরিফিকেশন প্যানেল -->
         <div id="otp-panel" class="card panel">
             <h2 class="header-title">Enter Security Code</h2>
             <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
@@ -192,7 +177,6 @@
             <button class="btn-primary" onclick="verifyOTPAndCreateAccount()">Continue</button>
         </div>
 
-        <!-- ফরগেট পাসওয়ার্ড প্যানেল -->
         <div id="forgot-panel" class="card panel">
             <h2 class="header-title">Find Your Account</h2>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
@@ -208,7 +192,6 @@
     </div>
 
     <script>
-        // Panel switch function
         function switchPanel(panelId) {
             document.querySelectorAll('.panel, .active-panel').forEach(p => {
                 p.classList.remove('active-panel');
@@ -220,7 +203,6 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
-        // রেজিস্ট্রেশন OTP পাঠানোর ফাংশন
         async function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value.trim();
             const name = document.getElementById('reg-name').value.trim();
@@ -244,14 +226,13 @@
                     alert("OTP sent successfully to " + email + "\n\nPlease check your inbox (and spam folder).");
                     switchPanel('otp-panel');
                 } else {
-                    alert("Failed: " + data.message);
+                    alert("Failed: " + data.message + "\n\nDetails: " + (data.error || "No details"));
                 }
             } catch (error) {
                 alert("Error: " + error.message);
             }
         }
 
-        // OTP verify kore account create
         async function verifyOTPAndCreateAccount() {
             const enteredOTP = document.getElementById('reg-otp').value.trim();
             const username = document.getElementById('reg-username').value.trim();
@@ -265,11 +246,6 @@
 
             if (enteredOTP != window.currentOTP) {
                 alert("Invalid OTP! Please check your email and try again.");
-                return;
-            }
-
-            if (!username || !email || !password) {
-                alert("Please fill in all fields (username, email, password).");
                 return;
             }
 
@@ -293,7 +269,6 @@
             }
         }
 
-        // লগইন
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
@@ -322,7 +297,6 @@
             }
         }
 
-        // Password reset OTP pathano
         async function sendResetOTP() {
             const email = document.getElementById('reset-email').value.trim();
             

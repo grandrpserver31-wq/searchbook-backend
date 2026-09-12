@@ -10,20 +10,31 @@ app.use(express.json());
 app.use(cors());
 
 // SearchBook Cloud Database Link
-const MONGO_URI = "mongodb+srv://searchbookuser:searchbook123@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster0";
+const MONGO_URI = "mongodb+srv://grandrpserver31_db_user:Tx8SpBrESEEbb0wr@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster00";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log("SearchBook MongoDB Atlas Connected Successfully!"))
     .catch(err => console.error("Database Connection Error:", err));
 
 // ==========================================
-// NODEMAILER SETUP (Gmail)
+// NODEMAILER SETUP (Gmail - Port 465 SSL)
 // ==========================================
 const transporter = nodemailer.createTransport({
-    service: 'gmail',
+    host: 'smtp.gmail.com',
+    port: 465,
+    secure: true,
     auth: {
         user: process.env.GMAIL_USER,
         pass: process.env.GMAIL_PASS
+    }
+});
+
+// Verify transporter on startup
+transporter.verify((error, success) => {
+    if (error) {
+        console.error("Nodemailer verification FAILED:", error.message);
+    } else {
+        console.log("Nodemailer is ready to send emails!");
     }
 });
 
@@ -38,10 +49,8 @@ app.post('/api/send-otp', async (req, res) => {
             return res.status(400).json({ success: false, message: "Email dorkar!" });
         }
 
-        // 6 digit OTP generate
         const otp = Math.floor(100000 + Math.random() * 900000);
 
-        // Email content
         const mailOptions = {
             from: `"Searchbook" <${process.env.GMAIL_USER}>`,
             to: email,
@@ -62,15 +71,19 @@ app.post('/api/send-otp', async (req, res) => {
         await transporter.sendMail(mailOptions);
         console.log(`OTP sent to ${email}: ${otp}`);
 
-        res.status(200).json({ 
-            success: true, 
+        res.status(200).json({
+            success: true,
             message: "OTP sent successfully to " + email,
             otp: otp
         });
 
     } catch (error) {
-        console.error("Email sending failed:", error);
-        res.status(500).json({ success: false, message: "Failed to send OTP", error: error.message });
+        console.error("Email sending failed:", error.message);
+        res.status(500).json({
+            success: false,
+            message: "Failed to send OTP",
+            error: error.message
+        });
     }
 });
 
