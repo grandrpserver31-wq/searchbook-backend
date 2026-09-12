@@ -15,131 +15,28 @@
             --text-muted: #606770;
             --border-color: #dddfe2;
         }
-
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
-        }
-
-        body {
-            background-color: var(--bg-color);
-            color: var(--text-main);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .container {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            width: 100%;
-            max-width: 400px;
-            padding: 20px;
-        }
-
-        .logo-text {
-            font-size: 40px;
-            font-weight: 800;
-            color: var(--primary-blue);
-            margin-bottom: 20px;
-            letter-spacing: -1px;
-        }
-
-        .card {
-            background: var(--white);
-            width: 100%;
-            padding: 25px;
-            border-radius: 8px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-            border: 1px solid var(--border-color);
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 20px; }
+        .logo-text { font-size: 40px; font-weight: 800; color: var(--primary-blue); margin-bottom: 20px; letter-spacing: -1px; }
+        .card { background: var(--white); width: 100%; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
         .input-group { margin-bottom: 15px; }
-
-        .input-group input {
-            width: 100%;
-            padding: 14px;
-            font-size: 16px;
-            border: 1px solid var(--border-color);
-            border-radius: 6px;
-            outline: none;
-            background: #fcfcfc;
-        }
-
-        .input-group input:focus {
-            border-color: var(--primary-blue);
-            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
-        }
-
-        .btn-primary {
-            width: 100%;
-            background: var(--primary-blue);
-            color: white;
-            border: none;
-            padding: 12px;
-            font-size: 18px;
-            font-weight: bold;
-            border-radius: 6px;
-            cursor: pointer;
-            margin-top: 10px;
-            transition: 0.2s;
-        }
-
+        .input-group input { width: 100%; padding: 14px; font-size: 16px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; background: #fcfcfc; }
+        .input-group input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); }
+        .btn-primary { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 12px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-primary:hover { background: #166fe5; }
-
-        .btn-success {
-            background: #42b72a;
-            width: auto;
-            padding: 12px 20px;
-            margin: 20px auto 0 auto;
-            display: block;
-        }
-
+        .btn-primary:disabled { background: #8ab4f8; cursor: not-allowed; }
+        .btn-success { background: #42b72a; width: auto; padding: 12px 20px; margin: 20px auto 0 auto; display: block; }
         .btn-success:hover { background: #36a420; }
-
-        .divider {
-            border-bottom: 1px solid var(--border-color);
-            margin: 20px 0;
-        }
-
-        .link-text {
-            color: var(--primary-blue);
-            font-size: 14px;
-            text-align: center;
-            display: block;
-            margin-top: 15px;
-            text-decoration: none;
-            cursor: pointer;
-        }
-
+        .divider { border-bottom: 1px solid var(--border-color); margin: 20px 0; }
+        .link-text { color: var(--primary-blue); font-size: 14px; text-align: center; display: block; margin-top: 15px; text-decoration: none; cursor: pointer; }
         .link-text:hover { text-decoration: underline; }
-
         .panel { display: none; }
         .active-panel { display: block; }
-        
-        .header-title {
-            font-size: 20px;
-            margin-bottom: 15px;
-            text-align: center;
-            color: var(--text-main);
-        }
-
-        /* Code Sent Message Style */
-        .success-message {
-            background: #d4edda;
-            color: #155724;
-            padding: 12px;
-            border-radius: 6px;
-            margin-bottom: 15px;
-            text-align: center;
-            font-size: 14px;
-            border: 1px solid #c3e6cb;
-            display: none;
-        }
+        .header-title { font-size: 20px; margin-bottom: 15px; text-align: center; color: var(--text-main); }
+        .timer { text-align: center; font-size: 16px; color: #e74c3c; margin-bottom: 15px; font-weight: bold; background: #fdecea; padding: 10px; border-radius: 6px; }
+        .otp-display { text-align: center; font-size: 28px; color: #1877f2; margin-bottom: 15px; font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed #1877f2; }
+        .note { font-size: 12px; color: #e74c3c; text-align: center; margin-bottom: 15px; }
     </style>
 </head>
 <body>
@@ -182,14 +79,13 @@
         <div id="otp-panel" class="card panel">
             <h2 class="header-title">Enter Security Code</h2>
             <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-                Please check your email for a message with your code.
+                Ei OTP ta <b>1 minute</b> er jonno valid. Tarpor expire hoye jabe.
             </p>
             
-            <!-- Code Sent Message -->
-            <div id="code-sent-message" class="success-message">
-                ✅ Code Sent Successfully! Check your email.
-            </div>
-
+            <div id="otp-display" class="otp-display">------</div>
+            <div id="timer" class="timer">⏱️ OTP expires in 60 seconds</div>
+            <p class="note">⚠️ Ei OTP shudhu apnar browser e dekhacche. Onno kew dekhতে parbe na.</p>
+            
             <div class="input-group">
                 <input type="text" id="reg-otp" placeholder="Enter 6-digit code" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 3px;">
             </div>
@@ -199,7 +95,7 @@
         <div id="forgot-panel" class="card panel">
             <h2 class="header-title">Find Your Account</h2>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
-                Please enter your email address to search for your account and receive a password reset code.
+                Please enter your email address to search for your account.
             </p>
             <div class="input-group">
                 <input type="email" id="reset-email" placeholder="Email address">
@@ -222,48 +118,61 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
+        let otpTimer = null;
+        let otpExpireTime = null;
+
         async function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value.trim();
             const name = document.getElementById('reg-name').value.trim();
+            const username = document.getElementById('reg-username').value.trim();
+            const password = document.getElementById('reg-password').value;
 
-            if (!email || !name) {
-                alert("Please fill in your name and email first.");
+            if (!email || !name || !username || !password) {
+                alert("Please fill in all fields.");
                 return;
             }
-
-            // Button disable korun loading er somoy
-            const btn = event.target;
-            btn.disabled = true;
-            btn.textContent = "Sending...";
 
             try {
                 const response = await fetch(BACKEND_URL + '/api/send-otp', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, name })
+                    body: JSON.stringify({ email })
                 });
 
                 const data = await response.json();
 
                 if (data.success) {
-                    window.currentOTP = data.otp;
+                    // OTP ta browser e dekhacchi
+                    document.getElementById('otp-display').textContent = data.otp;
                     
-                    // Code Sent message dekhacche
+                    alert("✅ OTP Generated!\n\nYour OTP: " + data.otp + "\n\n⚠️ Ei OTP 1 minute por expire hoye jabe!");
+                    
                     switchPanel('otp-panel');
-                    const msgDiv = document.getElementById('code-sent-message');
-                    msgDiv.style.display = 'block';
-                    msgDiv.textContent = '✅ Code Sent Successfully to ' + email + '! Check your inbox.';
                     
-                    alert("✅ Code Sent Successfully!\n\nPlease check your email: " + email + "\n\n(Spam folder o check korun)");
+                    otpExpireTime = Date.now() + 60 * 1000;
+                    startTimer();
                 } else {
-                    alert("❌ Failed: " + data.message + "\n\nDetails: " + (data.error || "No details"));
+                    alert("❌ Failed: " + data.message);
                 }
             } catch (error) {
                 alert("❌ Error: " + error.message);
-            } finally {
-                btn.disabled = false;
-                btn.textContent = "Sign Up & Send OTP";
             }
+        }
+
+        function startTimer() {
+            if (otpTimer) clearInterval(otpTimer);
+            
+            otpTimer = setInterval(() => {
+                const remaining = Math.max(0, Math.floor((otpExpireTime - Date.now()) / 1000));
+                document.getElementById('timer').textContent = `⏱️ OTP expires in ${remaining} seconds`;
+                
+                if (remaining <= 0) {
+                    clearInterval(otpTimer);
+                    document.getElementById('timer').textContent = "❌ OTP expired! Please request new OTP.";
+                    document.getElementById('otp-display').textContent = "------";
+                    document.getElementById('otp-display').style.color = "#e74c3c";
+                }
+            }, 1000);
         }
 
         async function verifyOTPAndCreateAccount() {
@@ -277,25 +186,39 @@
                 return;
             }
 
-            if (enteredOTP != window.currentOTP) {
-                alert("❌ Invalid OTP! Please check your email and try again.");
+            if (Date.now() > otpExpireTime) {
+                alert("❌ OTP expire hoye geche! Abar Sign Up & Send OTP e click korun.");
                 return;
             }
 
             try {
-                const response = await fetch(BACKEND_URL + '/api/signup', {
+                const verifyResponse = await fetch(BACKEND_URL + '/api/verify-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, otp: enteredOTP })
+                });
+
+                const verifyData = await verifyResponse.json();
+
+                if (!verifyData.success) {
+                    alert("❌ " + verifyData.message);
+                    return;
+                }
+
+                const signupResponse = await fetch(BACKEND_URL + '/api/signup', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ username, email, password })
                 });
 
-                const data = await response.json();
+                const signupData = await signupResponse.json();
 
-                if (data.success) {
+                if (signupData.success) {
                     alert("✅ Account created successfully! Welcome to Searchbook.");
+                    if (otpTimer) clearInterval(otpTimer);
                     switchPanel('login-panel');
                 } else {
-                    alert("❌ Signup failed: " + data.message);
+                    alert("❌ Signup failed: " + signupData.message);
                 }
             } catch (error) {
                 alert("❌ Error: " + error.message);
@@ -331,31 +254,7 @@
         }
 
         async function sendResetOTP() {
-            const email = document.getElementById('reset-email').value.trim();
-            
-            if (!email) {
-                alert("Please enter your email address.");
-                return;
-            }
-
-            try {
-                const response = await fetch(BACKEND_URL + '/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, name: "User" })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    window.currentResetOTP = data.otp;
-                    alert("✅ Password reset code sent to " + email);
-                } else {
-                    alert("❌ Failed: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            }
+            alert("Password reset feature coming soon!");
         }
     </script>
 </body>

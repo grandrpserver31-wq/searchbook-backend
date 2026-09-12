@@ -2,14 +2,12 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
-const nodemailer = require('nodemailer');
 
 const app = express();
 app.use(express.static(__dirname));
 app.use(express.json());
 app.use(cors());
 
-// SearchBook Cloud Database Link
 const MONGO_URI = "mongodb+srv://grandrpserver31_db_user:Tx8SpBrESEEbb0wr@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster00";
 
 mongoose.connect(MONGO_URI)
@@ -17,78 +15,86 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("Database Connection Error:", err));
 
 // ==========================================
-// NODEMAILER SETUP (Brevo SMTP)
+// OTP STORE (1 minute expire)
 // ==========================================
-const transporter = nodemailer.createTransport({
-    host: 'smtp-relay.brevo.com',
-    port: 587,
-    secure: false,
-    auth: {
-        user: process.env.BREVO_USER,
-        pass: process.env.BREVO_PASS
-    }
-});
-
-// Verify transporter on startup
-transporter.verify((error, success) => {
-    if (error) {
-        console.error("Brevo SMTP verification FAILED:", error.message);
-    } else {
-        console.log("Brevo SMTP is ready to send emails!");
-    }
-});
+const otpStore = {};
 
 // ==========================================
-// OTP SEND API
+// SEND OTP API (Email pathabe na, shudhu generate korbe)
 // ==========================================
 app.post('/api/send-otp', async (req, res) => {
     try {
-        const { email, name } = req.body;
+        const { email } = req.body;
 
         if (!email) {
             return res.status(400).json({ success: false, message: "Email dorkar!" });
         }
 
+        // 6 digit OTP generate
         const otp = Math.floor(100000 + Math.random() * 900000);
 
-        const mailOptions = {
-            from: `"Searchbook" <imogirovce@gmail.com>`,
-            to: email,
-            subject: 'Your Searchbook Verification Code',
-            html: `
-                <div style="font-family: Arial, sans-serif; max-width: 500px; margin: auto; padding: 20px; border: 1px solid #ddd; border-radius: 8px;">
-                    <h2 style="color: #1877f2; text-align: center;">Searchbook</h2>
-                    <p>Hi ${name || 'User'},</p>
-                    <p>Your verification code is:</p>
-                    <h1 style="color: #1877f2; letter-spacing: 8px; text-align: center;">${otp}</h1>
-                    <p>Please enter this code to complete your registration.</p>
-                    <p style="color: #666; font-size: 12px;">If you didn't request this, ignore this email.</p>
-                    <p>Thank you,<br>Searchbook Team</p>
-                </div>
-            `
+        // Server memory te save (1 minute expire)
+        otpStore[email] = {
+            otp: otp,
+            expiresAt: Date.now() + 60 * 1000
         };
 
-        await transporter.sendMail(mailOptions);
-        console.log(`OTP sent to ${email}: ${otp}`);
+        console.log(`OTP generated for ${email}: ${otp} (expires in 1 min)`);
 
+        // 1 minute por auto delete
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) {
+                delete otpStore[email];
+                console.log(`OTP expired & deleted for ${email}`);
+            }
+        }, 61 * 1000);
+
+        // OTP ta response e pathacchi (browser e dekhacche)
         res.status(200).json({
             success: true,
-            message: "OTP sent successfully to " + email,
-            otp: otp
+            message: "OTP generated successfully",
+            otp: otp  // <-- Browser e dekhacche (1 min expire)
         });
 
     } catch (error) {
-        console.error("Email sending failed:", error.message);
-        res.status(500).json({
-            success: false,
-            message: "Failed to send OTP",
-            error: error.message
-        });
+        console.error("OTP generate failed:", error.message);
+        res.status(500).json({ success: false, message: "OTP generate korte problem hoyeche" });
     }
 });
 
 // ==========================================
-// USER SCHEMA
+// VERIFY OTP API
+// ==========================================
+app.post('/api/verify-otp', async (req, res) => {
+    try {
+        const { email, otp } = req.body;
+
+        const stored = otpStore[email];
+
+        if (!stored) {
+            return res.status(400).json({ success: false, message: "OTP expire hoye geche. Abar pathan." });
+        }
+
+        if (Date.now() > stored.expiresAt) {
+            delete otpStore[email];
+            return res.status(400).json({ success: false, message: "OTP expire hoye geche. Abar pathan." });
+        }
+
+        if (stored.otp != otp) {
+            return res.status(400).json({ success: false, message: "Bhul OTP!" });
+        }
+
+        // OTP thik — muche fellun
+        delete otpStore[email];
+        res.status(200).json({ success: true, message: "OTP verified successfully!" });
+
+    } catch (error) {
+        res.status(500).json({ success: false, message: "OTP verify korte problem hoyeche" });
+    }
+});
+
+// ==========================================
+// SCHEMAS
 // ==========================================
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
@@ -98,9 +104,6 @@ const UserSchema = new mongoose.Schema({
 });
 const User = mongoose.model('User', UserSchema);
 
-// ==========================================
-// POST SCHEMA
-// ==========================================
 const PostSchema = new mongoose.Schema({
     username: { type: String, required: true },
     content: { type: String, required: true },
@@ -109,22 +112,42 @@ const PostSchema = new mongoose.Schema({
 const Post = mongoose.model('Post', PostSchema);
 
 // ==========================================
-// API ROUTES
+// SIGNUP API
 // ==========================================
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password } = req.body;
+
+        if (!username || !email || !password) {
+            return res.status(400).json({ success: false, message: "Sob field puron korun" });
+        }
+
+        const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+        if (existingUser) {
+            return res.status(400).json({ success: false, message: "Ei email/username age theke ache" });
+        }
+
+        // Password hash korun (hacker dekhbe na)
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
 
-        const newUser = new User({ username, email, passwordHash: hashedPassword });
+        const newUser = new User({
+            username,
+            email,
+            passwordHash: hashedPassword
+        });
+
         await newUser.save();
-        res.status(201).json({ success: true, message: "SearchBook-এ অ্যাকাউন্ট তৈরি সফল হয়েছে!" });
+        res.status(201).json({ success: true, message: "Account created successfully!" });
+
     } catch (err) {
-        res.status(500).json({ success: false, message: "অ্যাকাউন্ট তৈরি করা যায়নি।" });
+        res.status(500).json({ success: false, message: "Account create korte problem hoyeche" });
     }
 });
 
+// ==========================================
+// LOGIN API
+// ==========================================
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -140,6 +163,9 @@ app.post('/api/login', async (req, res) => {
     }
 });
 
+// ==========================================
+// POSTS API
+// ==========================================
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content } = req.body;
@@ -160,8 +186,5 @@ app.get('/api/posts', async (req, res) => {
     }
 });
 
-// ==========================================
-// SERVER START
-// ==========================================
 const PORT = process.env.PORT || 5000;
 app.listen(PORT, () => console.log(`SearchBook Backend running on port ${PORT}`));
