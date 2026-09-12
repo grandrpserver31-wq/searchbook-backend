@@ -158,19 +158,6 @@
             <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
         </div>
 
-        <!-- 2FA লগইন প্যানেল -->
-        <div id="twofa-panel" class="card panel">
-            <h2 class="header-title">Two-Factor Authentication</h2>
-            <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-                Enter the 6-digit code from your Google Authenticator app.
-            </p>
-            <div class="input-group">
-                <input type="text" id="2fa-code" placeholder="000000" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 5px;">
-            </div>
-            <button class="btn-primary" onclick="verify2FA()">Submit Code</button>
-            <span class="link-text" onclick="switchPanel('login-panel')">Back to Login</span>
-        </div>
-
         <!-- রেজিস্টার প্যানেল -->
         <div id="register-panel" class="card panel">
             <h2 class="header-title">Create a new account</h2>
@@ -233,7 +220,7 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
-        // রেজিস্ট্রেশন OTP পাঠানোর ফাংশন (Render backend + Nodemailer diye)
+        // রেজিস্ট্রেশন OTP পাঠানোর ফাংশন
         async function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value;
             const name = document.getElementById('reg-name').value;
@@ -271,6 +258,11 @@
             const email = document.getElementById('reg-email').value;
             const password = document.getElementById('reg-password').value;
 
+            if (!enteredOTP) {
+                alert("Please enter the OTP code.");
+                return;
+            }
+
             if (enteredOTP != window.currentOTP) {
                 alert("Invalid OTP! Please check your email and try again.");
                 return;
@@ -296,6 +288,7 @@
             }
         }
 
+        // লগইন (2FA chara)
         async function handleLogin() {
             const email = document.getElementById('login-email').value;
             const password = document.getElementById('login-password').value;
@@ -324,11 +317,7 @@
             }
         }
 
-        function verify2FA() {
-            alert("2FA Code verified! Redirecting to Searchbook Feed...");
-        }
-
-        // Password reset OTP pathano (backend er through te)
+        // Password reset OTP pathano
         async function sendResetOTP() {
             const email = document.getElementById('reset-email').value;
             
