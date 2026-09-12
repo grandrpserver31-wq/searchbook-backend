@@ -16,13 +16,14 @@
             --border-color: #dddfe2;
         }
         * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; }
         .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 20px; }
+        .container.wide { max-width: 600px; }
         .logo-text { font-size: 40px; font-weight: 800; color: var(--primary-blue); margin-bottom: 20px; letter-spacing: -1px; }
         .card { background: var(--white); width: 100%; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
         .input-group { margin-bottom: 15px; }
-        .input-group input { width: 100%; padding: 14px; font-size: 16px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; background: #fcfcfc; }
-        .input-group input:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); }
+        .input-group input, .input-group textarea { width: 100%; padding: 14px; font-size: 16px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; background: #fcfcfc; font-family: inherit; }
+        .input-group input:focus, .input-group textarea:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); }
         .btn-primary { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 12px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
         .btn-primary:hover { background: #166fe5; }
         .btn-primary:disabled { background: #8ab4f8; cursor: not-allowed; }
@@ -37,13 +38,27 @@
         .timer { text-align: center; font-size: 16px; color: #e74c3c; margin-bottom: 15px; font-weight: bold; background: #fdecea; padding: 10px; border-radius: 6px; }
         .otp-display { text-align: center; font-size: 28px; color: #1877f2; margin-bottom: 15px; font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed #1877f2; }
         .note { font-size: 12px; color: #e74c3c; text-align: center; margin-bottom: 15px; }
+        
+        /* Feed Styles */
+        .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); }
+        .feed-header h2 { color: var(--primary-blue); margin: 0; }
+        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
+        .logout-btn:hover { background: #c0392b; }
+        .post-box { background: #fcfcfc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
+        .post-box textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; resize: vertical; min-height: 80px; font-family: inherit; }
+        .post-item { background: #fcfcfc; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 12px; }
+        .post-item .post-user { color: var(--primary-blue); font-weight: bold; }
+        .post-item .post-time { color: var(--text-muted); font-size: 12px; }
+        .post-item .post-content { margin-top: 8px; color: var(--text-main); white-space: pre-wrap; word-wrap: break-word; }
+        .user-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center; color: var(--primary-blue); font-weight: bold; }
     </style>
 </head>
 <body>
 
-    <div class="container">
+    <div class="container" id="main-container">
         <h1 class="logo-text">Searchbook</h1>
 
+        <!-- Login Panel -->
         <div id="login-panel" class="card active-panel">
             <div class="input-group">
                 <input type="email" id="login-email" placeholder="Email address">
@@ -57,6 +72,7 @@
             <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
         </div>
 
+        <!-- Register Panel -->
         <div id="register-panel" class="card panel">
             <h2 class="header-title">Create a new account</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">It's quick and easy.</p>
@@ -76,22 +92,22 @@
             <span class="link-text" onclick="switchPanel('login-panel')">Already have an account?</span>
         </div>
 
+        <!-- OTP Panel -->
         <div id="otp-panel" class="card panel">
             <h2 class="header-title">Enter Security Code</h2>
             <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
                 Ei OTP ta <b>1 minute</b> er jonno valid. Tarpor expire hoye jabe.
             </p>
-            
             <div id="otp-display" class="otp-display">------</div>
             <div id="timer" class="timer">⏱️ OTP expires in 60 seconds</div>
             <p class="note">⚠️ Ei OTP shudhu apnar browser e dekhacche. Onno kew dekhতে parbe na.</p>
-            
             <div class="input-group">
                 <input type="text" id="reg-otp" placeholder="Enter 6-digit code" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 3px;">
             </div>
             <button class="btn-primary" onclick="verifyOTPAndCreateAccount()">Continue</button>
         </div>
 
+        <!-- Forgot Panel -->
         <div id="forgot-panel" class="card panel">
             <h2 class="header-title">Find Your Account</h2>
             <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
@@ -102,6 +118,28 @@
             </div>
             <button class="btn-primary" onclick="sendResetOTP()">Search & Send Code</button>
             <span class="link-text" onclick="switchPanel('login-panel')">Cancel</span>
+        </div>
+
+        <!-- Feed Panel -->
+        <div id="feed-panel" class="card panel">
+            <div class="feed-header">
+                <h2>Feed</h2>
+                <button class="logout-btn" onclick="handleLogout()">Logout</button>
+            </div>
+
+            <div class="user-info" id="user-info">Welcome!</div>
+
+            <div class="post-box">
+                <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                <button class="btn-primary" style="margin-top: 10px;" onclick="createPost()">Post</button>
+            </div>
+
+            <div class="divider"></div>
+
+            <h3 style="margin-bottom: 15px; color: var(--text-main);">Recent Posts</h3>
+            <div id="posts-list">
+                <p style="text-align: center; color: var(--text-muted);">Loading posts...</p>
+            </div>
         </div>
 
     </div>
@@ -121,6 +159,7 @@
         let otpTimer = null;
         let otpExpireTime = null;
 
+        // ================= REGISTER OTP =================
         async function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value.trim();
             const name = document.getElementById('reg-name').value.trim();
@@ -142,13 +181,10 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    // OTP ta browser e dekhacchi
                     document.getElementById('otp-display').textContent = data.otp;
-                    
+                    document.getElementById('otp-display').style.color = "#1877f2";
                     alert("✅ OTP Generated!\n\nYour OTP: " + data.otp + "\n\n⚠️ Ei OTP 1 minute por expire hoye jabe!");
-                    
                     switchPanel('otp-panel');
-                    
                     otpExpireTime = Date.now() + 60 * 1000;
                     startTimer();
                 } else {
@@ -225,6 +261,7 @@
             }
         }
 
+        // ================= LOGIN =================
         async function handleLogin() {
             const email = document.getElementById('login-email').value.trim();
             const password = document.getElementById('login-password').value;
@@ -244,13 +281,111 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    alert("✅ Login successful! Welcome " + data.username);
+                    // User info save korun
+                    window.currentUser = {
+                        username: data.username,
+                        email: email
+                    };
+                    
+                    // User info dekhান
+                    document.getElementById('user-info').textContent = "👋 Welcome, " + data.username + "!";
+                    
+                    // Feed panel e jao
+                    switchPanel('feed-panel');
+                    
+                    // Container wide korun
+                    document.getElementById('main-container').classList.add('wide');
+                    
+                    // Posts load korun
+                    loadPosts();
                 } else {
                     alert("❌ Login failed: " + data.message);
                 }
             } catch (error) {
                 alert("❌ Error: " + error.message);
             }
+        }
+
+        // ================= FEED =================
+        async function loadPosts() {
+            const postsList = document.getElementById('posts-list');
+            postsList.innerHTML = '<p style="text-align: center; color: #606770;">Loading posts...</p>';
+            
+            try {
+                const response = await fetch(BACKEND_URL + '/api/posts');
+                const posts = await response.json();
+                
+                if (posts.length === 0) {
+                    postsList.innerHTML = '<p style="text-align: center; color: #606770;">No posts yet. Be the first to post!</p>';
+                    return;
+                }
+                
+                postsList.innerHTML = posts.map(post => `
+                    <div class="post-item">
+                        <div style="display: flex; justify-content: space-between; align-items: center;">
+                            <span class="post-user">${escapeHtml(post.username)}</span>
+                            <span class="post-time">${new Date(post.createdAt).toLocaleString()}</span>
+                        </div>
+                        <div class="post-content">${escapeHtml(post.content)}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                console.error("Posts load failed:", error);
+                postsList.innerHTML = '<p style="text-align: center; color: #e74c3c;">Failed to load posts.</p>';
+            }
+        }
+
+        async function createPost() {
+            const content = document.getElementById('post-content').value.trim();
+            
+            if (!content) {
+                alert("Please write something.");
+                return;
+            }
+            
+            if (!window.currentUser) {
+                alert("Please login first.");
+                return;
+            }
+            
+            try {
+                const response = await fetch(BACKEND_URL + '/api/posts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        username: window.currentUser.username,
+                        content: content
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.success) {
+                    document.getElementById('post-content').value = '';
+                    loadPosts();
+                } else {
+                    alert("❌ Failed: " + data.message);
+                }
+            } catch (error) {
+                alert("❌ Error: " + error.message);
+            }
+        }
+
+        // ================= LOGOUT =================
+        function handleLogout() {
+            window.currentUser = null;
+            document.getElementById('login-email').value = '';
+            document.getElementById('login-password').value = '';
+            document.getElementById('main-container').classList.remove('wide');
+            switchPanel('login-panel');
+        }
+
+        // ================= HELPERS =================
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
         }
 
         async function sendResetOTP() {
