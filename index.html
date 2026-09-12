@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Searchbook - Connect and Share</title>
+    <!-- FontAwesome for clean icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* একদম সিম্পল হোয়াইট থিম */
+        :root {
+            --bg-color: #f0f2f5;
+            --white: #ffffff;
+            --primary-blue: #1877f2;
+            --text-main: #1c1e21;
+            --text-muted: #606770;
+            --border-color: #dddfe2;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        /* মেইন কন্টেইনার */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 400px;
+            padding: 20px;
+        }
+
+        .logo-text {
+            font-size: 40px;
+            font-weight: 800;
+            color: var(--primary-blue);
+            margin-bottom: 20px;
+            letter-spacing: -1px;
+        }
+
+        /* কার্ড স্টাইল (লগইন/রেজিস্টার বক্স) */
+        .card {
+            background: var(--white);
+            width: 100%;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            border: 1px solid var(--border-color);
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 14px;
+            font-size: 16px;
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            outline: none;
+            background: #fcfcfc;
+        }
+
+        .input-group input:focus {
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2);
+        }
+
+        .btn-primary {
+            width: 100%;
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 12px;
+            font-size: 18px;
+            font-weight: bold;
+            border-radius: 6px;
+            cursor: pointer;
+            margin-top: 10px;
+            transition: 0.2s;
+        }
+
+        .btn-primary:hover {
+            background: #166fe5;
+        }
+
+        .btn-success {
+            background: #42b72a;
+            width: auto;
+            padding: 12px 20px;
+            margin: 20px auto 0 auto;
+            display: block;
+        }
+
+        .btn-success:hover {
+            background: #36a420;
+        }
+
+        .divider {
+            border-bottom: 1px solid var(--border-color);
+            margin: 20px 0;
+        }
+
+        .link-text {
+            color: var(--primary-blue);
+            font-size: 14px;
+            text-align: center;
+            display: block;
+            margin-top: 15px;
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .link-text:hover {
+            text-decoration: underline;
+        }
+
+        /* প্যানেল হাইড/শো করার জন্য */
+        .panel { display: none; }
+        .active-panel { display: block; }
+        
+        .header-title {
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            color: var(--text-main);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Searchbook Logo -->
+        <h1 class="logo-text">Searchbook</h1>
+
+        <!-- লগইন প্যানেল -->
+        <div id="login-panel" class="card active-panel">
+            <div class="input-group">
+                <input type="email" id="login-email" placeholder="Email address">
+            </div>
+            <div class="input-group">
+                <input type="password" id="login-password" placeholder="Password">
+            </div>
+            <button class="btn-primary" onclick="handleLogin()">Log In</button>
+            <span class="link-text" onclick="switchPanel('forgot-panel')">Forgotten password?</span>
+            
+            <div class="divider"></div>
+            
+            <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
+        </div>
+
+        <!-- 2FA লগইন প্যানেল (লগইনের পর আসবে যদি 2FA অন থাকে) -->
+        <div id="twofa-panel" class="card panel">
+            <h2 class="header-title">Two-Factor Authentication</h2>
+            <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+                Enter the 6-digit code from your Google Authenticator app.
+            </p>
+            <div class="input-group">
+                <input type="text" id="2fa-code" placeholder="000000" maxlength="6" style="text-align: center; font-size: 24px; letter-spacing: 5px;">
+            </div>
+            <button class="btn-primary" onclick="verify2FA()">Submit Code</button>
+            <span class="link-text" onclick="switchPanel('login-panel')">Back to Login</span>
+        </div>
+
+        <!-- রেজিস্টার প্যানেল (নতুন একাউন্ট) -->
+        <div id="register-panel" class="card panel">
+            <h2 class="header-title">Create a new account</h2>
+            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">It's quick and easy.</p>
+            
+            <div class="input-group">
+                <input type="text" id="reg-name" placeholder="Full Name">
+            </div>
+            <div class="input-group">
+                <input type="text" id="reg-username" placeholder="Username (e.g. riyad_ahmed)">
+            </div>
+            <div class="input-group">
+                <input type="email" id="reg-email" placeholder="Email address">
+            </div>
+            <div class="input-group">
+                <input type="password" id="reg-password" placeholder="New password">
+            </div>
+            
+            <button class="btn-primary btn-success" onclick="sendRegistrationOTP()">Sign Up & Send OTP</button>
+            <span class="link-text" onclick="switchPanel('login-panel')">Already have an account?</span>
+        </div>
+
+        <!-- OTP ভেরিফিকেশন প্যানেল (রেজিস্ট্রেশনের সময়) -->
+        <div id="otp-panel" class="card panel">
+            <h2 class="header-title">Enter Security Code</h2>
+            <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
+                Please check your email for a message with your code.
+            </p>
+            <div class="input-group">
+                <input type="text" id="reg-otp" placeholder="Enter 6-digit code" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 3px;">
+            </div>
+            <button class="btn-primary" onclick="verifyOTPAndCreateAccount()">Continue</button>
+        </div>
+
+        <!-- ফরগেট পাসওয়ার্ড প্যানেল -->
+        <div id="forgot-panel" class="card panel">
+            <h2 class="header-title">Find Your Account</h2>
+            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
+                Please enter your email address to search for your account and receive a password reset code.
+            </p>
+            <div class="input-group">
+                <input type="email" id="reset-email" placeholder="Email address">
+            </div>
+            <button class="btn-primary" onclick="sendResetOTP()">Search & Send Code</button>
+            <span class="link-text" onclick="switchPanel('login-panel')">Cancel</span>
+        </div>
+
+    </div>
+
+    <script>
+        // প্যানেল চেঞ্জ করার ফাংশন
+        function switchPanel(panelId) {
+            document.querySelectorAll('.panel, .active-panel').forEach(p => {
+                p.classList.remove('active-panel');
+                p.classList.add('panel');
+            });
+            document.getElementById(panelId).classList.remove('panel');
+            document.getElementById(panelId).classList.add('active-panel');
+        }
+
+        // এখানে রিয়েল API রিকোয়েস্ট যাবে তোর Render ব্যাকএন্ডে (সার্চ বুকের আসল অ্যালগরিদমে)
+        const BACKEND_URL = "https://searchbook-backend.onrender.com";
+
+        function sendRegistrationOTP() {
+            alert("This will talk to your Render backend to send a real email OTP!");
+            switchPanel('otp-panel');
+        }
+
+        function verifyOTPAndCreateAccount() {
+            alert("Account created successfully! Welcome to Searchbook.");
+            switchPanel('login-panel');
+        }
+
+        function handleLogin() {
+            alert("Checking credentials on Render backend... Triggering 2FA.");
+            // যদি 2FA অন থাকে, তাহলে 2FA প্যানেলে নিবে
+            switchPanel('twofa-panel');
+        }
+
+        function verify2FA() {
+            alert("2FA Code verified! Redirecting to Searchbook Feed...");
+            // লগইন সফল হলে সার্চ বুকের মেইন ফিডে (যেখানে অ্যালগরিদম কাজ করবে) রিডাইরেক্ট হবে
+        }
+
+        function sendResetOTP() {
+            alert("Reset code sent to your email via Render Backend!");
+        }
+    </script>
+</body>
+</html>
