@@ -220,15 +220,7 @@
 
     </div>
 
-    <!-- EmailJS SDK -->
-    <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
-
     <script>
-        // EmailJS Initialization (Apnar Public Key)
-        (function() {
-            emailjs.init("h6LFqyZ36jEtQ4Wq_");
-        })();
-
         // Panel switch function
         function switchPanel(panelId) {
             document.querySelectorAll('.panel, .active-panel').forEach(p => {
@@ -241,7 +233,7 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
-        // ১. Registration OTP pathano
+        // Registration OTP pathano (EmailJS chara)
         function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value;
             const name = document.getElementById('reg-name').value;
@@ -251,30 +243,16 @@
                 return;
             }
 
+            // Ekhane OTP generate hocche
             const otp = Math.floor(100000 + Math.random() * 900000);
             window.currentOTP = otp; 
 
-            const templateParams = {
-                to_name: name,
-                to_email: email,
-                otp_code: otp,
-                message: "Your Searchbook verification code is: " + otp
-            };
-
-            // EmailJS diye email pathano
-            // Service ID: service_xyf1vsg, Template ID: template_cwbp2l1
-            emailjs.send('service_xyf1vsg', 'template_cwbp2l1', templateParams)
-                .then(function(response) {
-                    console.log('SUCCESS!', response.status, response.text);
-                    alert("OTP sent successfully to " + email);
-                    switchPanel('otp-panel');
-                }, function(error) {
-                    console.log('FAILED...', error);
-                    alert("Failed to send OTP. Please try again. Error: " + JSON.stringify(error));
-                });
+            // EmailJS chara shudhu alert
+            alert("OTP generated: " + otp + "\n\n(EmailJS chara, tai email e jabe na. Eta test er jonno.)");
+            switchPanel('otp-panel');
         }
 
-        // ২. OTP verify kore account create
+        // OTP verify kore account create
         function verifyOTPAndCreateAccount() {
             const enteredOTP = document.getElementById('reg-otp').value;
 
@@ -295,7 +273,7 @@
             alert("2FA Code verified! Redirecting to Searchbook Feed...");
         }
 
-        // ৩. Password reset OTP pathano
+        // Password reset OTP pathano (EmailJS chara)
         function sendResetOTP() {
             const email = document.getElementById('reset-email').value;
             
@@ -307,19 +285,7 @@
             const otp = Math.floor(100000 + Math.random() * 900000);
             window.currentResetOTP = otp;
 
-            const templateParams = {
-                to_email: email,
-                otp_code: otp,
-                message: "Your Searchbook password reset code is: " + otp
-            };
-
-            // Template ID: template_0v1cidr
-            emailjs.send('service_xyf1vsg', 'template_0v1cidr', templateParams)
-                .then(function(response) {
-                    alert("Password reset code sent to " + email);
-                }, function(error) {
-                    alert("Failed to send reset code. Error: " + JSON.stringify(error));
-                });
+            alert("Password reset code: " + otp + "\n\n(EmailJS chara, tai email e jabe na. Eta test er jonno.)");
         }
     </script>
 </body>
