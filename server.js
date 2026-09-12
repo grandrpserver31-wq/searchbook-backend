@@ -17,24 +17,24 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("Database Connection Error:", err));
 
 // ==========================================
-// NODEMAILER SETUP (Gmail - Port 465 SSL)
+// NODEMAILER SETUP (Brevo SMTP)
 // ==========================================
 const transporter = nodemailer.createTransport({
-    host: 'smtp.gmail.com',
-    port: 465,
-    secure: true,
+    host: 'smtp-relay.brevo.com',
+    port: 587,
+    secure: false,
     auth: {
-        user: process.env.GMAIL_USER,
-        pass: process.env.GMAIL_PASS
+        user: process.env.BREVO_USER,
+        pass: process.env.BREVO_PASS
     }
 });
 
 // Verify transporter on startup
 transporter.verify((error, success) => {
     if (error) {
-        console.error("Nodemailer verification FAILED:", error.message);
+        console.error("Brevo SMTP verification FAILED:", error.message);
     } else {
-        console.log("Nodemailer is ready to send emails!");
+        console.log("Brevo SMTP is ready to send emails!");
     }
 });
 
@@ -52,7 +52,7 @@ app.post('/api/send-otp', async (req, res) => {
         const otp = Math.floor(100000 + Math.random() * 900000);
 
         const mailOptions = {
-            from: `"Searchbook" <${process.env.GMAIL_USER}>`,
+            from: `"Searchbook" <imogirovce@gmail.com>`,
             to: email,
             subject: 'Your Searchbook Verification Code',
             html: `
