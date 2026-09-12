@@ -233,8 +233,8 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
-        // Registration OTP pathano (EmailJS chara)
-        function sendRegistrationOTP() {
+        // রেজিস্ট্রেশন OTP পাঠানোর ফাংশন (Render backend + Nodemailer diye)
+        async function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value;
             const name = document.getElementById('reg-name').value;
 
@@ -243,38 +243,93 @@
                 return;
             }
 
-            // Ekhane OTP generate hocche
-            const otp = Math.floor(100000 + Math.random() * 900000);
-            window.currentOTP = otp; 
+            try {
+                const response = await fetch(BACKEND_URL + '/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name })
+                });
 
-            // EmailJS chara shudhu alert
-            alert("OTP generated: " + otp + "\n\n(EmailJS chara, tai email e jabe na. Eta test er jonno.)");
-            switchPanel('otp-panel');
-        }
+                const data = await response.json();
 
-        // OTP verify kore account create
-        function verifyOTPAndCreateAccount() {
-            const enteredOTP = document.getElementById('reg-otp').value;
-
-            if (enteredOTP == window.currentOTP) {
-                alert("OTP Verified! Account created successfully. Welcome to Searchbook.");
-                switchPanel('login-panel');
-            } else {
-                alert("Invalid OTP! Please check your email and try again.");
+                if (data.success) {
+                    window.currentOTP = data.otp;
+                    alert("OTP sent successfully to " + email + "\n\nPlease check your inbox (and spam folder).");
+                    switchPanel('otp-panel');
+                } else {
+                    alert("Failed: " + data.message);
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
             }
         }
 
-        function handleLogin() {
-            alert("Checking credentials on Render backend... Triggering 2FA.");
-            switchPanel('twofa-panel');
+        // OTP verify kore account create
+        async function verifyOTPAndCreateAccount() {
+            const enteredOTP = document.getElementById('reg-otp').value;
+            const username = document.getElementById('reg-username').value;
+            const email = document.getElementById('reg-email').value;
+            const password = document.getElementById('reg-password').value;
+
+            if (enteredOTP != window.currentOTP) {
+                alert("Invalid OTP! Please check your email and try again.");
+                return;
+            }
+
+            try {
+                const response = await fetch(BACKEND_URL + '/api/signup', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert("Account created successfully! Welcome to Searchbook.");
+                    switchPanel('login-panel');
+                } else {
+                    alert("Signup failed: " + data.message);
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
+        }
+
+        async function handleLogin() {
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+
+            if (!email || !password) {
+                alert("Please fill email and password.");
+                return;
+            }
+
+            try {
+                const response = await fetch(BACKEND_URL + '/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, password })
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    alert("Login successful! Welcome " + data.username);
+                } else {
+                    alert("Login failed: " + data.message);
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
         }
 
         function verify2FA() {
             alert("2FA Code verified! Redirecting to Searchbook Feed...");
         }
 
-        // Password reset OTP pathano (EmailJS chara)
-        function sendResetOTP() {
+        // Password reset OTP pathano (backend er through te)
+        async function sendResetOTP() {
             const email = document.getElementById('reset-email').value;
             
             if (!email) {
@@ -282,10 +337,24 @@
                 return;
             }
 
-            const otp = Math.floor(100000 + Math.random() * 900000);
-            window.currentResetOTP = otp;
+            try {
+                const response = await fetch(BACKEND_URL + '/api/send-otp', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email, name: "User" })
+                });
 
-            alert("Password reset code: " + otp + "\n\n(EmailJS chara, tai email e jabe na. Eta test er jonno.)");
+                const data = await response.json();
+
+                if (data.success) {
+                    window.currentResetOTP = data.otp;
+                    alert("Password reset code sent to " + email);
+                } else {
+                    alert("Failed: " + data.message);
+                }
+            } catch (error) {
+                alert("Error: " + error.message);
+            }
         }
     </script>
 </body>
