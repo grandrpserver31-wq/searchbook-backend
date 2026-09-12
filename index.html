@@ -4,11 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Searchbook - Connect and Share</title>
-    <!-- FontAwesome for clean icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <style>
-        /* একদম সিম্পল হোয়াইট থিম */
         :root {
             --bg-color: #f0f2f5;
             --white: #ffffff;
@@ -34,7 +32,6 @@
             min-height: 100vh;
         }
 
-        /* মেইন কন্টেইনার */
         .container {
             display: flex;
             flex-direction: column;
@@ -52,7 +49,6 @@
             letter-spacing: -1px;
         }
 
-        /* কার্ড স্টাইল (লগইন/রেজিস্টার বক্স) */
         .card {
             background: var(--white);
             width: 100%;
@@ -130,7 +126,6 @@
             text-decoration: underline;
         }
 
-        /* প্যানেল হাইড/শো করার জন্য */
         .panel { display: none; }
         .active-panel { display: block; }
         
@@ -145,7 +140,6 @@
 <body>
 
     <div class="container">
-        <!-- Searchbook Logo -->
         <h1 class="logo-text">Searchbook</h1>
 
         <!-- লগইন প্যানেল -->
@@ -164,7 +158,7 @@
             <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
         </div>
 
-        <!-- 2FA লগইন প্যানেল (লগইনের পর আসবে যদি 2FA অন থাকে) -->
+        <!-- 2FA লগইন প্যানেল -->
         <div id="twofa-panel" class="card panel">
             <h2 class="header-title">Two-Factor Authentication</h2>
             <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
@@ -177,7 +171,7 @@
             <span class="link-text" onclick="switchPanel('login-panel')">Back to Login</span>
         </div>
 
-        <!-- রেজিস্টার প্যানেল (নতুন একাউন্ট) -->
+        <!-- রেজিস্টার প্যানেল -->
         <div id="register-panel" class="card panel">
             <h2 class="header-title">Create a new account</h2>
             <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">It's quick and easy.</p>
@@ -199,7 +193,7 @@
             <span class="link-text" onclick="switchPanel('login-panel')">Already have an account?</span>
         </div>
 
-        <!-- OTP ভেরিফিকেশন প্যানেল (রেজিস্ট্রেশনের সময়) -->
+        <!-- OTP ভেরিফিকেশন প্যানেল -->
         <div id="otp-panel" class="card panel">
             <h2 class="header-title">Enter Security Code</h2>
             <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
@@ -226,16 +220,16 @@
 
     </div>
 
-    <!-- EmailJS SDK যোগ করা হলো -->
+    <!-- EmailJS SDK -->
     <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@3/dist/email.min.js"></script>
 
     <script>
-        // EmailJS Initialization (Apnar Public Key boshan)
+        // EmailJS Initialization (Apnar Public Key)
         (function() {
-            emailjs.init("h6LFqyZ36jEtQ4Wq_"); // <--- Apnar Public Key ekhane boshaben
+            emailjs.init("h6LFqyZ36jEtQ4Wq_");
         })();
 
-        // প্যানেল চেঞ্জ করার ফাংশন
+        // Panel switch function
         function switchPanel(panelId) {
             document.querySelectorAll('.panel, .active-panel').forEach(p => {
                 p.classList.remove('active-panel');
@@ -247,7 +241,7 @@
 
         const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
-        // ১. রেজিস্ট্রেশনের সময় OTP পাঠানোর ফাংশন
+        // ১. Registration OTP pathano
         function sendRegistrationOTP() {
             const email = document.getElementById('reg-email').value;
             const name = document.getElementById('reg-name').value;
@@ -257,13 +251,9 @@
                 return;
             }
 
-            // ৬ ডিজিটের র‍্যান্ডম OTP তৈরি করা
             const otp = Math.floor(100000 + Math.random() * 900000);
-            
-            // OTP ta global variable e save kore rakhchi jate verify korar somoy milate pari
             window.currentOTP = otp; 
 
-            // EmailJS Template Parameters
             const templateParams = {
                 to_name: name,
                 to_email: email,
@@ -272,6 +262,7 @@
             };
 
             // EmailJS diye email pathano
+            // Service ID: service_xyf1vsg, Template ID: template_cwbp2l1
             emailjs.send('service_xyf1vsg', 'template_cwbp2l1', templateParams)
                 .then(function(response) {
                     console.log('SUCCESS!', response.status, response.text);
@@ -283,34 +274,12 @@
                 });
         }
 
-        // ২. OTP ভেরিফাই করে একাউন্ট তৈরি করা
+        // ২. OTP verify kore account create
         function verifyOTPAndCreateAccount() {
             const enteredOTP = document.getElementById('reg-otp').value;
-            const email = document.getElementById('reg-email').value;
-            const password = document.getElementById('reg-password').value;
-            const name = document.getElementById('reg-name').value;
-            const username = document.getElementById('reg-username').value;
 
             if (enteredOTP == window.currentOTP) {
-                // OTP thik ache, ekhon backend e data pathate hobe
-                // (Apnar server.js er /register API te pathate hobe)
                 alert("OTP Verified! Account created successfully. Welcome to Searchbook.");
-                
-                // Note: Ekhane apni fetch() diye apnar Render backend e data pathaben
-                // Example:
-                /*
-                fetch(BACKEND_URL + '/register', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ name, username, email, password })
-                })
-                .then(res => res.json())
-                .then(data => {
-                    alert(data.message);
-                    switchPanel('login-panel');
-                });
-                */
-                
                 switchPanel('login-panel');
             } else {
                 alert("Invalid OTP! Please check your email and try again.");
@@ -326,7 +295,7 @@
             alert("2FA Code verified! Redirecting to Searchbook Feed...");
         }
 
-        // ৩. পাসওয়ার্ড রিসেটের সময় OTP পাঠানোর ফাংশন
+        // ৩. Password reset OTP pathano
         function sendResetOTP() {
             const email = document.getElementById('reset-email').value;
             
@@ -344,7 +313,7 @@
                 message: "Your Searchbook password reset code is: " + otp
             };
 
-            // Password Reset Template ID use korte hobe (Apnar screenshot e template_0v1cidr chilo)
+            // Template ID: template_0v1cidr
             emailjs.send('service_xyf1vsg', 'template_0v1cidr', templateParams)
                 .then(function(response) {
                     alert("Password reset code sent to " + email);
