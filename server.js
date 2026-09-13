@@ -361,7 +361,6 @@ app.post('/api/admin/login', async (req, res) => {
     }
 });
 
-// Admin change own password
 app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
     try {
         const { oldPassword, newPassword } = req.body;
