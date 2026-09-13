@@ -15,7 +15,27 @@ mongoose.connect(MONGO_URI)
     .catch(err => console.error("DB Error:", err));
 
 // ==========================================
-// OTP Store (1 min expire)
+// ACTIVE USERS TRACKER
+// ==========================================
+const activeUsers = {};
+
+app.use((req, res, next) => {
+    const username = req.headers['x-username'];
+    if (username) activeUsers[username] = Date.now();
+    next();
+});
+
+setInterval(() => {
+    const now = Date.now();
+    for (const u in activeUsers) {
+        if (now - activeUsers[u] > 2 * 60 * 1000) {
+            delete activeUsers[u];
+        }
+    }
+}, 60000);
+
+// ==========================================
+// OTP STORE (1 min expire)
 // ==========================================
 const otpStore = {};
 
@@ -33,6 +53,7 @@ app.post('/api/send-otp', async (req, res) => {
             }
         }, 61000);
 
+        console.log(`OTP generated for ${email}: ${otp}`);
         res.json({ success: true, message: "OTP generated", otp });
     } catch (error) {
         res.status(500).json({ success: false, message: "OTP failed" });
@@ -70,6 +91,8 @@ const UserSchema = new mongoose.Schema({
     profilePic: { type: String, default: "" },
     followers: { type: [String], default: [] },
     following: { type: [String], default: [] },
+    bookmarks: { type: [String], default: [] },
+    theme: { type: String, default: "light" },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -79,13 +102,42 @@ const PostSchema = new mongoose.Schema({
     content: { type: String, default: "" },
     media: { type: String, default: "" },
     mediaType: { type: String, default: "text" },
-    likes: { type: [String], default: [] },        // kon user like korche
-    comments: { type: Array, default: [] },        // comments
+    likes: { type: [String], default: [] },
+    reactions: { type: Object, default: {} },
+    comments: { type: Array, default: [] },
     shares: { type: Number, default: 0 },
     views: { type: Number, default: 0 },
+    poll: { type: Object, default: null },
     createdAt: { type: Date, default: Date.now }
 });
 const Post = mongoose.model('Post', PostSchema);
+
+const StorySchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    media: { type: String, required: true },
+    mediaType: { type: String, default: "image" },
+    text: { type: String, default: "" },
+    expiresAt: { type: Date, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Story = mongoose.model('Story', StorySchema);
+
+const RoomSchema = new mongoose.Schema({
+    name: { type: String, required: true, unique: true },
+    members: { type: [String], required: true },
+    lastMessage: { type: String, default: "" },
+    lastTime: { type: Date, default: Date.now },
+    createdAt: { type: Date, default: Date.now }
+});
+const Room = mongoose.model('Room', RoomSchema);
+
+const MessageSchema = new mongoose.Schema({
+    roomId: { type: String, required: true },
+    sender: { type: String, required: true },
+    text: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Message = mongoose.model('Message', MessageSchema);
 
 // ==========================================
 // AUTH APIs
@@ -123,15 +175,36 @@ app.post('/api/login', async (req, res) => {
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
 
+        activeUsers[user.username] = Date.now();
+
         res.json({
             success: true,
             username: user.username,
             email: user.email,
-            fullName: user.fullName
+            fullName: user.fullName,
+            theme: user.theme || "light"
         });
     } catch (err) {
         res.status(500).json({ success: false, message: "Login failed" });
     }
+});
+
+app.post('/api/logout', (req, res) => {
+    const { username } = req.body;
+    if (username) delete activeUsers[username];
+    res.json({ success: true });
+});
+
+app.post('/api/heartbeat', (req, res) => {
+    const { username } = req.body;
+    if (username) activeUsers[username] = Date.now();
+    res.json({ success: true });
+});
+
+app.get('/api/active-users', (req, res) => {
+    const now = Date.now();
+    const list = Object.keys(activeUsers).filter(u => now - activeUsers[u] < 2 * 60 * 1000);
+    res.json({ success: true, count: list.length, users: list });
 });
 
 // ==========================================
@@ -139,245 +212,329 @@ app.post('/api/login', async (req, res) => {
 // ==========================================
 app.get('/api/user/:email', async (req, res) => {
     try {
-        const user = await User.findOne({ email: req.params.email });
-        if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        res.json({
-            success: true,
-            user: {
-                username: user.username,
-                email: user.email,
-                fullName: user.fullName || user.username,
-                bio: user.bio || "",
-                profilePic: user.profilePic || "",
-                followers: user.followers || [],
-                following: user.following || [],
-                createdAt: user.createdAt
-            }
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+        const u = await User.findOne({ email: req.params.email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const now = Date.now();
+        const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
+        res.json({ success: true, user: {
+            username: u.username, email: u.email, fullName: u.fullName || u.username,
+            bio: u.bio || "", profilePic: u.profilePic || "",
+            followers: u.followers || [], following: u.following || [],
+            bookmarks: u.bookmarks || [], theme: u.theme || "light",
+            isActive: !!isActive, createdAt: u.createdAt
+        }});
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Profile view by username (search e use hobe)
 app.get('/api/user/username/:username', async (req, res) => {
     try {
-        const user = await User.findOne({ username: req.params.username });
-        if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        res.json({
-            success: true,
-            user: {
-                username: user.username,
-                fullName: user.fullName || user.username,
-                bio: user.bio || "",
-                profilePic: user.profilePic || "",
-                followers: user.followers || [],
-                following: user.following || [],
-                createdAt: user.createdAt
-            }
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+        const u = await User.findOne({ username: req.params.username });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const now = Date.now();
+        const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
+        res.json({ success: true, user: {
+            username: u.username, fullName: u.fullName || u.username,
+            bio: u.bio || "", profilePic: u.profilePic || "",
+            followers: u.followers || [], following: u.following || [],
+            isActive: !!isActive, createdAt: u.createdAt
+        }});
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Search users
 app.get('/api/search/users/:query', async (req, res) => {
     try {
-        const query = req.params.query;
-        const users = await User.find({
-            $or: [
-                { username: { $regex: query, $options: 'i' } },
-                { fullName: { $regex: query, $options: 'i' } }
-            ]
-        }).limit(20).select('username fullName profilePic bio');
-        res.json({ success: true, users });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Search failed" });
-    }
+        const q = req.params.query;
+        const users = await User.find({ $or: [
+            { username: { $regex: q, $options: 'i' } },
+            { fullName: { $regex: q, $options: 'i' } }
+        ]}).limit(20).select('username fullName profilePic bio');
+        const now = Date.now();
+        const list = users.map(u => ({
+            username: u.username, fullName: u.fullName,
+            profilePic: u.profilePic, bio: u.bio,
+            isActive: !!(activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000))
+        }));
+        res.json({ success: true, users: list });
+    } catch (e) { res.status(500).json({ success: false, message: "Search failed" }); }
 });
 
 app.put('/api/user/profile', async (req, res) => {
     try {
         const { email, profilePic, bio, fullName } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        if (profilePic !== undefined) user.profilePic = profilePic;
-        if (bio !== undefined) user.bio = bio;
-        if (fullName !== undefined) user.fullName = fullName;
-
-        await user.save();
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (profilePic !== undefined) u.profilePic = profilePic;
+        if (bio !== undefined) u.bio = bio;
+        if (fullName !== undefined) u.fullName = fullName;
+        await u.save();
         res.json({ success: true, message: "Profile updated!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Update failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Update failed" }); }
 });
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
         const { email, oldPassword, newPassword } = req.body;
-        const user = await User.findOne({ email });
-        if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        const isMatch = await bcrypt.compare(oldPassword, user.passwordHash);
-        if (!isMatch) return res.status(400).json({ success: false, message: "Purono password bhul" });
-
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const m = await bcrypt.compare(oldPassword, u.passwordHash);
+        if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
-
         const salt = await bcrypt.genSalt(10);
-        user.passwordHash = await bcrypt.hash(newPassword, salt);
-
-        await user.save();
+        u.passwordHash = await bcrypt.hash(newPassword, salt);
+        await u.save();
         res.json({ success: true, message: "Password changed!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Follow / Unfollow
+app.put('/api/user/theme', async (req, res) => {
+    try {
+        const { email, theme } = req.body;
+        await User.updateOne({ email }, { theme });
+        res.json({ success: true });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// BOOKMARKS
+app.post('/api/user/bookmark', async (req, res) => {
+    try {
+        const { email, postId } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const idx = u.bookmarks.indexOf(postId);
+        if (idx === -1) u.bookmarks.push(postId);
+        else u.bookmarks.splice(idx, 1);
+        await u.save();
+        res.json({ success: true, bookmarks: u.bookmarks });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.get('/api/user/bookmarks/:email', async (req, res) => {
+    try {
+        const u = await User.findOne({ email: req.params.email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const posts = await Post.find({ _id: { $in: u.bookmarks } });
+        res.json({ success: true, posts });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// FOLLOW
 app.post('/api/user/follow', async (req, res) => {
     try {
         const { follower, following } = req.body;
         if (follower === following) return res.status(400).json({ success: false, message: "Nijer ke follow korte parben na" });
-
         await User.updateOne({ username: follower }, { $addToSet: { following } });
         await User.updateOne({ username: following }, { $addToSet: { followers: follower } });
-
         res.json({ success: true, message: "Followed!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
 app.post('/api/user/unfollow', async (req, res) => {
     try {
         const { follower, following } = req.body;
-
         await User.updateOne({ username: follower }, { $pull: { following } });
         await User.updateOne({ username: following }, { $pull: { followers: follower } });
-
         res.json({ success: true, message: "Unfollowed!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
 // ==========================================
-// POST APIs (Algorithm shoho)
+// POST APIs (Algorithm)
 // ==========================================
 app.post('/api/posts', async (req, res) => {
     try {
-        const { username, content, media, mediaType } = req.body;
-        const newPost = new Post({
-            username,
-            content: content || "",
-            media: media || "",
-            mediaType: mediaType || "text"
+        const { username, content, media, mediaType, poll } = req.body;
+        const np = new Post({
+            username, content: content || "",
+            media: media || "", mediaType: mediaType || "text",
+            poll: poll || null
         });
-        await newPost.save();
+        await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Post failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Post failed" }); }
 });
 
-// ALGORITHM: Viral posts upore ashbe
 app.get('/api/posts', async (req, res) => {
     try {
         const posts = await Post.find().limit(100).lean();
-
-        // Algorithm score calculate korun
         const now = Date.now();
         posts.forEach(p => {
-            const ageInHours = (now - new Date(p.createdAt).getTime()) / (1000 * 60 * 60);
+            const age = (now - new Date(p.createdAt).getTime()) / 3600000;
             const likeScore = (p.likes?.length || 0) * 3;
             const commentScore = (p.comments?.length || 0) * 4;
             const shareScore = (p.shares || 0) * 5;
             const viewScore = (p.views || 0) * 0.5;
-            
-            // Time decay: notun post upore
-            const timeScore = Math.max(0, 24 - ageInHours) * 2;
-            
-            p.score = likeScore + commentScore + shareScore + viewScore + timeScore;
+            const reactionScore = Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 3;
+            const timeScore = Math.max(0, 24 - age) * 2;
+            p.score = likeScore + commentScore + shareScore + viewScore + reactionScore + timeScore;
         });
-
-        // Score onujayi sort korun
         posts.sort((a, b) => b.score - a.score);
         res.json(posts.slice(0, 50));
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Load failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Load failed" }); }
 });
 
 app.get('/api/posts/user/:username', async (req, res) => {
     try {
         const posts = await Post.find({ username: req.params.username }).sort({ createdAt: -1 });
         res.json(posts);
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Load failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Load failed" }); }
 });
 
-// Like
 app.post('/api/posts/like', async (req, res) => {
     try {
         const { postId, username } = req.body;
-        const post = await Post.findById(postId);
-        if (!post) return res.status(404).json({ success: false, message: "Post nai" });
-
-        const idx = post.likes.indexOf(username);
-        if (idx === -1) post.likes.push(username);
-        else post.likes.splice(idx, 1);
-
-        await post.save();
-        res.json({ success: true, likes: post.likes.length });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+        const p = await Post.findById(postId);
+        if (!p) return res.status(404).json({ success: false, message: "Post nai" });
+        const idx = p.likes.indexOf(username);
+        if (idx === -1) p.likes.push(username); else p.likes.splice(idx, 1);
+        await p.save();
+        res.json({ success: true, likes: p.likes.length });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Comment
+app.post('/api/posts/reaction', async (req, res) => {
+    try {
+        const { postId, username, reaction } = req.body;
+        const p = await Post.findById(postId);
+        if (!p) return res.status(404).json({ success: false, message: "Post nai" });
+        if (!p.reactions) p.reactions = {};
+        if (!p.reactions[reaction]) p.reactions[reaction] = [];
+
+        Object.keys(p.reactions).forEach(k => {
+            const idx = p.reactions[k].indexOf(username);
+            if (idx !== -1 && k !== reaction) p.reactions[k].splice(idx, 1);
+        });
+
+        const idx = p.reactions[reaction].indexOf(username);
+        if (idx === -1) p.reactions[reaction].push(username);
+        else p.reactions[reaction].splice(idx, 1);
+
+        p.markModified('reactions');
+        await p.save();
+        res.json({ success: true, reactions: p.reactions });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
 app.post('/api/posts/comment', async (req, res) => {
     try {
         const { postId, username, text } = req.body;
-        const post = await Post.findById(postId);
-        if (!post) return res.status(404).json({ success: false, message: "Post nai" });
-
-        post.comments.push({ username, text, createdAt: new Date() });
-        await post.save();
-        res.json({ success: true, comments: post.comments });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+        const p = await Post.findById(postId);
+        if (!p) return res.status(404).json({ success: false, message: "Post nai" });
+        p.comments.push({ username, text, createdAt: new Date() });
+        await p.save();
+        res.json({ success: true, comments: p.comments });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Share
 app.post('/api/posts/share', async (req, res) => {
     try {
         const { postId } = req.body;
-        const post = await Post.findById(postId);
-        if (!post) return res.status(404).json({ success: false, message: "Post nai" });
-
-        post.shares = (post.shares || 0) + 1;
-        await post.save();
-        res.json({ success: true, shares: post.shares });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+        const p = await Post.findById(postId);
+        if (!p) return res.status(404).json({ success: false, message: "Post nai" });
+        p.shares = (p.shares || 0) + 1;
+        await p.save();
+        res.json({ success: true, shares: p.shares });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// View
 app.post('/api/posts/view', async (req, res) => {
     try {
         const { postId } = req.body;
         await Post.findByIdAndUpdate(postId, { $inc: { views: 1 } });
         res.json({ success: true });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/posts/vote', async (req, res) => {
+    try {
+        const { postId, username, optionIndex } = req.body;
+        const p = await Post.findById(postId);
+        if (!p || !p.poll) return res.status(404).json({ success: false, message: "Poll nai" });
+
+        let alreadyVoted = false;
+        p.poll.options.forEach((opt, i) => {
+            const idx = opt.votes.indexOf(username);
+            if (idx !== -1) {
+                opt.votes.splice(idx, 1);
+                if (i === optionIndex) alreadyVoted = true;
+            }
+        });
+
+        if (!alreadyVoted) p.poll.options[optionIndex].votes.push(username);
+
+        p.markModified('poll');
+        await p.save();
+        res.json({ success: true, poll: p.poll });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// ==========================================
+// STORIES (24h)
+// ==========================================
+app.post('/api/stories', async (req, res) => {
+    try {
+        const { username, media, mediaType, text } = req.body;
+        if (!media) return res.status(400).json({ success: false, message: "Media dorkar" });
+        const ns = new Story({
+            username, media, mediaType: mediaType || "image",
+            text: text || "",
+            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
+        });
+        await ns.save();
+        res.status(201).json({ success: true, message: "Story created!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Story failed" }); }
+});
+
+app.get('/api/stories', async (req, res) => {
+    try {
+        await Story.deleteMany({ expiresAt: { $lt: new Date() } });
+        const stories = await Story.find({ expiresAt: { $gt: new Date() } }).sort({ createdAt: -1 });
+        const grouped = {};
+        stories.forEach(s => {
+            if (!grouped[s.username]) grouped[s.username] = [];
+            grouped[s.username].push(s);
+        });
+        res.json({ success: true, stories: grouped });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// ==========================================
+// CHAT
+// ==========================================
+app.post('/api/chat/room', async (req, res) => {
+    try {
+        const { user1, user2 } = req.body;
+        const roomName = [user1, user2].sort().join('_');
+        let room = await Room.findOne({ name: roomName });
+        if (!room) {
+            room = new Room({ name: roomName, members: [user1, user2] });
+            await room.save();
+        }
+        res.json({ success: true, room });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.get('/api/chat/rooms/:username', async (req, res) => {
+    try {
+        const rooms = await Room.find({ members: req.params.username }).sort({ lastTime: -1 });
+        res.json({ success: true, rooms });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/chat/message', async (req, res) => {
+    try {
+        const { roomId, sender, text } = req.body;
+        const m = new Message({ roomId, sender, text });
+        await m.save();
+        await Room.findByIdAndUpdate(roomId, { lastMessage: text.substring(0, 50), lastTime: new Date() });
+        res.json({ success: true, message: m });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.get('/api/chat/messages/:roomId', async (req, res) => {
+    try {
+        const msgs = await Message.find({ roomId: req.params.roomId }).sort({ createdAt: 1 }).limit(200);
+        res.json({ success: true, messages: msgs });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
 const PORT = process.env.PORT || 5000;
