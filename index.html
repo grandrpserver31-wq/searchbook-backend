@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Searchbook</title>
 <style>
-:root { --blue: #1877f2; --white: #fff; --bg: #f0f2f5; --text: #1c1e21; --muted: #606770; --border: #dddfe2; --green: #42b72a; }
+:root { --blue: #1877f2; --white: #fff; --bg: #f0f2f5; --text: #1c1e21; --muted: #606770; --border: #dddfe2; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
 body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .container { max-width: 500px; margin: 0 auto; padding: 20px; }
@@ -36,11 +36,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
 .feed-header h2 { margin: 0; text-align: left; }
 .header-btns { display: flex; gap: 8px; }
 .small-btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; color: white; }
-.pic-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); position: relative; }
-.pic-wrapper { position: relative; display: inline-block; }
-.status-dot { position: absolute; bottom: 5px; right: 5px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; }
-.status-dot.online { background: #42b72a; }
-.status-dot.offline { background: #333; }
+.pic-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); }
 .center { text-align: center; }
 .media-btns { display: flex; gap: 8px; margin-top: 8px; }
 .media-btn { flex: 1; padding: 10px; border: 2px dashed var(--border); border-radius: 6px; background: white; cursor: pointer; font-size: 14px; }
@@ -51,35 +47,9 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
 .action-btn.liked { color: #1877f2; }
 .search-result { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .search-result:hover { background: #f0f2f5; }
-.search-pic-wrapper { position: relative; }
 .search-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
-.search-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
-.search-status.online { background: #42b72a; }
-.search-status.offline { background: #333; }
 .stat-row { display: flex; gap: 15px; justify-content: center; margin: 10px 0; font-size: 13px; color: var(--muted); }
 .stat-row b { color: var(--text); }
-
-/* Active counter */
-.active-counter { background: #eafaf1; color: #27ae60; padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 12px; border: 1px solid #c3e6cb; }
-
-/* Chat */
-.chat-room-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.chat-room-item:hover { background: #f0f2f5; }
-.chat-avatar { width: 45px; height: 45px; border-radius: 50%; background: #1877f2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
-.chat-info { flex: 1; }
-.chat-name { font-weight: bold; color: var(--text); }
-.chat-last { font-size: 12px; color: var(--muted); margin-top: 3px; }
-.chat-time { font-size: 11px; color: var(--muted); }
-
-/* Chat Window */
-#chat-messages { max-height: 400px; overflow-y: auto; padding: 10px; background: #fcfcfc; border-radius: 8px; margin-bottom: 12px; }
-.chat-msg { padding: 10px 14px; margin-bottom: 8px; border-radius: 18px; max-width: 75%; word-wrap: break-word; }
-.chat-msg.me { background: #1877f2; color: white; margin-left: auto; text-align: right; }
-.chat-msg.other { background: #e4e6eb; color: #1c1e21; }
-.chat-msg-time { font-size: 10px; opacity: 0.7; margin-top: 3px; }
-.chat-input-row { display: flex; gap: 8px; }
-.chat-input-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; font-size: 15px; }
-.chat-send-btn { background: #1877f2; color: white; border: none; padding: 0 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
 </style>
 </head>
 <body>
@@ -132,17 +102,10 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
             <h2>Feed</h2>
             <div class="header-btns">
                 <button class="small-btn" style="background:#f39c12;" onclick="switchPanel('search-panel')">🔍</button>
-                <button class="small-btn" style="background:#9b59b6;" onclick="openChatList()">💬</button>
                 <button class="small-btn" style="background:#1877f2;" onclick="openProfile()">Profile</button>
                 <button class="small-btn" style="background:#e74c3c;" onclick="handleLogout()">Logout</button>
             </div>
         </div>
-
-        <!-- Active Counter -->
-        <div class="active-counter" id="active-counter">
-            🟢 Loading active users...
-        </div>
-
         <div id="feed-user-info" style="text-align:center; padding:10px; background:#e7f3ff; border-radius:6px; margin-bottom:15px; color:#1877f2; font-weight:bold;"></div>
         
         <div class="input-group"><textarea id="post-content" placeholder="What's on your mind?" style="min-height:70px;"></textarea></div>
@@ -172,17 +135,14 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
         <div id="search-results"></div>
     </div>
 
-    <!-- Visit Profile -->
+    <!-- User Profile Visit -->
     <div id="visit-panel" class="card">
         <div class="feed-header">
             <h2>Profile</h2>
             <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
         </div>
         <div class="center">
-            <div class="pic-wrapper">
-                <img id="visit-pic" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
-                <span class="status-dot offline" id="visit-status"></span>
-            </div>
+            <img id="visit-pic" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
             <h3 id="visit-name" style="margin-top:10px;"></h3>
             <p id="visit-bio" style="color:#606770; margin-top:5px;"></p>
             <div class="stat-row">
@@ -191,7 +151,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
                 <span><b id="visit-following">0</b> Following</span>
             </div>
             <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
-            <button class="btn" style="background:#9b59b6; margin-top:8px;" onclick="startChatWith('')">💬 Message</button>
         </div>
         <div class="divider"></div>
         <h3 style="margin-bottom:12px;">Posts</h3>
@@ -206,10 +165,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
         </div>
 
         <div class="center">
-            <div class="pic-wrapper">
-                <img id="profile-pic-display" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
-                <span class="status-dot online"></span>
-            </div>
+            <img id="profile-pic-display" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
             <h3 id="profile-name" style="margin-top:10px;"></h3>
             <p id="profile-bio" style="color:#606770; margin-top:5px;"></p>
         </div>
@@ -231,34 +187,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
         <div class="input-group"><input type="password" id="new-pass" placeholder="New Password"></div>
         <button class="btn btn-red" onclick="changePassword()">Change Password</button>
     </div>
-
-    <!-- Chat List -->
-    <div id="chat-list-panel" class="card">
-        <div class="feed-header">
-            <h2>💬 Messages</h2>
-            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
-        </div>
-        <div class="input-group">
-            <input type="text" id="chat-user-search" placeholder="Username diye search korun" oninput="searchForChat()">
-        </div>
-        <div id="chat-search-results"></div>
-        <div class="divider"></div>
-        <h3 style="margin-bottom:12px;">Your Chats</h3>
-        <div id="chat-rooms-list"><p style="text-align:center; color:#606770;">Loading...</p></div>
-    </div>
-
-    <!-- Chat Window -->
-    <div id="chat-window-panel" class="card">
-        <div class="feed-header">
-            <h2 id="chat-with-name">Chat</h2>
-            <button class="small-btn" style="background:#1877f2;" onclick="openChatList()">Back</button>
-        </div>
-        <div id="chat-messages"></div>
-        <div class="chat-input-row">
-            <input type="text" id="chat-input" placeholder="Message likhun..." onkeypress="if(event.key==='Enter') sendMessage()">
-            <button class="chat-send-btn" onclick="sendMessage()">Send</button>
-        </div>
-    </div>
 </div>
 
 <script>
@@ -267,15 +195,6 @@ let currentUser = null;
 let otpTimer = null, otpExpireTime = null;
 let selectedMedia = null, selectedMediaType = null;
 let visitUser = null;
-let currentRoomId = null, currentChatWith = null;
-let chatRefreshTimer = null, activeRefreshTimer = null, heartbeatTimer = null;
-
-// ============ HEADERS HELPER ============
-function authHeaders() {
-    const h = { 'Content-Type': 'application/json' };
-    if (currentUser) h['x-username'] = currentUser.username;
-    return h;
-}
 
 // ============ PANEL SWITCH ============
 function switchPanel(id) {
@@ -383,61 +302,29 @@ async function handleLogin() {
             document.getElementById('feed-user-info').textContent = "👋 Welcome, " + data.username + "!";
             switchPanel('feed-panel');
             loadPosts();
-            startHeartbeat();
-            loadActiveCount();
         } else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
 function handleLogout() {
-    if (currentUser) {
-        fetch(BACKEND_URL + '/api/logout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ username: currentUser.username })
-        }).catch(() => {});
-    }
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
-    if (activeRefreshTimer) clearInterval(activeRefreshTimer);
     currentUser = null;
     document.getElementById('login-email').value = '';
     document.getElementById('login-password').value = '';
     switchPanel('login-panel');
 }
 
-// ============ HEARTBEAT (Active) ============
-function startHeartbeat() {
-    if (heartbeatTimer) clearInterval(heartbeatTimer);
-    heartbeatTimer = setInterval(() => {
-        if (currentUser) {
-            fetch(BACKEND_URL + '/api/heartbeat', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser.username })
-            }).catch(() => {});
-        }
-    }, 30000); // 30 second
-}
-
-async function loadActiveCount() {
-    try {
-        const res = await fetch(BACKEND_URL + '/api/active-users');
-        const data = await res.json();
-        document.getElementById('active-counter').textContent = "🟢 " + data.count + " users active now";
-    } catch (e) { console.log(e); }
-}
-
 // ============ POST ============
 function handleMedia(input, type) {
     const file = input.files[0];
     if (!file) return;
+
     if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
 
     const reader = new FileReader();
     reader.onload = (e) => {
         selectedMedia = e.target.result;
         selectedMediaType = type;
+
         const preview = document.getElementById('media-preview');
         if (type === 'image') {
             preview.innerHTML = `<img src="${selectedMedia}" style="max-width:100%; border-radius:6px;">`;
@@ -450,13 +337,14 @@ function handleMedia(input, type) {
 
 async function createPost() {
     const content = document.getElementById('post-content').value.trim();
+
     if (!content && !selectedMedia) { alert("Kichu likhun ba media din"); return; }
     if (!currentUser) { alert("Login korun"); return; }
 
     try {
         const res = await fetch(BACKEND_URL + '/api/posts', {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 username: currentUser.username,
                 content: content,
@@ -476,6 +364,7 @@ async function createPost() {
     } catch (e) { alert("❌ " + e.message); }
 }
 
+// ============ LOAD POSTS (Algorithm) ============
 async function loadPosts() {
     const list = document.getElementById('posts-list');
     list.innerHTML = '<p style="text-align:center;">Loading...</p>';
@@ -491,6 +380,7 @@ async function loadPosts() {
 
         list.innerHTML = posts.map(p => renderPost(p)).join('');
 
+        // View count barান
         posts.forEach(p => {
             fetch(BACKEND_URL + '/api/posts/view', {
                 method: 'POST',
@@ -544,7 +434,7 @@ async function likePost(postId) {
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/like', {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ postId, username: currentUser.username })
         });
         const data = await res.json();
@@ -560,7 +450,7 @@ async function commentPost(postId) {
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/comment', {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ postId, username: currentUser.username, text })
         });
         const data = await res.json();
@@ -572,7 +462,7 @@ async function sharePost(postId) {
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/share', {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ postId })
         });
         const data = await res.json();
@@ -590,12 +480,11 @@ async function doSearch() {
     searchTimer = setTimeout(async () => {
         const q = document.getElementById('search-input').value.trim();
         const results = document.getElementById('search-results');
+        
         if (!q) { results.innerHTML = ''; return; }
 
         try {
-            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
-                headers: authHeaders()
-            });
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q));
             const data = await res.json();
 
             if (!data.users || data.users.length === 0) {
@@ -605,10 +494,7 @@ async function doSearch() {
 
             results.innerHTML = data.users.map(u => `
                 <div class="search-result" onclick="visitProfile('${escapeHtml(u.username)}')">
-                    <div class="search-pic-wrapper">
-                        <img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}">
-                        <span class="search-status ${u.isActive ? 'online' : 'offline'}"></span>
-                    </div>
+                    <img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}">
                     <div>
                         <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
                         <div style="font-size:12px; color:#606770;">${escapeHtml(u.fullName || '')}</div>
@@ -626,9 +512,7 @@ async function visitProfile(username) {
     if (!username) return;
     
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), {
-            headers: authHeaders()
-        });
+        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username));
         const data = await res.json();
 
         if (data.success) {
@@ -638,25 +522,16 @@ async function visitProfile(username) {
             document.getElementById('visit-name').textContent = u.fullName || u.username;
             document.getElementById('visit-bio').textContent = u.bio || "No bio yet";
             document.getElementById('visit-pic').src = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
-
-            // Active status
-            const statusDot = document.getElementById('visit-status');
-            if (u.isActive) {
-                statusDot.classList.remove('offline');
-                statusDot.classList.add('online');
-            } else {
-                statusDot.classList.remove('online');
-                statusDot.classList.add('offline');
-            }
-
             document.getElementById('visit-followers').textContent = (u.followers || []).length;
             document.getElementById('visit-following').textContent = (u.following || []).length;
 
+            // Follow button state
             const isFollowing = (u.followers || []).includes(currentUser.username);
             const btn = document.getElementById('follow-btn');
             btn.textContent = isFollowing ? "Unfollow" : "Follow";
             btn.style.background = isFollowing ? "#e74c3c" : "#42b72a";
 
+            // Posts load
             const pRes = await fetch(BACKEND_URL + '/api/posts/user/' + encodeURIComponent(username));
             const posts = await pRes.json();
             document.getElementById('visit-posts').textContent = posts.length;
@@ -667,10 +542,6 @@ async function visitProfile(username) {
             } else {
                 list.innerHTML = posts.map(p => renderPost(p)).join('');
             }
-
-            // Message button e username set korun
-            const msgBtn = document.querySelector('#visit-panel .btn[onclick^="startChatWith"]');
-            if (msgBtn) msgBtn.setAttribute('onclick', `startChatWith('${escapeHtml(username)}')`);
 
             switchPanel('visit-panel');
         }
@@ -686,7 +557,7 @@ async function toggleFollow() {
     try {
         const res = await fetch(BACKEND_URL + endpoint, {
             method: 'POST',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 follower: currentUser.username,
                 following: visitUser.username
@@ -694,7 +565,7 @@ async function toggleFollow() {
         });
         const data = await res.json();
         if (data.success) {
-            visitProfile(visitUser.username);
+            visitProfile(visitUser.username); // Reload
         }
     } catch (e) { alert("❌ " + e.message); }
 }
@@ -704,9 +575,7 @@ async function openProfile() {
     if (!currentUser) return;
 
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/' + currentUser.email, {
-            headers: authHeaders()
-        });
+        const res = await fetch(BACKEND_URL + '/api/user/' + currentUser.email);
         const data = await res.json();
 
         if (data.success) {
@@ -744,7 +613,7 @@ async function updateProfile() {
     try {
         const res = await fetch(BACKEND_URL + '/api/user/profile', {
             method: 'PUT',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 email: currentUser.email,
                 profilePic,
@@ -772,7 +641,7 @@ async function changePassword() {
     try {
         const res = await fetch(BACKEND_URL + '/api/user/change-password', {
             method: 'PUT',
-            headers: authHeaders(),
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({
                 email: currentUser.email,
                 oldPassword,
@@ -789,176 +658,12 @@ async function changePassword() {
     } catch (e) { alert("❌ " + e.message); }
 }
 
-// ============ CHAT ============
-async function openChatList() {
-    if (!currentUser) { alert("Login korun"); return; }
-
-    const roomsList = document.getElementById('chat-rooms-list');
-    roomsList.innerHTML = '<p style="text-align:center;">Loading...</p>';
-
-    try {
-        const res = await fetch(BACKEND_URL + '/api/chat/rooms/' + currentUser.username, {
-            headers: authHeaders()
-        });
-        const data = await res.json();
-
-        if (!data.rooms || data.rooms.length === 0) {
-            roomsList.innerHTML = '<p style="text-align:center; color:#606770;">No chats yet. Search korun!</p>';
-        } else {
-            roomsList.innerHTML = data.rooms.map(r => {
-                const other = r.members.find(m => m !== currentUser.username);
-                return `
-                    <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
-                        <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(other)}</div>
-                            <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
-                        </div>
-                        <div class="chat-time">${r.lastTime ? new Date(r.lastTime).toLocaleDateString() : ''}</div>
-                    </div>
-                `;
-            }).join('');
-        }
-
-        switchPanel('chat-list-panel');
-    } catch (e) { alert("❌ " + e.message); }
-}
-
-let chatSearchTimer = null;
-async function searchForChat() {
-    if (chatSearchTimer) clearTimeout(chatSearchTimer);
-    chatSearchTimer = setTimeout(async () => {
-        const q = document.getElementById('chat-user-search').value.trim();
-        const results = document.getElementById('chat-search-results');
-        if (!q) { results.innerHTML = ''; return; }
-
-        try {
-            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
-                headers: authHeaders()
-            });
-            const data = await res.json();
-
-            if (!data.users || data.users.length === 0) {
-                results.innerHTML = '<p style="text-align:center; color:#606770;">No user found</p>';
-                return;
-            }
-
-            results.innerHTML = data.users.filter(u => u.username !== currentUser.username).map(u => `
-                <div class="search-result" onclick="startChatWith('${escapeHtml(u.username)}')">
-                    <div class="search-pic-wrapper">
-                        <img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}">
-                        <span class="search-status ${u.isActive ? 'online' : 'offline'}"></span>
-                    </div>
-                    <div>
-                        <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
-                        <div style="font-size:12px; color:#606770;">${escapeHtml(u.fullName || '')}</div>
-                    </div>
-                </div>
-            `).join('');
-        } catch (e) {
-            results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>';
-        }
-    }, 300);
-}
-
-async function startChatWith(username) {
-    if (!currentUser) { alert("Login korun"); return; }
-    if (!username) { alert("Username din"); return; }
-    if (username === currentUser.username) { alert("Nijer sathe chat korte parben na"); return; }
-
-    try {
-        const res = await fetch(BACKEND_URL + '/api/chat/room', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({
-                user1: currentUser.username,
-                user2: username
-            })
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            openChat(username, data.room._id);
-        } else {
-            alert("❌ " + data.message);
-        }
-    } catch (e) { alert("❌ " + e.message); }
-}
-
-async function openChat(username, roomId) {
-    currentRoomId = roomId;
-    currentChatWith = username;
-    document.getElementById('chat-with-name').textContent = "💬 " + username;
-
-    switchPanel('chat-window-panel');
-    await loadMessages();
-
-    // Auto refresh
-    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
-    chatRefreshTimer = setInterval(loadMessages, 3000);
-}
-
-async function loadMessages() {
-    if (!currentRoomId) return;
-    try {
-        const res = await fetch(BACKEND_URL + '/api/chat/messages/' + currentRoomId, {
-            headers: authHeaders()
-        });
-        const data = await res.json();
-
-        if (data.success) {
-            const box = document.getElementById('chat-messages');
-            const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
-
-            box.innerHTML = data.messages.map(m => `
-                <div class="chat-msg ${m.sender === currentUser.username ? 'me' : 'other'}">
-                    ${escapeHtml(m.text)}
-                    <div class="chat-msg-time">${new Date(m.createdAt).toLocaleTimeString()}</div>
-                </div>
-            `).join('');
-
-            if (wasAtBottom) box.scrollTop = box.scrollHeight;
-        }
-    } catch (e) { console.log(e); }
-}
-
-async function sendMessage() {
-    const input = document.getElementById('chat-input');
-    const text = input.value.trim();
-    if (!text || !currentRoomId) return;
-
-    input.value = '';
-
-    try {
-        const res = await fetch(BACKEND_URL + '/api/chat/message', {
-            method: 'POST',
-            headers: authHeaders(),
-            body: JSON.stringify({
-                roomId: currentRoomId,
-                sender: currentUser.username,
-                text
-            })
-        });
-        const data = await res.json();
-        if (data.success) {
-            await loadMessages();
-        }
-    } catch (e) { alert("❌ " + e.message); }
-}
-
 // ============ HELPERS ============
 function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
 }
-
-// ============ AUTO REFRESH ACTIVE COUNT ============
-setInterval(() => {
-    if (currentUser) {
-        loadActiveCount();
-    }
-}, 60000); // protti 1 minute
 </script>
 </body>
 </html>
