@@ -524,7 +524,6 @@ async function submit2FALogin(){
     } catch(e){alert("❌ "+e.message);}
 }
 
-// ============ 2FA ============
 async function start2FASetup(){
     if(!currentUser) return;
     try{
@@ -581,7 +580,6 @@ async function disable2FA(){
     } catch(e){alert("❌ "+e.message);}
 }
 
-// ============ FORGOT PASSWORD ============
 async function checkForgotEmail(){
     const email=document.getElementById("reset-email").value.trim();
     if(!email){alert("Email din");return;}
@@ -832,33 +830,22 @@ async function commentPost(postId){if(!currentUser){alert("Login korun");return;
 
 async function sharePost(postId){
     const postUrl=window.location.origin+"/post/"+postId;
-    const shareText="Check out this post on Searchbook! 🌙 "+postUrl;
+    const shareText="Check out this post on Searchbook! 🌙";
     const choice=prompt(
         "🔗 Share korun:\n\n"+
         "1. 💬 WhatsApp\n"+
-        "2. 📘 Facebook Feed\n"+
-        "3. 💌 Facebook Messenger\n"+
-        "4. 📸 Instagram Story\n"+
-        "5. ✉️ Instagram Message\n"+
-        "6. 📋 Copy Link\n\n"+
-        "Number din (1-6):"
+        "2. 📘 Facebook\n"+
+        "3. 📋 Copy Link\n\n"+
+        "Number din (1-3):"
     );
     let url=null;
     if(choice==="1"){
-        url="https://wa.me/?text="+encodeURIComponent(shareText);
+        url="https://wa.me/?text="+encodeURIComponent(shareText+" "+postUrl);
     } else if(choice==="2"){
+        await navigator.clipboard.writeText(postUrl);
+        alert("📋 Link copied! Facebook e paste korte parben।");
         url="https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(postUrl);
     } else if(choice==="3"){
-        url="https://www.facebook.com/dialog/send?link="+encodeURIComponent(postUrl)+"&app_id=123456789&redirect_uri="+encodeURIComponent(postUrl);
-    } else if(choice==="4"){
-        await navigator.clipboard.writeText(shareText);
-        alert("📋 Post link copied!\n\nInstagram open hobe — Story te paste korun।");
-        url="https://www.instagram.com/";
-    } else if(choice==="5"){
-        await navigator.clipboard.writeText(shareText);
-        alert("📋 Post link copied!\n\nInstagram open hobe — Message e paste korun।");
-        url="https://www.instagram.com/direct/inbox/";
-    } else if(choice==="6"){
         await navigator.clipboard.writeText(postUrl);
         alert("📋 Post link copied!");
         url=null;
@@ -866,7 +853,7 @@ async function sharePost(postId){
     if(url){
         window.open(url,"_blank");
     }
-    if(choice&&choice>="1"&&choice<="5"){
+    if(choice==="1"||choice==="2"){
         try{
             await fetch(BACKEND_URL+"/api/posts/share",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId})});
             loadPosts();
