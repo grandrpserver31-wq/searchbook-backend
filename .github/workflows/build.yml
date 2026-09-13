@@ -30,7 +30,7 @@ jobs:
       - name: Install Capacitor
         run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Create www folder and copy files
+      - name: Create www folder
         run: |
           mkdir -p www
           cp index.html www/
@@ -53,13 +53,30 @@ jobs:
       - name: Sync Capacitor
         run: npx cap sync
 
+      - name: Fix Kotlin version conflict
+        run: |
+          cd android
+          cat >> build.gradle << 'EOF'
+
+          allprojects {
+              configurations.all {
+                  resolutionStrategy {
+                      force 'org.jetbrains.kotlin:kotlin-stdlib:1.9.10'
+                      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk8:1.9.10'
+                      force 'org.jetbrains.kotlin:kotlin-stdlib-jdk7:1.9.10'
+                  }
+              }
+          }
+          EOF
+
       - name: Build APK
         run: |
           cd android
           chmod +x gradlew
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug --stacktrace
 
       - name: Upload APK
+        if: success()
         uses: actions/upload-artifact@v4
         with:
           name: Searchbook-APK
