@@ -9,7 +9,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
 body { background: var(--bg); color: var(--text); min-height: 100vh; transition: 0.3s; }
 
-/* DARK MODE */
 body.dark { --bg: #18191a; --white: #242526; --text: #e4e6eb; --muted: #b0b3b8; --border: #3a3b3c; }
 body.dark .card { background: #242526; }
 body.dark input, body.dark textarea { background: #3a3b3c; color: #e4e6eb; border-color: #3a3b3c; }
@@ -20,7 +19,11 @@ body.dark .chat-msg.other { background: #4e4f50; color: #e4e6eb; }
 
 .container { max-width: 500px; margin: 0 auto; padding: 20px; }
 .logo { font-size: 40px; font-weight: 800; color: var(--blue); text-align: center; margin-bottom: 20px; }
-.card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: 0.3s; }
+
+/* ✅ GURUTTOPURNO: Panel hide/show */
+.card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: 0.3s; display: none; }
+.card.active { display: block; }
+
 .input-group { margin-bottom: 15px; }
 .input-group input, .input-group textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit; background: var(--white); color: var(--text); }
 .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); }
@@ -32,8 +35,6 @@ body.dark .chat-msg.other { background: #4e4f50; color: #e4e6eb; }
 .btn-red:hover { background: #c0392b; }
 .link { color: var(--blue); font-size: 14px; text-align: center; display: block; margin-top: 12px; cursor: pointer; }
 .divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
-.panel { display: none; }
-.active { display: block; }
 h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text); }
 .timer { text-align: center; color: #e74c3c; font-weight: bold; padding: 10px; background: #fdecea; border-radius: 6px; margin-bottom: 12px; }
 .otp-display { text-align: center; font-size: 28px; color: var(--blue); font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed var(--blue); margin-bottom: 12px; }
@@ -71,29 +72,24 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 .stat-row b { color: var(--text); }
 .active-counter { background: #eafaf1; color: #27ae60; padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 12px; border: 1px solid #c3e6cb; }
 
-/* STORIES */
 .stories-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
 .story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
 .story-ring { width: 65px; height: 65px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366); }
-.story-ring.seen { background: #b0b3b8; }
 .story-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
 .story-name { font-size: 11px; color: var(--text); margin-top: 4px; max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .add-story-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 3px solid var(--white); }
 
-/* STORY VIEWER */
 #story-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; }
 #story-viewer.active { display: flex; }
 .story-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; color: white; }
 .story-viewer-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .story-viewer-media { max-width: 100%; max-height: 80vh; border-radius: 12px; }
 
-/* REACTIONS */
 .reactions-bar { display: flex; gap: 4px; margin-top: 8px; padding: 6px; background: rgba(24,119,242,0.08); border-radius: 20px; }
 .reaction-btn { flex: 1; background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; transition: 0.2s; }
 .reaction-btn:hover { background: rgba(24,119,242,0.15); transform: scale(1.2); }
 .reaction-btn.active { background: rgba(24,119,242,0.25); }
 
-/* POLL */
 .poll-box { margin-top: 12px; padding: 15px; background: rgba(24,119,242,0.05); border-radius: 8px; border: 1px solid var(--border); }
 .poll-question { font-weight: bold; margin-bottom: 12px; color: var(--text); }
 .poll-option { padding: 12px; border: 2px solid var(--border); border-radius: 6px; margin-bottom: 8px; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
@@ -102,13 +98,10 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 .poll-option-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(24,119,242,0.15); z-index: 0; transition: 0.3s; }
 .poll-option-text { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 14px; }
 .poll-total { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
-
-/* POLL CREATE */
 .poll-creator { margin-top: 8px; padding: 12px; background: rgba(24,119,242,0.05); border-radius: 6px; display: none; }
 .poll-creator input { margin-bottom: 6px; padding: 10px; font-size: 14px; }
 .poll-creator-btn { padding: 8px; font-size: 13px; margin-top: 4px; }
 
-/* CHAT */
 .chat-room-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
 .chat-room-item:hover { background: rgba(24,119,242,0.05); }
 .chat-avatar { width: 45px; height: 45px; border-radius: 50%; background: #1877f2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
@@ -125,7 +118,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 .chat-input-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; font-size: 15px; }
 .chat-send-btn { background: #1877f2; color: white; border: none; padding: 0 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
 
-/* DARK MODE TOGGLE */
 .theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--blue); color: white; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999; display: none; }
 .theme-toggle.show { display: block; }
 </style>
@@ -137,7 +129,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 <div class="container">
     <h1 class="logo">Searchbook</h1>
 
-    <!-- Login -->
+    <!-- Login (default active) -->
     <div id="login-panel" class="card active">
         <div class="input-group"><input type="email" id="login-email" placeholder="Email"></div>
         <div class="input-group"><input type="password" id="login-password" placeholder="Password"></div>
@@ -161,7 +153,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
     <!-- OTP -->
     <div id="otp-panel" class="card">
         <h2>Enter OTP</h2>
-        <p style="text-align:center; color:#606770; font-size:13px; margin-bottom:10px;">OTP valid for 1 minute only</p>
+        <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:10px;">OTP valid for 1 minute only</p>
         <div id="otp-display" class="otp-display">------</div>
         <div id="timer" class="timer">⏱️ 60 seconds left</div>
         <div class="input-group"><input type="text" id="reg-otp" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:5px;"></div>
@@ -176,7 +168,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
     </div>
 
-    <!-- Feed -->
+    <!-- Feed (login er por shudhu ei ta dekhаbe) -->
     <div id="feed-panel" class="card">
         <div class="feed-header">
             <h2>Feed</h2>
@@ -191,7 +183,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 
         <div class="active-counter" id="active-counter">🟢 Loading...</div>
 
-        <!-- Stories Bar -->
         <div class="stories-bar" id="stories-bar">
             <div class="story-item" onclick="document.getElementById('story-input').click()">
                 <div class="add-story-btn">+</div>
@@ -212,7 +203,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
         <div id="media-preview" style="margin-top:10px;"></div>
 
-        <!-- Poll Creator -->
         <div class="poll-creator" id="poll-creator">
             <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px;">
             <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;">
@@ -274,7 +264,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <div id="visit-posts-list"></div>
     </div>
 
-    <!-- Profile -->
+    <!-- Profile (Self) -->
     <div id="profile-panel" class="card">
         <div class="feed-header">
             <h2>My Profile</h2>
@@ -337,7 +327,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
     </div>
 </div>
 
-<!-- Story Viewer -->
 <div id="story-viewer" onclick="closeStory()">
     <div class="story-viewer-header">
         <span id="story-viewer-name" style="font-weight:bold;"></span>
@@ -365,9 +354,11 @@ function authHeaders() {
     return h;
 }
 
+/* ✅ GURUTTOPURNO: Panel switch — ekta panel dekhаbe, baki hide */
 function switchPanel(id) {
     document.querySelectorAll('.card').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
     window.scrollTo(0, 0);
 }
 
@@ -388,8 +379,7 @@ async function toggleTheme() {
     applyTheme(newTheme);
     if (currentUser) {
         fetch(BACKEND_URL + '/api/user/theme', {
-            method: 'PUT',
-            headers: authHeaders(),
+            method: 'PUT', headers: authHeaders(),
             body: JSON.stringify({ email: currentUser.email, theme: newTheme })
         }).catch(() => {});
     }
@@ -476,7 +466,10 @@ async function handleLogin() {
             document.getElementById('feed-user-info').textContent = "👋 Welcome, " + data.username + "!";
             document.getElementById('theme-toggle').classList.add('show');
             applyTheme(data.theme || 'light');
+
+            /* ✅ Login er por shudhu Feed panel dekhаbe */
             switchPanel('feed-panel');
+
             loadPosts();
             loadStories();
             startHeartbeat();
@@ -527,14 +520,12 @@ function uploadStory(input) {
     const file = input.files[0];
     if (!file) return;
     if (file.size > 8 * 1024 * 1024) { alert("Max 8MB"); return; }
-
     const isVideo = file.type.startsWith('video');
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const res = await fetch(BACKEND_URL + '/api/stories', {
-                method: 'POST',
-                headers: authHeaders(),
+                method: 'POST', headers: authHeaders(),
                 body: JSON.stringify({
                     username: currentUser.username,
                     media: e.target.result,
@@ -557,17 +548,13 @@ async function loadStories() {
         const res = await fetch(BACKEND_URL + '/api/stories');
         const data = await res.json();
         const bar = document.getElementById('stories-bar');
-
-        // Age er sob story item (nijer add chara) remove
         bar.innerHTML = `
             <div class="story-item" onclick="document.getElementById('story-input').click()">
                 <div class="add-story-btn">+</div>
                 <div class="story-name">Your Story</div>
             </div>
         `;
-
         if (!data.stories) return;
-
         Object.keys(data.stories).forEach(username => {
             const userStories = data.stories[username];
             const first = userStories[0];
@@ -590,11 +577,8 @@ function viewStory(username, stories) {
     const container = document.getElementById('story-viewer-media-container');
     let html = '';
     stories.forEach(s => {
-        if (s.mediaType === 'video') {
-            html += `<video src="${s.media}" controls autoplay class="story-viewer-media"></video>`;
-        } else {
-            html += `<img src="${s.media}" class="story-viewer-media">`;
-        }
+        if (s.mediaType === 'video') html += `<video src="${s.media}" controls autoplay class="story-viewer-media"></video>`;
+        else html += `<img src="${s.media}" class="story-viewer-media">`;
     });
     container.innerHTML = html;
     document.getElementById('story-viewer').classList.add('active');
@@ -699,22 +683,19 @@ function renderPost(p) {
         else mediaHtml = `<img src="${p.media}" class="post-media">`;
     }
 
-    // Reactions
     const reactions = p.reactions || {};
     const userReaction = currentUser ? Object.keys(reactions).find(k => reactions[k]?.includes(currentUser.username)) : null;
     const totalReactions = Object.values(reactions).reduce((s, arr) => s + (arr?.length || 0), 0);
-
     const reactionEmojis = { love: '❤️', haha: '😂', sad: '😢', angry: '😡', wow: '😮' };
 
     let reactionsHtml = `
         <div class="reactions-bar">
             ${Object.keys(reactionEmojis).map(k => `
-                <button class="reaction-btn ${userReaction === k ? 'active' : ''}" onclick="reactPost('${p._id}', '${k}')" title="${k}">${reactionEmojis[k]}</button>
+                <button class="reaction-btn ${userReaction === k ? 'active' : ''}" onclick="reactPost('${p._id}', '${k}')">${reactionEmojis[k]}</button>
             `).join('')}
         </div>
     `;
 
-    // Poll
     let pollHtml = '';
     if (p.poll) {
         const totalVotes = p.poll.options.reduce((s, o) => s + o.votes.length, 0);
@@ -839,19 +820,14 @@ async function toggleBookmark(postId) {
             body: JSON.stringify({ email: currentUser.email, postId })
         });
         const data = await res.json();
-        if (data.success) {
-            bookmarks = data.bookmarks || [];
-            loadPosts();
-        }
+        if (data.success) { bookmarks = data.bookmarks || []; loadPosts(); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
 async function loadBookmarks() {
     if (!currentUser) return;
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, {
-            headers: authHeaders()
-        });
+        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() });
         const data = await res.json();
         if (data.success) bookmarks = data.posts.map(p => p._id);
     } catch (e) { console.log(e); }
@@ -862,15 +838,10 @@ async function openBookmarks() {
     const list = document.getElementById('bookmarks-list');
     list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, {
-            headers: authHeaders()
-        });
+        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() });
         const data = await res.json();
-        if (!data.posts || data.posts.length === 0) {
-            list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>';
-        } else {
-            list.innerHTML = data.posts.map(p => renderPost(p)).join('');
-        }
+        if (!data.posts || data.posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>';
+        else list.innerHTML = data.posts.map(p => renderPost(p)).join('');
         switchPanel('bookmarks-panel');
     } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; }
 }
@@ -884,14 +855,9 @@ async function doSearch() {
         const results = document.getElementById('search-results');
         if (!q) { results.innerHTML = ''; return; }
         try {
-            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
-                headers: authHeaders()
-            });
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), { headers: authHeaders() });
             const data = await res.json();
-            if (!data.users || data.users.length === 0) {
-                results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>';
-                return;
-            }
+            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
             results.innerHTML = data.users.map(u => `
                 <div class="search-result" onclick="visitProfile('${escapeHtml(u.username)}')">
                     <div class="search-pic-wrapper">
@@ -912,9 +878,7 @@ async function doSearch() {
 async function visitProfile(username) {
     if (!username) return;
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), {
-            headers: authHeaders()
-        });
+        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), { headers: authHeaders() });
         const data = await res.json();
         if (data.success) {
             const u = data.user;
@@ -1004,11 +968,8 @@ async function updateProfile() {
             body: JSON.stringify({ email: currentUser.email, profilePic, fullName, bio })
         });
         const data = await res.json();
-        if (data.success) {
-            alert("✅ Profile updated!");
-            delete picEl.dataset.newPic;
-            openProfile();
-        } else { alert("❌ " + data.message); }
+        if (data.success) { alert("✅ Profile updated!"); delete picEl.dataset.newPic; openProfile(); }
+        else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1023,11 +984,8 @@ async function changePassword() {
             body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword })
         });
         const data = await res.json();
-        if (data.success) {
-            alert("✅ Password changed!");
-            document.getElementById('old-pass').value = '';
-            document.getElementById('new-pass').value = '';
-        } else { alert("❌ " + data.message); }
+        if (data.success) { alert("✅ Password changed!"); document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = ''; }
+        else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1039,22 +997,19 @@ async function openChatList() {
     try {
         const res = await fetch(BACKEND_URL + '/api/chat/rooms/' + currentUser.username, { headers: authHeaders() });
         const data = await res.json();
-        if (!data.rooms || data.rooms.length === 0) {
-            roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet. Search korun!</p>';
-        } else {
-            roomsList.innerHTML = data.rooms.map(r => {
-                const other = r.members.find(m => m !== currentUser.username);
-                return `
-                    <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
-                        <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
-                        <div class="chat-info">
-                            <div class="chat-name">${escapeHtml(other)}</div>
-                            <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
-                        </div>
+        if (!data.rooms || data.rooms.length === 0) roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet. Search korun!</p>';
+        else roomsList.innerHTML = data.rooms.map(r => {
+            const other = r.members.find(m => m !== currentUser.username);
+            return `
+                <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
+                    <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
+                    <div class="chat-info">
+                        <div class="chat-name">${escapeHtml(other)}</div>
+                        <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
                     </div>
-                `;
-            }).join('');
-        }
+                </div>
+            `;
+        }).join('');
         switchPanel('chat-list-panel');
     } catch (e) { alert("❌ " + e.message); }
 }
@@ -1069,10 +1024,7 @@ async function searchForChat() {
         try {
             const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), { headers: authHeaders() });
             const data = await res.json();
-            if (!data.users || data.users.length === 0) {
-                results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>';
-                return;
-            }
+            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
             results.innerHTML = data.users.filter(u => u.username !== currentUser.username).map(u => `
                 <div class="search-result" onclick="startChatWith('${escapeHtml(u.username)}')">
                     <div class="search-pic-wrapper">
