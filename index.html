@@ -179,8 +179,28 @@ h2{text-align:center;margin-bottom:20px;font-size:22px;color:var(--text);font-we
 
         <div id="forgot-panel" class="card">
             <h2>Find Account</h2>
+            <p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:15px;">Email din — 2FA ache kina check korbo</p>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Email"></div>
-            <button class="btn" onclick="alert('Coming soon!')">Search</button>
+            <button class="btn" onclick="checkForgotEmail()">Search</button>
+            <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
+        </div>
+
+        <div id="forgot-2fa-panel" class="card">
+            <h2>🔐 2FA Verify</h2>
+            <p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:15px;">Google Authenticator theke code din</p>
+            <div class="input-group"><input type="text" id="forgot-2fa-code" placeholder="000000" maxlength="6" style="text-align:center;font-size:24px;letter-spacing:8px;font-weight:700;"></div>
+            <button class="btn" onclick="verifyForgot2FA()">Verify 2FA</button>
+            <span class="link" onclick="switchPanel('forgot-panel')">← Back</span>
+        </div>
+
+        <div id="forgot-reset-panel" class="card">
+            <h2>Reset Password</h2>
+            <p style="text-align:center;color:var(--muted);font-size:13px;margin-bottom:15px;">Email OTP + notun password din</p>
+            <div id="forgot-otp-display" class="otp-display">------</div>
+            <div id="forgot-timer" class="timer">⏱️ 60 seconds left</div>
+            <div class="input-group"><input type="text" id="forgot-otp-input" placeholder="Enter OTP" maxlength="6" style="text-align:center;font-size:20px;letter-spacing:6px;"></div>
+            <div class="input-group"><input type="password" id="forgot-new-pass" placeholder="New Password (min 6 char)"></div>
+            <button class="btn btn-green" onclick="resetPassword()">Reset Password</button>
             <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
         </div>
     </div>
@@ -375,14 +395,10 @@ let currentRoomId=null,currentChatWith=null;
 let chatRefreshTimer=null,heartbeatTimer=null;
 let bookmarks=[];
 let currentTheme="light";
-let pendingLoginEmail=null;
-let pendingLoginPassword=null;
+let pendingLoginEmail=null,pendingLoginPassword=null;
+let forgotEmail=null,forgotOtpTimer=null,forgotOtpExpireTime=null;
 
-function authHeaders(){
-    const h={"Content-Type":"application/json"};
-    if(currentUser) h["x-username"]=currentUser.username;
-    return h;
-}
+function authHeaders(){const h={"Content-Type":"application/json"};if(currentUser) h["x-username"]=currentUser.username;return h;}
 
 function switchPanel(id){
     document.querySelectorAll("#auth-app .card").forEach(function(p){p.classList.remove("active");});
@@ -439,11 +455,7 @@ function startTimer(){
     otpTimer=setInterval(function(){
         const rem=Math.max(0,Math.floor((otpExpireTime-Date.now())/1000));
         document.getElementById("timer").textContent="⏱️ "+rem+" seconds left";
-        if(rem<=0){
-            clearInterval(otpTimer);
-            document.getElementById("timer").textContent="❌ OTP expired!";
-            document.getElementById("otp-display").textContent="------";
-        }
+        if(rem<=0){clearInterval(otpTimer);document.getElementById("timer").textContent="❌ OTP expired!";document.getElementById("otp-display").textContent="------";}
     },1000);
 }
 
@@ -461,11 +473,8 @@ async function verifyAndSignup(){
         if(!vData.success){alert("❌ "+vData.message);return;}
         const sRes=await fetch(BACKEND_URL+"/api/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username,email:email,password:password,fullName:fullName})});
         const sData=await sRes.json();
-        if(sData.success){
-            alert("✅ Account created!");
-            if(otpTimer) clearInterval(otpTimer);
-            switchPanel("login-panel");
-        } else alert("❌ "+sData.message);
+        if(sData.success){alert("✅ Account created!");if(otpTimer) clearInterval(otpTimer);switchPanel("login-panel");}
+        else alert("❌ "+sData.message);
     } catch(e){alert("❌ "+e.message);}
 }
 
@@ -536,17 +545,12 @@ async function verify2FASetup(){
     try{
         const res=await fetch(BACKEND_URL+"/api/2fa/verify",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,code:code})});
         const data=await res.json();
-        if(data.success){
-            alert("✅ 2FA enabled!");
-            document.getElementById("twofa-setup-panel").style.display="none";
-            update2FAStatus(true);
-        } else alert("❌ "+data.message);
+        if(data.success){alert("✅ 2FA enabled!");document.getElementById("twofa-setup-panel").style.display="none";update2FAStatus(true);}
+        else alert("❌ "+data.message);
     } catch(e){alert("❌ "+e.message);}
 }
 
-function cancel2FASetup(){
-    document.getElementById("twofa-setup-panel").style.display="none";
-}
+function cancel2FASetup(){document.getElementById("twofa-setup-panel").style.display="none";}
 
 function update2FAStatus(enabled){
     const status=document.getElementById("twofa-status");
@@ -572,9 +576,74 @@ async function disable2FA(){
     try{
         const res=await fetch(BACKEND_URL+"/api/2fa/disable",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,code:code})});
         const data=await res.json();
+        if(data.success){alert("✅ 2FA disabled!");update2FAStatus(false);}
+        else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+// ============ FORGOT PASSWORD ============
+async function checkForgotEmail(){
+    const email=document.getElementById("reset-email").value.trim();
+    if(!email){alert("Email din");return;}
+    forgotEmail=email;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})});
+        const data=await res.json();
+        if(!data.success){alert("❌ "+data.message);return;}
+        if(data.needs2FA){
+            switchPanel("forgot-2fa-panel");
+            document.getElementById("forgot-2fa-code").value="";
+        } else {
+            document.getElementById("forgot-otp-display").textContent=data.otp;
+            alert("Reset OTP: "+data.otp+"\n\n1 minute por expire hobe!");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime=Date.now()+60000;
+            startForgotTimer();
+        }
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function verifyForgot2FA(){
+    const code=document.getElementById("forgot-2fa-code").value.trim();
+    if(!code){alert("2FA code din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/verify-2fa",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:forgotEmail,twoFACode:code})});
+        const data=await res.json();
         if(data.success){
-            alert("✅ 2FA disabled!");
-            update2FAStatus(false);
+            document.getElementById("forgot-otp-display").textContent=data.otp;
+            alert("✅ 2FA verified!\n\nReset OTP: "+data.otp+"\n\n1 minute por expire hobe!");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime=Date.now()+60000;
+            startForgotTimer();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+function startForgotTimer(){
+    if(forgotOtpTimer) clearInterval(forgotOtpTimer);
+    forgotOtpTimer=setInterval(function(){
+        const rem=Math.max(0,Math.floor((forgotOtpExpireTime-Date.now())/1000));
+        document.getElementById("forgot-timer").textContent="⏱️ "+rem+" seconds left";
+        if(rem<=0){clearInterval(forgotOtpTimer);document.getElementById("forgot-timer").textContent="❌ OTP expired!";document.getElementById("forgot-otp-display").textContent="------";}
+    },1000);
+}
+
+async function resetPassword(){
+    const otp=document.getElementById("forgot-otp-input").value.trim();
+    const newPassword=document.getElementById("forgot-new-pass").value;
+    if(!otp){alert("OTP din");return;}
+    if(!newPassword||newPassword.length<6){alert("New password min 6 char");return;}
+    if(Date.now()>forgotOtpExpireTime){alert("OTP expire!");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/reset",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:forgotEmail,otp:otp,newPassword:newPassword})});
+        const data=await res.json();
+        if(data.success){
+            alert("✅ Password reset successful! Ekhon login korun.");
+            if(forgotOtpTimer) clearInterval(forgotOtpTimer);
+            document.getElementById("forgot-otp-input").value="";
+            document.getElementById("forgot-new-pass").value="";
+            document.getElementById("reset-email").value="";
+            switchPanel("login-panel");
         } else alert("❌ "+data.message);
     } catch(e){alert("❌ "+e.message);}
 }
@@ -869,11 +938,30 @@ async function changePassword(){
     const newPassword=document.getElementById("new-pass").value;
     if(!oldPassword||!newPassword){alert("Dui password din");return;}
     if(newPassword.length<6){alert("New pass min 6 char");return;}
+
+    // Jodi 2FA enabled thake — 2FA code chai
+    const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
+    let twoFACode = null;
+    if (twoFAEnabled) {
+        twoFACode = prompt("2FA code din (6 digit):");
+        if (!twoFACode) return;
+    }
+
     try{
-        const res=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword})});
+        const res=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword,twoFACode:twoFACode})});
         const data=await res.json();
-        if(data.success){alert("✅ Password changed!");document.getElementById("old-pass").value="";document.getElementById("new-pass").value="";}
-        else alert("❌ "+data.message);
+        if(data.requires2FA){
+            const code = prompt("2FA code din (6 digit):");
+            if (!code) return;
+            const res2=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword,twoFACode:code})});
+            const data2=await res2.json();
+            if(data2.success){alert("✅ Password changed!");document.getElementById("old-pass").value="";document.getElementById("new-pass").value="";}
+            else alert("❌ "+data2.message);
+        } else if(data.success){
+            alert("✅ Password changed!");
+            document.getElementById("old-pass").value="";
+            document.getElementById("new-pass").value="";
+        } else alert("❌ "+data.message);
     } catch(e){alert("❌ "+e.message);}
 }
 
