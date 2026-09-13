@@ -20,6 +20,10 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
 .input-group { margin-bottom: 16px; }
 .input-group input, .input-group textarea { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: inherit; background: #fafbff; color: var(--text); }
 .input-group input:focus, .input-group textarea:focus { border-color: var(--primary); background: var(--white); box-shadow: 0 0 0 4px rgba(108,92,231,0.1); }
+.password-wrapper { position: relative; }
+.password-wrapper input { padding-right: 48px; }
+.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.password-toggle:hover { background: var(--bg); color: var(--primary); }
 .btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; }
 .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
@@ -145,7 +149,12 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 
         <div id="login-panel" class="card active">
             <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
-            <div class="input-group"><input type="password" id="login-password" placeholder="Password"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
+                </div>
+            </div>
             <button class="btn" onclick="handleLogin()">Log In</button>
             <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
             <div class="divider"></div>
@@ -163,7 +172,12 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
             <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
             <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
-            <div class="input-group"><input type="password" id="reg-password" placeholder="Password (min 6 char)"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="reg-password" placeholder="Password (min 6 char)">
+                    <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
+                </div>
+            </div>
             <button class="btn btn-green" onclick="sendOTP()">Sign Up & Send OTP</button>
             <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
@@ -185,11 +199,37 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
         </div>
 
+        <!-- ============ FORGOT PASSWORD ============ -->
         <div id="forgot-panel" class="card">
-            <h2>Find Account</h2>
-            <div class="input-group"><input type="email" id="reset-email" placeholder="Email"></div>
-            <button class="btn" onclick="alert('Coming soon!')">Search</button>
-            <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
+            <h2>🔑 Forgot Password</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Account er email din — OTP pathabo</p>
+            <div class="input-group"><input type="email" id="reset-email" placeholder="Your account email"></div>
+            <button class="btn" onclick="checkResetEmail()">Send OTP</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="forgot-2fa-panel" class="card">
+            <h2>🔐 2FA Verify</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Apnar account e 2FA active ache.<br>Google Authenticator theke 6-digit code din.</p>
+            <div class="input-group"><input type="text" id="forgot-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
+            <button class="btn" onclick="verifyForgot2FA()">Verify 2FA</button>
+            <span class="link" onclick="switchPanel('forgot-panel')">← Back</span>
+        </div>
+
+        <div id="forgot-reset-panel" class="card">
+            <h2>🔑 Reset Password</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Email e pathano OTP din + notun password set korun</p>
+            <div id="forgot-otp-display" class="otp-display">------</div>
+            <div id="forgot-timer" class="timer">⏱️ 60 seconds left</div>
+            <div class="input-group"><input type="text" id="forgot-otp-input" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:700;"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="forgot-new-password" placeholder="New Password (min 6 char)">
+                    <button type="button" class="password-toggle" onclick="togglePassword('forgot-new-password', this)">👁️</button>
+                </div>
+            </div>
+            <button class="btn btn-green" onclick="resetPasswordFinal()">Reset Password</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
         </div>
     </div>
 </div>
@@ -284,8 +324,18 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 
                     <div class="divider"></div>
                     <h3 style="margin-bottom:14px;">⚙️ Change Password</h3>
-                    <div class="input-group"><input type="password" id="old-pass" placeholder="Old Password"></div>
-                    <div class="input-group"><input type="password" id="new-pass" placeholder="New Password"></div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="old-pass" placeholder="Old Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-pass" placeholder="New Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
+                        </div>
+                    </div>
                     <button class="btn btn-red" onclick="changePassword()">Change Password</button>
 
                     <div class="divider"></div>
@@ -386,6 +436,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 const BACKEND_URL = window.location.origin;
 let currentUser = null;
 let otpTimer = null, otpExpireTime = null;
+let forgotOtpTimer = null, forgotOtpExpireTime = null;
 let selectedMedia = null, selectedMediaType = null;
 let visitUser = null;
 let currentRoomId = null, currentChatWith = null;
@@ -393,11 +444,24 @@ let chatRefreshTimer = null, heartbeatTimer = null;
 let bookmarks = [];
 let currentTheme = "light";
 let pendingLoginEmail = null, pendingLoginPassword = null;
+let forgotEmail = null;
 
 function authHeaders() {
     const h = { "Content-Type": "application/json" };
     if (currentUser) h["x-username"] = currentUser.username;
     return h;
+}
+
+// ============ PASSWORD TOGGLE ============
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+    }
 }
 
 function switchPanel(id) {
@@ -430,6 +494,7 @@ async function toggleTheme() {
     if (currentUser) fetch(BACKEND_URL + "/api/user/theme", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, theme: t }) }).catch(function() {});
 }
 
+// ============ SIGNUP ============
 async function sendOTP() {
     const name = document.getElementById("reg-name").value.trim();
     const username = document.getElementById("reg-username").value.trim();
@@ -478,6 +543,7 @@ async function verifyAndSignup() {
     } catch (e) { alert("❌ " + e.message); }
 }
 
+// ============ LOGIN ============
 async function handleLogin() {
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
@@ -520,6 +586,78 @@ async function submit2FALogin() {
             document.getElementById("main-app").classList.add("active");
             switchMainView("feed-view");
             startHeartbeat();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ============ FORGOT PASSWORD ============
+async function checkResetEmail() {
+    const email = document.getElementById("reset-email").value.trim();
+    if (!email) { alert("Email din"); return; }
+    forgotEmail = email;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/check-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email }) });
+        const data = await res.json();
+        if (!data.success) { alert("❌ " + data.message); return; }
+        
+        if (data.needs2FA) {
+            // User has 2FA enabled — go to 2FA verify panel
+            switchPanel("forgot-2fa-panel");
+            document.getElementById("forgot-2fa-code").value = "";
+            alert("🔐 Apnar account e 2FA active ache.\n\nGoogle Authenticator app theke 6-digit code din.");
+        } else {
+            // No 2FA — show OTP and go to reset panel
+            document.getElementById("forgot-otp-display").textContent = data.otp;
+            alert("OTP: " + data.otp + "\n\n1 minute por expire hobe!\n\nOTP diye notun password set korun.");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime = Date.now() + 60000;
+            startForgotTimer();
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function verifyForgot2FA() {
+    const code = document.getElementById("forgot-2fa-code").value.trim();
+    if (!code || code.length !== 6) { alert("6-digit code din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/verify-2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail, twoFACode: code }) });
+        const data = await res.json();
+        if (!data.success) { alert("❌ " + data.message); return; }
+        
+        document.getElementById("forgot-otp-display").textContent = data.otp;
+        alert("✅ 2FA verified!\n\nOTP: " + data.otp + "\n\nEkhon OTP + notun password din.");
+        switchPanel("forgot-reset-panel");
+        forgotOtpExpireTime = Date.now() + 60000;
+        startForgotTimer();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function startForgotTimer() {
+    if (forgotOtpTimer) clearInterval(forgotOtpTimer);
+    forgotOtpTimer = setInterval(function() {
+        const rem = Math.max(0, Math.floor((forgotOtpExpireTime - Date.now()) / 1000));
+        document.getElementById("forgot-timer").textContent = "⏱️ " + rem + " seconds left";
+        if (rem <= 0) { clearInterval(forgotOtpTimer); document.getElementById("forgot-timer").textContent = "❌ OTP expired!"; document.getElementById("forgot-otp-display").textContent = "------"; }
+    }, 1000);
+}
+
+async function resetPasswordFinal() {
+    const otp = document.getElementById("forgot-otp-input").value.trim();
+    const newPassword = document.getElementById("forgot-new-password").value;
+    if (!otp) { alert("OTP din"); return; }
+    if (!newPassword || newPassword.length < 6) { alert("New password min 6 char"); return; }
+    if (Date.now() > forgotOtpExpireTime) { alert("OTP expire! আবার চেষ্টা করুন।"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail, otp: otp, newPassword: newPassword }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ " + data.message);
+            if (forgotOtpTimer) clearInterval(forgotOtpTimer);
+            document.getElementById("forgot-otp-input").value = "";
+            document.getElementById("forgot-new-password").value = "";
+            document.getElementById("reset-email").value = "";
+            forgotEmail = null;
+            switchPanel("login-panel");
         } else alert("❌ " + data.message);
     } catch (e) { alert("❌ " + e.message); }
 }
@@ -877,11 +1015,30 @@ async function changePassword() {
     const newPassword = document.getElementById("new-pass").value;
     if (!oldPassword || !newPassword) { alert("Dui password din"); return; }
     if (newPassword.length < 6) { alert("New pass min 6 char"); return; }
+
+    // If 2FA enabled, ask for 2FA code first
+    const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
+    let twoFACode = null;
+    if (twoFAEnabled) {
+        twoFACode = prompt("2FA code din (6 digit):");
+        if (!twoFACode) return;
+    }
+
     try {
-        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword: oldPassword, newPassword: newPassword }) });
+        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword: oldPassword, newPassword: newPassword, twoFACode: twoFACode }) });
         const data = await res.json();
-        if (data.success) { alert("✅ Password changed!"); document.getElementById("old-pass").value = ""; document.getElementById("new-pass").value = ""; }
-        else alert("❌ " + data.message);
+        if (data.requires2FA) {
+            const code = prompt("2FA code din (6 digit):");
+            if (!code) return;
+            const res2 = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword: oldPassword, newPassword: newPassword, twoFACode: code }) });
+            const data2 = await res2.json();
+            if (data2.success) { alert("✅ Password changed!"); document.getElementById("old-pass").value = ""; document.getElementById("new-pass").value = ""; }
+            else alert("❌ " + data2.message);
+        } else if (data.success) {
+            alert("✅ Password changed!");
+            document.getElementById("old-pass").value = "";
+            document.getElementById("new-pass").value = "";
+        } else alert("❌ " + data.message);
     } catch (e) { alert("❌ " + e.message); }
 }
 
