@@ -10,12 +10,16 @@
         .container { max-width: 1200px; margin: 0 auto; }
         .card { background: white; padding: 25px; border-radius: 16px; box-shadow: 0 8px 32px rgba(0,0,0,0.2); margin-bottom: 20px; }
         h1 { color: #6c5ce7; text-align: center; margin-bottom: 20px; font-size: 26px; }
+        h2 { color: #6c5ce7; margin-bottom: 15px; font-size: 20px; }
         .login-form input { width: 100%; padding: 14px; border: 2px solid #eef0f6; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; }
         .login-form input:focus { border-color: #6c5ce7; }
+        .input-full { width: 100%; padding: 14px; border: 2px solid #eef0f6; border-radius: 10px; font-size: 15px; margin-bottom: 10px; outline: none; }
+        .input-full:focus { border-color: #6c5ce7; }
         button { padding: 12px 24px; background: #6c5ce7; color: white; border: none; border-radius: 8px; cursor: pointer; font-weight: bold; font-size: 14px; margin: 4px; }
         button:hover { background: #5b4bcf; }
         .btn-red { background: #e74c3c; } .btn-red:hover { background: #c0392b; }
         .btn-orange { background: #f39c12; } .btn-orange:hover { background: #e67e22; }
+        .btn-green { background: #42b72a; } .btn-green:hover { background: #36a420; }
         .btn-gray { background: #95a5a6; } .btn-gray:hover { background: #7f8c8d; }
         table { width: 100%; border-collapse: collapse; margin-top: 15px; }
         th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eef0f6; font-size: 13px; }
@@ -52,8 +56,16 @@
                 <button class="btn-red" onclick="logoutAdmin()">🚪 Logout</button>
                 <div id="stats" class="stats"></div>
             </div>
+
             <div class="card">
-                <h2 style="margin-bottom: 15px; color: #6c5ce7;">👥 All Users</h2>
+                <h2>🔑 Admin Password Change</h2>
+                <input type="password" id="old-admin-pass" class="input-full" placeholder="Purono Admin Password">
+                <input type="password" id="new-admin-pass" class="input-full" placeholder="Notun Admin Password (min 6 char)">
+                <button onclick="changeAdminPassword()">🔐 Change Password</button>
+            </div>
+
+            <div class="card">
+                <h2>👥 All Users</h2>
                 <div id="users-table"></div>
             </div>
         </div>
@@ -103,7 +115,6 @@
                     return;
                 }
 
-                // Stats
                 const totalUsers = data.count;
                 const blockedUsers = data.users.filter(u => u.blocked).length;
                 const activeUsers = data.users.filter(u => u.isActive).length;
@@ -116,7 +127,6 @@
                     <div class="stat-box"><h3>${twoFAUsers}</h3><p>2FA Enabled</p></div>
                 `;
 
-                // Table
                 if (data.users.length === 0) {
                     table.innerHTML = '<p style="text-align: center; color: #95a5a6;">No users yet</p>';
                     return;
@@ -134,7 +144,7 @@
                     html += '<td class="action-btns">';
                     
                     if (u.blocked) {
-                        html += '<button class="small-btn" style="background:#42b72a;" onclick="toggleBlock(\'' + escapeHtml(u.username) + '\', false)">Unblock</button>';
+                        html += '<button class="small-btn btn-green" onclick="toggleBlock(\'' + escapeHtml(u.username) + '\', false)">Unblock</button>';
                     } else {
                         html += '<button class="small-btn btn-orange" onclick="toggleBlock(\'' + escapeHtml(u.username) + '\', true)">Block</button>';
                     }
@@ -230,6 +240,45 @@
                 if (data.success) { alert("✅ User deleted!"); loadUsers(); }
                 else alert("❌ " + data.message);
             } catch (e) { alert("❌ Error: " + e.message); }
+        }
+
+        async function changeAdminPassword() {
+            const oldPassword = document.getElementById('old-admin-pass').value;
+            const newPassword = document.getElementById('new-admin-pass').value;
+            
+            if (!oldPassword || !newPassword) {
+                alert("Dui password din");
+                return;
+            }
+            
+            if (newPassword.length < 6) {
+                alert("Min 6 character");
+                return;
+            }
+            
+            try {
+                const res = await fetch(BACKEND_URL + '/api/admin/change-password', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-user': ADMIN_USER,
+                        'x-admin-pass': ADMIN_PASS
+                    },
+                    body: JSON.stringify({ oldPassword, newPassword })
+                });
+                const data = await res.json();
+                
+                if (data.success) {
+                    alert("✅ " + data.message);
+                    document.getElementById('old-admin-pass').value = '';
+                    document.getElementById('new-admin-pass').value = '';
+                    ADMIN_PASS = newPassword;
+                } else {
+                    alert("❌ " + data.message);
+                }
+            } catch (e) {
+                alert("❌ Error: " + e.message);
+            }
         }
 
         function escapeHtml(text) {
