@@ -24,7 +24,6 @@ body.dark .post-item,body.dark .chat-room-item,body.dark .search-result{backgrou
 .btn:hover{transform:translateY(-2px);box-shadow:var(--shadow-md)}
 .btn-green{background:linear-gradient(135deg,#00b894,#00cec9)}
 .btn-red{background:linear-gradient(135deg,#e17055,#d63031)}
-.btn-orange{background:linear-gradient(135deg,#f39c12,#e67e22)}
 .link{color:var(--primary);font-size:14px;text-align:center;display:block;margin-top:14px;cursor:pointer;font-weight:500}
 .divider{border-bottom:1px solid var(--border);margin:20px 0}
 h2{text-align:center;margin-bottom:20px;font-size:22px;color:var(--text);font-weight:700}
@@ -149,9 +148,6 @@ h2{text-align:center;margin-bottom:20px;font-size:22px;color:var(--text);font-we
             <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
             <div class="divider"></div>
             <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
-            <div class="divider"></div>
-            <button class="btn btn-orange" onclick="downloadApp()">📱 Download Android App</button>
-            <span class="link" style="font-size:12px;">Get the app for Android phone</span>
         </div>
 
         <div id="register-panel" class="card">
@@ -325,4 +321,736 @@ h2{text-align:center;margin-bottom:20px;font-size:22px;color:var(--text);font-we
                 <div class="post-box">
                     <h2>💬 Messages</h2>
                     <div class="input-group"><input type="text" id="chat-user-search" placeholder="Username diye search korun" oninput="searchForChat()"></div>
-                    <div id="chat
+                    <div id="chat-search-results"></div>
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">Your Chats</h3>
+                    <div id="chat-rooms-list"><p style="text-align:center;color:var(--muted);">Loading...</p></div>
+                </div>
+            </div>
+
+            <div id="chat-window-view" class="main-view">
+                <div class="post-box">
+                    <div class="feed-header">
+                        <h2 id="chat-with-name">Chat</h2>
+                        <button class="small-btn" onclick="switchMainView('chat-list-view')">← Back</button>
+                    </div>
+                    <div id="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Message likhun..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="visit-view" class="main-view">
+                <div class="post-box">
+                    <div class="feed-header">
+                        <h2>Profile</h2>
+                        <button class="small-btn" onclick="switchMainView('feed-view')">← Back</button>
+                    </div>
+                    <div class="center">
+                        <div class="pic-wrapper">
+                            <img id="visit-pic" class="pic-circle-lg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
+                            <span class="status-dot offline" id="visit-status"></span>
+                        </div>
+                        <h3 id="visit-name" style="margin-top:12px;"></h3>
+                        <p id="visit-bio" style="color:var(--muted);margin-top:6px;"></p>
+                        <div class="stat-row">
+                            <span><b id="visit-posts">0</b> Posts</span>
+                            <span><b id="visit-followers">0</b> Followers</span>
+                            <span><b id="visit-following">0</b> Following</span>
+                        </div>
+                        <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
+                        <button class="btn" style="background:#9b59b6;margin-top:10px;" id="msg-btn" onclick="startChatWith('')">💬 Message</button>
+                    </div>
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">Posts</h3>
+                    <div id="visit-posts-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-sidebar">
+            <h4>🟢 Active Now</h4>
+            <div id="active-list"><p style="color:var(--muted);font-size:13px;">Loading...</p></div>
+        </div>
+    </div>
+</div>
+
+<div id="story-viewer" onclick="closeStory()">
+    <div class="story-viewer-header">
+        <span id="story-viewer-name" style="font-weight:bold;"></span>
+        <span style="cursor:pointer;font-size:28px;" onclick="closeStory()">✕</span>
+    </div>
+    <div class="story-viewer-content"><div id="story-viewer-media-container"></div></div>
+</div>
+
+<script>
+const BACKEND_URL="https://searchbook-backend.onrender.com";
+let currentUser=null;
+let otpTimer=null,otpExpireTime=null;
+let selectedMedia=null,selectedMediaType=null;
+let visitUser=null;
+let currentRoomId=null,currentChatWith=null;
+let chatRefreshTimer=null,heartbeatTimer=null;
+let bookmarks=[];
+let currentTheme="light";
+let pendingLoginEmail=null,pendingLoginPassword=null;
+let forgotEmail=null,forgotOtpTimer=null,forgotOtpExpireTime=null;
+
+function authHeaders(){const h={"Content-Type":"application/json"};if(currentUser) h["x-username"]=currentUser.username;return h;}
+
+function switchPanel(id){
+    document.querySelectorAll("#auth-app .card").forEach(function(p){p.classList.remove("active");});
+    const el=document.getElementById(id);
+    if(el) el.classList.add("active");
+    window.scrollTo(0,0);
+}
+
+function switchMainView(viewId){
+    document.querySelectorAll(".main-view").forEach(function(v){v.classList.remove("active");});
+    const el=document.getElementById(viewId);
+    if(el) el.classList.add("active");
+    window.scrollTo(0,0);
+    if(viewId==="feed-view"){loadPosts();loadStories();loadActiveUsers();}
+    if(viewId==="profile-view") openProfile();
+    if(viewId==="bookmark-view") openBookmarks();
+    if(viewId==="chat-list-view") openChatList();
+}
+
+function applyTheme(theme){
+    currentTheme=theme;
+    if(theme==="dark"){document.body.classList.add("dark");document.getElementById("theme-toggle").textContent="☀️";}
+    else{document.body.classList.remove("dark");document.getElementById("theme-toggle").textContent="🌙";}
+}
+
+async function toggleTheme(){
+    const t=currentTheme==="dark"?"light":"dark";
+    applyTheme(t);
+    if(currentUser) fetch(BACKEND_URL+"/api/user/theme",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,theme:t})}).catch(function(){});
+}
+
+async function sendOTP(){
+    const name=document.getElementById("reg-name").value.trim();
+    const username=document.getElementById("reg-username").value.trim();
+    const email=document.getElementById("reg-email").value.trim();
+    const password=document.getElementById("reg-password").value;
+    if(!name||!username||!email||!password){alert("Sob field din");return;}
+    if(password.length<6){alert("Password min 6 char");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/send-otp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})});
+        const data=await res.json();
+        if(data.success){
+            document.getElementById("otp-display").textContent=data.otp;
+            alert("OTP: "+data.otp+"\n\n1 minute por expire hobe!");
+            switchPanel("otp-panel");
+            otpExpireTime=Date.now()+60000;
+            startTimer();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+function startTimer(){
+    if(otpTimer) clearInterval(otpTimer);
+    otpTimer=setInterval(function(){
+        const rem=Math.max(0,Math.floor((otpExpireTime-Date.now())/1000));
+        document.getElementById("timer").textContent="⏱️ "+rem+" seconds left";
+        if(rem<=0){clearInterval(otpTimer);document.getElementById("timer").textContent="❌ OTP expired!";document.getElementById("otp-display").textContent="------";}
+    },1000);
+}
+
+async function verifyAndSignup(){
+    const otp=document.getElementById("reg-otp").value.trim();
+    const username=document.getElementById("reg-username").value.trim();
+    const email=document.getElementById("reg-email").value.trim();
+    const password=document.getElementById("reg-password").value;
+    const fullName=document.getElementById("reg-name").value.trim();
+    if(!otp){alert("OTP din");return;}
+    if(Date.now()>otpExpireTime){alert("OTP expire!");return;}
+    try{
+        const vRes=await fetch(BACKEND_URL+"/api/verify-otp",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,otp:otp})});
+        const vData=await vRes.json();
+        if(!vData.success){alert("❌ "+vData.message);return;}
+        const sRes=await fetch(BACKEND_URL+"/api/signup",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:username,email:email,password:password,fullName:fullName})});
+        const sData=await sRes.json();
+        if(sData.success){alert("✅ Account created!");if(otpTimer) clearInterval(otpTimer);switchPanel("login-panel");}
+        else alert("❌ "+sData.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function handleLogin(){
+    const email=document.getElementById("login-email").value.trim();
+    const password=document.getElementById("login-password").value;
+    if(!email||!password){alert("Email + password din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email,password:password})});
+        const data=await res.json();
+        if(data.requires2FA){
+            pendingLoginEmail=email;
+            pendingLoginPassword=password;
+            switchPanel("twofa-login-panel");
+            document.getElementById("login-2fa-code").value="";
+            return;
+        }
+        if(data.success){
+            currentUser={username:data.username,email:data.email,fullName:data.fullName};
+            document.getElementById("feed-user-info").textContent="👋 Welcome back, "+data.username+"!";
+            document.getElementById("theme-toggle").classList.add("show");
+            applyTheme(data.theme||"light");
+            document.getElementById("auth-app").style.display="none";
+            document.getElementById("main-app").classList.add("active");
+            switchMainView("feed-view");
+            startHeartbeat();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function submit2FALogin(){
+    const code=document.getElementById("login-2fa-code").value.trim();
+    if(!code){alert("Code din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/login",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:pendingLoginEmail,password:pendingLoginPassword,twoFACode:code})});
+        const data=await res.json();
+        if(data.success){
+            currentUser={username:data.username,email:data.email,fullName:data.fullName};
+            document.getElementById("feed-user-info").textContent="👋 Welcome back, "+data.username+"!";
+            document.getElementById("theme-toggle").classList.add("show");
+            applyTheme(data.theme||"light");
+            document.getElementById("auth-app").style.display="none";
+            document.getElementById("main-app").classList.add("active");
+            switchMainView("feed-view");
+            startHeartbeat();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+// ============ 2FA ============
+async function start2FASetup(){
+    if(!currentUser) return;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/2fa/setup",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email})});
+        const data=await res.json();
+        if(data.success){
+            document.getElementById("twofa-qr").src=data.qrCode;
+            document.getElementById("twofa-secret").textContent=data.secret;
+            document.getElementById("twofa-setup-panel").style.display="block";
+            document.getElementById("twofa-code-input").value="";
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function verify2FASetup(){
+    const code=document.getElementById("twofa-code-input").value.trim();
+    if(!code||code.length!==6){alert("6-digit code din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/2fa/verify",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,code:code})});
+        const data=await res.json();
+        if(data.success){alert("✅ 2FA enabled!");document.getElementById("twofa-setup-panel").style.display="none";update2FAStatus(true);}
+        else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+function cancel2FASetup(){document.getElementById("twofa-setup-panel").style.display="none";}
+
+function update2FAStatus(enabled){
+    const status=document.getElementById("twofa-status");
+    const btn=document.getElementById("twofa-btn");
+    if(enabled){
+        status.innerHTML="🟢 2FA Enabled";
+        status.style.color="#00b894";
+        btn.textContent="Disable 2FA";
+        btn.className="btn btn-red";
+        btn.onclick=disable2FA;
+    } else {
+        status.innerHTML="⚫ 2FA Disabled";
+        status.style.color="var(--muted)";
+        btn.textContent="Enable 2FA";
+        btn.className="btn";
+        btn.onclick=start2FASetup;
+    }
+}
+
+async function disable2FA(){
+    const code=prompt("2FA code din (6 digit):");
+    if(!code) return;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/2fa/disable",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,code:code})});
+        const data=await res.json();
+        if(data.success){alert("✅ 2FA disabled!");update2FAStatus(false);}
+        else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+// ============ FORGOT PASSWORD ============
+async function checkForgotEmail(){
+    const email=document.getElementById("reset-email").value.trim();
+    if(!email){alert("Email din");return;}
+    forgotEmail=email;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/check",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:email})});
+        const data=await res.json();
+        if(!data.success){alert("❌ "+data.message);return;}
+        if(data.needs2FA){
+            switchPanel("forgot-2fa-panel");
+            document.getElementById("forgot-2fa-code").value="";
+        } else {
+            document.getElementById("forgot-otp-display").textContent=data.otp;
+            alert("Reset OTP: "+data.otp+"\n\n1 minute por expire hobe!");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime=Date.now()+60000;
+            startForgotTimer();
+        }
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function verifyForgot2FA(){
+    const code=document.getElementById("forgot-2fa-code").value.trim();
+    if(!code){alert("2FA code din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/verify-2fa",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:forgotEmail,twoFACode:code})});
+        const data=await res.json();
+        if(data.success){
+            document.getElementById("forgot-otp-display").textContent=data.otp;
+            alert("✅ 2FA verified!\n\nReset OTP: "+data.otp+"\n\n1 minute por expire hobe!");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime=Date.now()+60000;
+            startForgotTimer();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+function startForgotTimer(){
+    if(forgotOtpTimer) clearInterval(forgotOtpTimer);
+    forgotOtpTimer=setInterval(function(){
+        const rem=Math.max(0,Math.floor((forgotOtpExpireTime-Date.now())/1000));
+        document.getElementById("forgot-timer").textContent="⏱️ "+rem+" seconds left";
+        if(rem<=0){clearInterval(forgotOtpTimer);document.getElementById("forgot-timer").textContent="❌ OTP expired!";document.getElementById("forgot-otp-display").textContent="------";}
+    },1000);
+}
+
+async function resetPassword(){
+    const otp=document.getElementById("forgot-otp-input").value.trim();
+    const newPassword=document.getElementById("forgot-new-pass").value;
+    if(!otp){alert("OTP din");return;}
+    if(!newPassword||newPassword.length<6){alert("New password min 6 char");return;}
+    if(Date.now()>forgotOtpExpireTime){alert("OTP expire!");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/forgot/reset",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({email:forgotEmail,otp:otp,newPassword:newPassword})});
+        const data=await res.json();
+        if(data.success){
+            alert("✅ Password reset successful! Ekhon login korun.");
+            if(forgotOtpTimer) clearInterval(forgotOtpTimer);
+            document.getElementById("forgot-otp-input").value="";
+            document.getElementById("forgot-new-pass").value="";
+            document.getElementById("reset-email").value="";
+            switchPanel("login-panel");
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+function handleLogout(){
+    if(currentUser) fetch(BACKEND_URL+"/api/logout",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:currentUser.username})}).catch(function(){});
+    if(heartbeatTimer) clearInterval(heartbeatTimer);
+    if(chatRefreshTimer) clearInterval(chatRefreshTimer);
+    currentUser=null;
+    document.getElementById("theme-toggle").classList.remove("show");
+    document.body.classList.remove("dark");
+    document.getElementById("main-app").classList.remove("active");
+    document.getElementById("auth-app").style.display="flex";
+    switchPanel("login-panel");
+}
+
+function startHeartbeat(){
+    if(heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer=setInterval(function(){
+        if(currentUser) fetch(BACKEND_URL+"/api/heartbeat",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({username:currentUser.username})}).catch(function(){});
+    },30000);
+}
+
+async function loadActiveUsers(){
+    try{
+        const res=await fetch(BACKEND_URL+"/api/active-users");
+        const data=await res.json();
+        document.getElementById("active-counter").textContent="🟢 "+data.count+" users active now";
+        if(data.users&&data.users.length>0){
+            document.getElementById("active-list").innerHTML=data.users.slice(0,10).map(function(u){return '<div class="right-item"><span class="dot"></span><span>'+escapeHtml(u)+'</span></div>';}).join("");
+        } else {
+            document.getElementById("active-list").innerHTML='<p style="color:var(--muted);font-size:13px;">No users active</p>';
+        }
+    } catch(e){}
+}
+
+function uploadStory(input){
+    const file=input.files[0];
+    if(!file) return;
+    if(file.size>8*1024*1024){alert("Max 8MB");return;}
+    const isVideo=file.type.startsWith("video");
+    const reader=new FileReader();
+    reader.onload=async function(e){
+        try{
+            const res=await fetch(BACKEND_URL+"/api/stories",{method:"POST",headers:authHeaders(),body:JSON.stringify({username:currentUser.username,media:e.target.result,mediaType:isVideo?"video":"image",text:""})});
+            const data=await res.json();
+            if(data.success){alert("✅ Story uploaded!");loadStories();}
+            else alert("❌ "+data.message);
+        } catch(err){alert("❌ "+err.message);}
+    };
+    reader.readAsDataURL(file);
+}
+
+async function loadStories(){
+    try{
+        const res=await fetch(BACKEND_URL+"/api/stories");
+        const data=await res.json();
+        const bar=document.getElementById("stories-bar");
+        bar.innerHTML='<div class="story-item" onclick="document.getElementById(\'story-input\').click()"><div class="add-story-btn">+</div><div class="story-name">Your Story</div></div>';
+        if(!data.stories) return;
+        Object.keys(data.stories).forEach(function(username){
+            const stories=data.stories[username];
+            const first=stories[0];
+            const item=document.createElement("div");
+            item.className="story-item";
+            item.onclick=function(){viewStory(username,stories);};
+            item.innerHTML='<div class="story-ring"><img class="story-pic" src="'+(first.mediaType==="image"?first.media:"data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23333\\'/%3E%3Ctext x=\\'50\\' y=\\'55\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'white\\'%3E🎥%3C/text%3E%3C/svg%3E")+'"></div><div class="story-name">'+escapeHtml(username)+'</div>';
+            bar.appendChild(item);
+        });
+    } catch(e){}
+}
+
+function viewStory(username,stories){
+    document.getElementById("story-viewer-name").textContent=username;
+    const container=document.getElementById("story-viewer-media-container");
+    let html="";
+    stories.forEach(function(s){
+        if(s.mediaType==="video") html+='<video src="'+s.media+'" controls autoplay class="story-viewer-media"></video>';
+        else html+='<img src="'+s.media+'" class="story-viewer-media">';
+    });
+    container.innerHTML=html;
+    document.getElementById("story-viewer").classList.add("active");
+}
+
+function closeStory(){
+    document.getElementById("story-viewer").classList.remove("active");
+    document.getElementById("story-viewer-media-container").innerHTML="";
+}
+
+function handleMedia(input,type){
+    const file=input.files[0];
+    if(!file) return;
+    if(file.size>5*1024*1024){alert("Max 5MB");return;}
+    const reader=new FileReader();
+    reader.onload=function(e){
+        selectedMedia=e.target.result;
+        selectedMediaType=type;
+        const preview=document.getElementById("media-preview");
+        if(type==="image") preview.innerHTML='<img src="'+selectedMedia+'" style="max-width:100%;border-radius:10px;">';
+        else preview.innerHTML='<video src="'+selectedMedia+'" controls style="max-width:100%;border-radius:10px;"></video>';
+    };
+    reader.readAsDataURL(file);
+}
+
+function togglePollCreator(){
+    const p=document.getElementById("poll-creator");
+    p.style.display=p.style.display==="block"?"none":"block";
+}
+
+function addPollOption(){
+    const c=document.getElementById("poll-creator");
+    const count=c.querySelectorAll(".poll-opt").length;
+    if(count>=5){alert("Max 5 option");return;}
+    const inp=document.createElement("input");
+    inp.type="text";
+    inp.className="poll-opt";
+    inp.placeholder="Option "+(count+1);
+    c.insertBefore(inp,c.querySelector(".poll-creator-btn"));
+}
+
+async function createPost(){
+    const content=document.getElementById("post-content").value.trim();
+    const pollQ=document.getElementById("poll-q").value.trim();
+    const pollOpts=Array.from(document.querySelectorAll(".poll-opt")).map(function(i){return i.value.trim();}).filter(function(v){return v;});
+    let poll=null;
+    if(pollQ&&pollOpts.length>=2) poll={question:pollQ,options:pollOpts.map(function(t){return {text:t,votes:[]};})};
+    if(!content&&!selectedMedia&&!poll){alert("Kichu likhun ba media/poll din");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/posts",{method:"POST",headers:authHeaders(),body:JSON.stringify({username:currentUser.username,content:content,media:selectedMedia||"",mediaType:selectedMediaType||"text",poll:poll})});
+        const data=await res.json();
+        if(data.success){
+            document.getElementById("post-content").value="";
+            document.getElementById("media-preview").innerHTML="";
+            document.getElementById("poll-creator").style.display="none";
+            document.getElementById("poll-q").value="";
+            document.querySelectorAll(".poll-opt").forEach(function(opt,i){if(i<2) opt.value="";});
+            selectedMedia=null;selectedMediaType=null;
+            loadPosts();
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function loadPosts(){
+    const list=document.getElementById("posts-list");
+    list.innerHTML='<p style="text-align:center;color:var(--muted);">Loading...</p>';
+    try{
+        const res=await fetch(BACKEND_URL+"/api/posts");
+        const posts=await res.json();
+        if(posts.length===0){list.innerHTML='<p style="text-align:center;color:var(--muted);">No posts yet</p>';return;}
+        list.innerHTML=posts.map(function(p){return renderPost(p);}).join("");
+        posts.forEach(function(p){
+            fetch(BACKEND_URL+"/api/posts/view",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({postId:p._id})}).catch(function(){});
+        });
+    } catch(e){list.innerHTML='<p style="color:#e74c3c;text-align:center;">Load failed</p>';}
+}
+
+function renderPost(p){
+    let mediaHtml="";
+    if(p.media){
+        if(p.mediaType==="video") mediaHtml='<video src="'+p.media+'" controls class="post-media"></video>';
+        else mediaHtml='<img src="'+p.media+'" class="post-media">';
+    }
+    const reactions=p.reactions||{};
+    const userReaction=currentUser?Object.keys(reactions).find(function(k){return reactions[k]&&reactions[k].includes(currentUser.username);}):null;
+    const totalReactions=Object.values(reactions).reduce(function(s,arr){return s+(arr?arr.length:0);},0);
+    const reactionEmojis={love:"❤️",haha:"😂",sad:"😢",angry:"😡",wow:"😮"};
+    let reactionsHtml='<div class="reactions-bar">'+Object.keys(reactionEmojis).map(function(k){return '<button class="reaction-btn '+(userReaction===k?"active":"")+'" onclick="reactPost(\''+p._id+'\',\''+k+'\')">'+reactionEmojis[k]+'</button>';}).join("")+'</div>';
+    let pollHtml="";
+    if(p.poll){
+        const totalVotes=p.poll.options.reduce(function(s,o){return s+o.votes.length;},0);
+        pollHtml='<div class="poll-box"><div class="poll-question">📊 '+escapeHtml(p.poll.question)+'</div>'+p.poll.options.map(function(opt,i){
+            const pct=totalVotes>0?Math.round((opt.votes.length/totalVotes)*100):0;
+            const voted=currentUser&&opt.votes.includes(currentUser.username);
+            return '<div class="poll-option '+(voted?"voted":"")+'" onclick="votePoll(\''+p._id+'\','+i+')"><div class="poll-option-fill" style="width:'+pct+'%"></div><div class="poll-option-text"><span>'+escapeHtml(opt.text)+'</span><span><b>'+pct+'%</b> ('+opt.votes.length+')</span></div></div>';
+        }).join("")+'<div class="poll-total">'+totalVotes+' votes</div></div>';
+    }
+    const liked=currentUser&&p.likes&&p.likes.includes(currentUser.username);
+    const isBookmarked=currentUser&&bookmarks.includes(p._id);
+    return '<div class="post-item"><div class="post-header"><div class="avatar">'+escapeHtml(p.username.substring(0,1).toUpperCase())+'</div><div class="info"><div class="post-user" onclick="visitProfile(\''+escapeHtml(p.username)+'\')">'+escapeHtml(p.username)+'</div><div class="post-time">'+new Date(p.createdAt).toLocaleString()+'</div></div></div><div class="post-content">'+escapeHtml(p.content)+'</div>'+mediaHtml+pollHtml+'<div style="margin-top:10px;font-size:12px;color:var(--muted);">'+(p.views||0)+' views · '+(p.likes?p.likes.length:0)+' likes · '+(p.comments?p.comments.length:0)+' comments · '+(p.shares||0)+' shares · '+totalReactions+' reactions</div>'+reactionsHtml+'<div class="post-actions"><button class="action-btn '+(liked?"liked":"")+'" onclick="likePost(\''+p._id+'\')">👍 Like</button><button class="action-btn" onclick="commentPost(\''+p._id+'\')">💬 Comment</button><button class="action-btn" onclick="sharePost(\''+p._id+'\')">🔗 Share</button><button class="action-btn '+(isBookmarked?"bookmarked":"")+'" onclick="toggleBookmark(\''+p._id+'\')">'+(isBookmarked?"🔖":"📑")+'</button></div></div>';
+}
+
+async function likePost(postId){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/posts/like",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
+async function reactPost(postId,reaction){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/posts/reaction",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,reaction:reaction})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
+async function votePoll(postId,optionIndex){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/posts/vote",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,optionIndex:optionIndex})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
+async function commentPost(postId){if(!currentUser){alert("Login korun");return;}const text=prompt("Comment likhun:");if(!text) return;try{const res=await fetch(BACKEND_URL+"/api/posts/comment",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,text:text})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
+async function sharePost(postId){try{const res=await fetch(BACKEND_URL+"/api/posts/share",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId})});const data=await res.json();if(data.success){alert("🔗 Shared!");loadPosts();}}catch(e){}}
+
+async function toggleBookmark(postId){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/user/bookmark",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,postId:postId})});const data=await res.json();if(data.success){bookmarks=data.bookmarks||[];loadPosts();}}catch(e){}}
+async function loadBookmarks(){if(!currentUser) return;try{const res=await fetch(BACKEND_URL+"/api/user/bookmarks/"+currentUser.email,{headers:authHeaders()});const data=await res.json();if(data.success) bookmarks=data.posts.map(function(p){return p._id;});}catch(e){}}
+async function openBookmarks(){if(!currentUser) return;const list=document.getElementById("bookmarks-list");list.innerHTML='<p style="text-align:center;color:var(--muted);">Loading...</p>';try{const res=await fetch(BACKEND_URL+"/api/user/bookmarks/"+currentUser.email,{headers:authHeaders()});const data=await res.json();if(!data.posts||data.posts.length===0) list.innerHTML='<p style="text-align:center;color:var(--muted);">No bookmarks yet</p>';else list.innerHTML=data.posts.map(function(p){return renderPost(p);}).join("");}catch(e){list.innerHTML='<p style="color:#e74c3c;">Failed</p>';}}
+
+let searchTimer=null;
+async function doSearch(){
+    if(searchTimer) clearTimeout(searchTimer);
+    searchTimer=setTimeout(async function(){
+        const q=document.getElementById("search-input").value.trim();
+        const results=document.getElementById("search-results");
+        if(!q){results.innerHTML="";return;}
+        try{
+            const res=await fetch(BACKEND_URL+"/api/search/users/"+encodeURIComponent(q),{headers:authHeaders()});
+            const data=await res.json();
+            if(!data.users||data.users.length===0){results.innerHTML='<p style="text-align:center;color:var(--muted);">No user found</p>';return;}
+            results.innerHTML=data.users.map(function(u){
+                return '<div class="search-result" onclick="visitProfile(\''+escapeHtml(u.username)+'\')"><div class="search-pic-wrapper"><img class="search-pic" src="'+(u.profilePic||"data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E")+'"><span class="search-status '+(u.isActive?"online":"offline")+'"></span></div><div><div style="font-weight:700;color:#6c5ce7;">'+escapeHtml(u.username)+'</div><div style="font-size:13px;color:var(--muted);">'+escapeHtml(u.fullName||"")+'</div></div></div>';
+            }).join("");
+        } catch(e){}
+    },300);
+}
+
+async function visitProfile(username){
+    if(!username) return;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/user/username/"+encodeURIComponent(username),{headers:authHeaders()});
+        const data=await res.json();
+        if(data.success){
+            const u=data.user;
+            visitUser=u;
+            document.getElementById("visit-name").textContent=u.fullName||u.username;
+            document.getElementById("visit-bio").textContent=u.bio||"No bio yet";
+            document.getElementById("visit-pic").src=u.profilePic||"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
+            const sd=document.getElementById("visit-status");
+            if(u.isActive){sd.classList.remove("offline");sd.classList.add("online");}
+            else{sd.classList.remove("online");sd.classList.add("offline");}
+            document.getElementById("visit-followers").textContent=(u.followers||[]).length;
+            document.getElementById("visit-following").textContent=(u.following||[]).length;
+            const isFollowing=(u.followers||[]).includes(currentUser.username);
+            const btn=document.getElementById("follow-btn");
+            btn.textContent=isFollowing?"Unfollow":"Follow";
+            document.getElementById("msg-btn").setAttribute("onclick","startChatWith('"+escapeHtml(username)+"')");
+            const pRes=await fetch(BACKEND_URL+"/api/posts/user/"+encodeURIComponent(username));
+            const posts=await pRes.json();
+            document.getElementById("visit-posts").textContent=posts.length;
+            const list=document.getElementById("visit-posts-list");
+            if(posts.length===0) list.innerHTML='<p style="text-align:center;color:var(--muted);">No posts</p>';
+            else list.innerHTML=posts.map(function(p){return renderPost(p);}).join("");
+            switchMainView("visit-view");
+        }
+    } catch(e){}
+}
+
+async function toggleFollow(){
+    if(!visitUser||!currentUser) return;
+    const isFollowing=(visitUser.followers||[]).includes(currentUser.username);
+    const endpoint=isFollowing?"/api/user/unfollow":"/api/user/follow";
+    try{const res=await fetch(BACKEND_URL+endpoint,{method:"POST",headers:authHeaders(),body:JSON.stringify({follower:currentUser.username,following:visitUser.username})});const data=await res.json();if(data.success) visitProfile(visitUser.username);}catch(e){}
+}
+
+async function openProfile(){
+    if(!currentUser) return;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/user/"+currentUser.email,{headers:authHeaders()});
+        const data=await res.json();
+        if(data.success){
+            const u=data.user;
+            document.getElementById("profile-name").textContent=u.fullName||u.username;
+            document.getElementById("profile-bio").textContent=u.bio||"No bio yet";
+            if(u.profilePic) document.getElementById("profile-pic-display").src=u.profilePic;
+            document.getElementById("edit-fullname").value=u.fullName||"";
+            document.getElementById("edit-bio").value=u.bio||"";
+            update2FAStatus(u.twoFAEnabled||false);
+        }
+    } catch(e){}
+}
+
+function uploadProfilePic(input){
+    const file=input.files[0];
+    if(!file) return;
+    if(file.size>5*1024*1024){alert("Max 5MB");return;}
+    const reader=new FileReader();
+    reader.onload=function(e){
+        document.getElementById("profile-pic-display").src=e.target.result;
+        document.getElementById("profile-pic-display").dataset.newPic=e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function updateProfile(){
+    const fullName=document.getElementById("edit-fullname").value.trim();
+    const bio=document.getElementById("edit-bio").value.trim();
+    const picEl=document.getElementById("profile-pic-display");
+    const profilePic=picEl.dataset.newPic||"";
+    try{
+        const res=await fetch(BACKEND_URL+"/api/user/profile",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,profilePic:profilePic,fullName:fullName,bio:bio})});
+        const data=await res.json();
+        if(data.success){alert("✅ Profile updated!");delete picEl.dataset.newPic;openProfile();}
+        else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function changePassword(){
+    const oldPassword=document.getElementById("old-pass").value;
+    const newPassword=document.getElementById("new-pass").value;
+    if(!oldPassword||!newPassword){alert("Dui password din");return;}
+    if(newPassword.length<6){alert("New pass min 6 char");return;}
+
+    // Jodi 2FA enabled thake — 2FA code chai
+    const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
+    let twoFACode = null;
+    if (twoFAEnabled) {
+        twoFACode = prompt("2FA code din (6 digit):");
+        if (!twoFACode) return;
+    }
+
+    try{
+        const res=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword,twoFACode:twoFACode})});
+        const data=await res.json();
+        if(data.requires2FA){
+            const code = prompt("2FA code din (6 digit):");
+            if (!code) return;
+            const res2=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword,twoFACode:code})});
+            const data2=await res2.json();
+            if(data2.success){alert("✅ Password changed!");document.getElementById("old-pass").value="";document.getElementById("new-pass").value="";}
+            else alert("❌ "+data2.message);
+        } else if(data.success){
+            alert("✅ Password changed!");
+            document.getElementById("old-pass").value="";
+            document.getElementById("new-pass").value="";
+        } else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function openChatList(){
+    if(!currentUser){alert("Login korun");return;}
+    const roomsList=document.getElementById("chat-rooms-list");
+    roomsList.innerHTML='<p style="text-align:center;color:var(--muted);">Loading...</p>';
+    try{
+        const res=await fetch(BACKEND_URL+"/api/chat/rooms/"+currentUser.username,{headers:authHeaders()});
+        const data=await res.json();
+        if(!data.rooms||data.rooms.length===0) roomsList.innerHTML='<p style="text-align:center;color:var(--muted);">No chats yet</p>';
+        else roomsList.innerHTML=data.rooms.map(function(r){
+            const other=r.members.find(function(m){return m!==currentUser.username;});
+            return '<div class="chat-room-item" onclick="openChat(\''+escapeHtml(other)+'\',\''+r._id+'\')"><div class="chat-avatar">'+escapeHtml(other.substring(0,1).toUpperCase())+'</div><div class="chat-info"><div class="chat-name">'+escapeHtml(other)+'</div><div class="chat-last">'+escapeHtml(r.lastMessage||"No messages")+'</div></div></div>';
+        }).join("");
+    } catch(e){}
+}
+
+let chatSearchTimer=null;
+async function searchForChat(){
+    if(chatSearchTimer) clearTimeout(chatSearchTimer);
+    chatSearchTimer=setTimeout(async function(){
+        const q=document.getElementById("chat-user-search").value.trim();
+        const results=document.getElementById("chat-search-results");
+        if(!q){results.innerHTML="";return;}
+        try{
+            const res=await fetch(BACKEND_URL+"/api/search/users/"+encodeURIComponent(q),{headers:authHeaders()});
+            const data=await res.json();
+            if(!data.users||data.users.length===0){results.innerHTML='<p style="text-align:center;color:var(--muted);">No user found</p>';return;}
+            results.innerHTML=data.users.filter(function(u){return u.username!==currentUser.username;}).map(function(u){
+                return '<div class="search-result" onclick="startChatWith(\''+escapeHtml(u.username)+'\')"><div class="search-pic-wrapper"><img class="search-pic" src="'+(u.profilePic||"data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E")+'"><span class="search-status '+(u.isActive?"online":"offline")+'"></span></div><div><div style="font-weight:700;color:#6c5ce7;">'+escapeHtml(u.username)+'</div><div style="font-size:13px;color:var(--muted);">'+escapeHtml(u.fullName||"")+'</div></div></div>';
+            }).join("");
+        } catch(e){}
+    },300);
+}
+
+async function startChatWith(username){
+    if(!currentUser){alert("Login korun");return;}
+    if(!username){alert("Username din");return;}
+    if(username===currentUser.username){alert("Nijer sathe chat korte parben na");return;}
+    try{
+        const res=await fetch(BACKEND_URL+"/api/chat/room",{method:"POST",headers:authHeaders(),body:JSON.stringify({user1:currentUser.username,user2:username})});
+        const data=await res.json();
+        if(data.success) openChat(username,data.room._id);
+        else alert("❌ "+data.message);
+    } catch(e){alert("❌ "+e.message);}
+}
+
+async function openChat(username,roomId){
+    currentRoomId=roomId;
+    currentChatWith=username;
+    document.getElementById("chat-with-name").textContent="💬 "+username;
+    switchMainView("chat-window-view");
+    await loadMessages();
+    if(chatRefreshTimer) clearInterval(chatRefreshTimer);
+    chatRefreshTimer=setInterval(loadMessages,3000);
+}
+
+async function loadMessages(){
+    if(!currentRoomId) return;
+    try{
+        const res=await fetch(BACKEND_URL+"/api/chat/messages/"+currentRoomId,{headers:authHeaders()});
+        const data=await res.json();
+        if(data.success){
+            const box=document.getElementById("chat-messages");
+            const wasAtBottom=box.scrollHeight-box.scrollTop-box.clientHeight<50;
+            box.innerHTML=data.messages.map(function(m){
+                return '<div class="chat-msg '+(m.sender===currentUser.username?"me":"other")+'">'+escapeHtml(m.text)+'<div class="chat-msg-time">'+new Date(m.createdAt).toLocaleTimeString()+'</div></div>';
+            }).join("");
+            if(wasAtBottom) box.scrollTop=box.scrollHeight;
+        }
+    } catch(e){}
+}
+
+async function sendMessage(){
+    const input=document.getElementById("chat-input");
+    const text=input.value.trim();
+    if(!text||!currentRoomId) return;
+    input.value="";
+    try{const res=await fetch(BACKEND_URL+"/api/chat/message",{method:"POST",headers:authHeaders(),body:JSON.stringify({roomId:currentRoomId,sender:currentUser.username,text:text})});const data=await res.json();if(data.success) await loadMessages();}catch(e){}
+}
+
+function escapeHtml(text){
+    const div=document.createElement("div");
+    div.textContent=text;
+    return div.innerHTML;
+}
+
+setInterval(function(){if(currentUser) loadActiveUsers();},60000);
+</script>
+</body>
+</html>
