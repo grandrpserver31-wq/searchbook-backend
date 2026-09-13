@@ -130,7 +130,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .story-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; color: white; }
 .story-viewer-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
 .story-viewer-media { max-width: 100%; max-height: 80vh; border-radius: 16px; }
-.app-download-btn { display: inline-flex; align-items: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; border-radius: 10px; text-decoration: none; font-weight: 700; font-size: 14px; box-shadow: 0 4px 16px rgba(0,184,148,0.3); transition: 0.2s; }
+.app-download-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 16px rgba(0,184,148,0.3); cursor: pointer; transition: 0.2s; font-family: inherit; }
 .app-download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,184,148,0.4); }
 </style>
 </head>
@@ -151,9 +151,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <div class="divider"></div>
             <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
             <div style="margin-top:16px;text-align:center;">
-                <a href="https://github.com/grandrpserver31-wq/searchbook-backend/releases/latest" target="_blank" class="app-download-btn">
+                <button onclick="downloadApp()" class="app-download-btn">
                     📱 Download Android App
-                </a>
+                </button>
                 <p style="font-size:11px;color:var(--muted);margin-top:8px;">Get Searchbook on your phone</p>
             </div>
         </div>
@@ -218,7 +218,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                     </div>
                 </div>
                 <input type="file" id="story-input" accept="image/*,video/*" style="display:none;" onchange="uploadStory(this)">
-                <div id="feed-user-info" style="padding:12px; background:#f0f0ff; border-radius:12px; margin-bottom:16px; color:#6c5ce7; font-weight:700; text-align:center;"></div>
+                <div id="feed-user-info" style="padding:12px; background:linear-gradient(135deg,#f0f0ff,#e8e8ff); border-radius:12px; margin-bottom:16px; color:#6c5ce7; font-weight:700; text-align:center;"></div>
                 <div class="post-box">
                     <textarea id="post-content" placeholder="What's on your mind?"></textarea>
                     <div class="media-btns">
@@ -226,18 +226,18 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                         <button class="media-btn" onclick="document.getElementById('video-input').click()">🎥 Video</button>
                         <button class="media-btn" onclick="togglePollCreator()">📊 Poll</button>
                     </div>
-                    <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this,'image')">
-                    <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this,'video')">
+                    <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this, 'image')">
+                    <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
                     <div id="media-preview" style="margin-top:10px;"></div>
                     <div class="poll-creator" id="poll-creator">
-                        <input type="text" id="poll-q" placeholder="Poll question...">
-                        <input type="text" class="poll-opt" placeholder="Option 1">
-                        <input type="text" class="poll-opt" placeholder="Option 2">
+                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%;">
                         <button class="btn btn-green poll-creator-btn" onclick="addPollOption()">+ Add Option</button>
                     </div>
                     <button class="btn" onclick="createPost()">Share Post</button>
                 </div>
-                <h3 style="margin-bottom:16px; font-size:18px;">🔥 Trending Posts</h3>
+                <h3 style="margin-bottom:16px; color:var(--text); font-size:18px;">🔥 Trending Posts</h3>
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
             </div>
 
@@ -843,6 +843,18 @@ async function sendMessage() {
     if (!text || !currentRoomId) return;
     input.value = "";
     try { const res = await fetch(BACKEND_URL + "/api/chat/message", { method: "POST", headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
+}
+
+function downloadApp() {
+    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v1.0.0/Searchbook-APK.zip";
+    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.zip\n\nDownload shesh hole zip file ta unzip korun, tarpor APK install korun.");
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = "Searchbook-APK.zip";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
 }
 
 function escapeHtml(text) {
