@@ -10,7 +10,7 @@ app.use(express.static(__dirname));
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
-const MONGO_URI = "mongodb+srv://grandrpserver31_db_user:Tx8SpBrESEEbb0wr@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster00";
+const MONGO_URI = process.env.MONGO_URI || "mongodb+srv://grandrpserver31_db_user:Tx8SpBrESEEbb0wr@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster00";
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log("SearchBook MongoDB Connected!"))
@@ -30,6 +30,7 @@ setInterval(() => {
     }
 }, 60000);
 
+// OTP STORE
 const otpStore = {};
 
 app.post('/api/send-otp', async (req, res) => {
@@ -58,6 +59,7 @@ app.post('/api/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
+// SCHEMAS
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -117,6 +119,7 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
+// AUTH APIs
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -142,11 +145,7 @@ app.post('/api/login', async (req, res) => {
 
         if (user.twoFAEnabled && user.twoFASecret) {
             if (!twoFACode) {
-                return res.status(200).json({
-                    success: false,
-                    requires2FA: true,
-                    message: "2FA code din"
-                });
+                return res.status(200).json({ success: false, requires2FA: true, message: "2FA code din" });
             }
             const verified = speakeasy.totp.verify({
                 secret: user.twoFASecret,
@@ -155,11 +154,7 @@ app.post('/api/login', async (req, res) => {
                 window: 1
             });
             if (!verified) {
-                return res.status(400).json({
-                    success: false,
-                    requires2FA: true,
-                    message: "Bhul 2FA code!"
-                });
+                return res.status(400).json({ success: false, requires2FA: true, message: "Bhul 2FA code!" });
             }
         }
 
@@ -168,31 +163,21 @@ app.post('/api/login', async (req, res) => {
     } catch (err) { res.status(500).json({ success: false, message: "Login failed" }); }
 });
 
-// ==========================================
 // 2FA APIs
-// ==========================================
-
 app.post('/api/2fa/setup', async (req, res) => {
     try {
         const { email } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
         const secret = speakeasy.generateSecret({
             name: `Searchbook (${user.username})`,
             issuer: 'Searchbook'
         });
-
         user.twoFASecret = secret.base32;
         await user.save();
-
         const qrCodeDataURL = await QRCode.toDataURL(secret.otpauth_url);
-
         res.json({ success: true, qrCode: qrCodeDataURL, secret: secret.base32 });
-    } catch (e) {
-        console.error(e);
-        res.status(500).json({ success: false, message: "2FA setup failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "2FA setup failed" }); }
 });
 
 app.post('/api/2fa/verify', async (req, res) => {
@@ -201,23 +186,17 @@ app.post('/api/2fa/verify', async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
         if (!user.twoFASecret) return res.status(400).json({ success: false, message: "Age setup korun" });
-
         const verified = speakeasy.totp.verify({
             secret: user.twoFASecret,
             encoding: 'base32',
             token: code,
             window: 1
         });
-
         if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
-
         user.twoFAEnabled = true;
         await user.save();
-
         res.json({ success: true, message: "2FA enabled!" });
-    } catch (e) {
-        res.status(500).json({ success: false, message: "Verify failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
 app.post('/api/2fa/disable', async (req, res) => {
@@ -225,26 +204,116 @@ app.post('/api/2fa/disable', async (req, res) => {
         const { email, code } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
         const verified = speakeasy.totp.verify({
             secret: user.twoFASecret,
             encoding: 'base32',
             token: code,
             window: 1
         });
-
         if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
-
         user.twoFAEnabled = false;
         user.twoFASecret = "";
         await user.save();
-
         res.json({ success: true, message: "2FA disabled!" });
-    } catch (e) {
-        res.status(500).json({ success: false, message: "Disable failed" });
-    }
+    } catch (e) { res.status(500).json({ success: false, message: "Disable failed" }); }
 });
 
+// FORGOT PASSWORD APIs
+app.post('/api/forgot/check', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: "Email din" });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "Ei email diye kono account nai" });
+
+        if (user.twoFAEnabled && user.twoFASecret) {
+            return res.json({ success: true, needs2FA: true, message: "2FA code din" });
+        }
+        // 2FA nai — direct OTP generate
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        return res.json({ success: true, needs2FA: false, otp: otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/forgot/verify-2fa', async (req, res) => {
+    try {
+        const { email, twoFACode } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFASecret,
+            encoding: 'base32',
+            token: twoFACode,
+            window: 1
+        });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+
+        // OTP generate
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        res.json({ success: true, message: "2FA verified", otp: otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/forgot/reset', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) return res.status(400).json({ success: false, message: "Sob field din" });
+        const stored = otpStore[email];
+        if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
+        if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+        const salt = await bcrypt.genSalt(10);
+        user.passwordHash = await bcrypt.hash(newPassword, salt);
+        await user.save();
+        delete otpStore[email];
+        res.json({ success: true, message: "Password reset successful!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// CHANGE PASSWORD
+app.put('/api/user/change-password', async (req, res) => {
+    try {
+        const { email, oldPassword, newPassword, twoFACode } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const m = await bcrypt.compare(oldPassword, u.passwordHash);
+        if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
+
+        if (u.twoFAEnabled && u.twoFASecret) {
+            if (!twoFACode) {
+                return res.status(200).json({ success: false, requires2FA: true, message: "2FA code din" });
+            }
+            const verified = speakeasy.totp.verify({
+                secret: u.twoFASecret,
+                encoding: 'base32',
+                token: twoFACode,
+                window: 1
+            });
+            if (!verified) {
+                return res.status(400).json({ success: false, requires2FA: true, message: "Bhul 2FA code!" });
+            }
+        }
+
+        if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+        const salt = await bcrypt.genSalt(10);
+        u.passwordHash = await bcrypt.hash(newPassword, salt);
+        await u.save();
+        res.json({ success: true, message: "Password changed!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// USER APIs
 app.post('/api/logout', (req, res) => {
     const { username } = req.body;
     if (username) delete activeUsers[username];
@@ -325,21 +394,6 @@ app.put('/api/user/profile', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Update failed" }); }
 });
 
-app.put('/api/user/change-password', async (req, res) => {
-    try {
-        const { email, oldPassword, newPassword } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-        const m = await bcrypt.compare(oldPassword, u.passwordHash);
-        if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
-        if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
-        const salt = await bcrypt.genSalt(10);
-        u.passwordHash = await bcrypt.hash(newPassword, salt);
-        await u.save();
-        res.json({ success: true, message: "Password changed!" });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
-});
-
 app.put('/api/user/theme', async (req, res) => {
     try {
         const { email, theme } = req.body;
@@ -389,6 +443,7 @@ app.post('/api/user/unfollow', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
+// POSTS APIs
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
@@ -506,6 +561,7 @@ app.post('/api/posts/vote', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
+// STORIES
 app.post('/api/stories', async (req, res) => {
     try {
         const { username, media, mediaType, text } = req.body;
@@ -529,6 +585,7 @@ app.get('/api/stories', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
+// CHAT
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
