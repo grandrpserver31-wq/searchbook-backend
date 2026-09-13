@@ -15,7 +15,7 @@ const MONGO_URI = process.env.MONGO_URI;
 
 // Admin credentials
 const ADMIN_USERNAME = "Admin_Master";
-const ADMIN_PASSWORD_HASH = "$2b$10$8K1p/a0dL1LXMIgoEDFrwOfgqwAGK9qXpvJqjE0U0J4vL6uG9y2Ki";
+const ADMIN_PASSWORD_HASH = "$2b$10$OLJNSDhgCyPxxvIF/Noz4OOgxN6WRsGWiwL9TeQt4SOywPdjffdMW";
 
 app.get('/server.js', (req, res) => res.status(403).send('Forbidden'));
 app.get('/.env', (req, res) => res.status(403).send('Forbidden'));
