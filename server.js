@@ -3,16 +3,16 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 const bcrypt = require('bcrypt');
+const speakeasy = require('speakeasy');
+const QRCode = require('qrcode');
 
 const app = express();
 app.use(express.static(__dirname));
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
-// MongoDB URI .env file থেকে আসবে — GitHub এ দেখা যাবে না
 const MONGO_URI = process.env.MONGO_URI;
 
-// Sensitive files block (safety)
 app.get('/server.js', (req, res) => res.status(403).send('Forbidden'));
 app.get('/.env', (req, res) => res.status(403).send('Forbidden'));
 
@@ -73,6 +73,8 @@ const UserSchema = new mongoose.Schema({
     following: { type: [String], default: [] },
     bookmarks: { type: [String], default: [] },
     theme: { type: String, default: "light" },
+    twoFASecret: { type: String, default: "" },
+    twoFAEnabled: { type: Boolean, default: false },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -135,14 +137,85 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, twoFACode } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User nai!" });
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
+
+        if (user.twoFAEnabled && user.twoFASecret) {
+            if (!twoFACode) {
+                return res.status(200).json({ success: false, requires2FA: true, message: "2FA code din" });
+            }
+            const verified = speakeasy.totp.verify({
+                secret: user.twoFASecret,
+                encoding: 'base32',
+                token: twoFACode,
+                window: 1
+            });
+            if (!verified) {
+                return res.status(400).json({ success: false, requires2FA: true, message: "Bhul 2FA code!" });
+            }
+        }
+
         activeUsers[user.username] = Date.now();
         res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName, theme: user.theme || "light" });
     } catch (err) { res.status(500).json({ success: false, message: "Login failed" }); }
+});
+
+// ============ 2FA APIs ============
+app.post('/api/2fa/setup', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        const secret = speakeasy.generateSecret({
+            name: `Searchbook (${user.username})`,
+            issuer: 'Searchbook'
+        });
+        user.twoFASecret = secret.base32;
+        await user.save();
+        const qrCodeDataURL = await QRCode.toDataURL(secret.otpauth_url);
+        res.json({ success: true, qrCode: qrCodeDataURL, secret: secret.base32 });
+    } catch (e) { res.status(500).json({ success: false, message: "2FA setup failed" }); }
+});
+
+app.post('/api/2fa/verify', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        if (!user.twoFASecret) return res.status(400).json({ success: false, message: "Age setup korun" });
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFASecret,
+            encoding: 'base32',
+            token: code,
+            window: 1
+        });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+        user.twoFAEnabled = true;
+        await user.save();
+        res.json({ success: true, message: "2FA enabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Verify failed" }); }
+});
+
+app.post('/api/2fa/disable', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFASecret,
+            encoding: 'base32',
+            token: code,
+            window: 1
+        });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+        user.twoFAEnabled = false;
+        user.twoFASecret = "";
+        await user.save();
+        res.json({ success: true, message: "2FA disabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Disable failed" }); }
 });
 
 app.post('/api/logout', (req, res) => {
@@ -174,6 +247,7 @@ app.get('/api/user/:email', async (req, res) => {
             bio: u.bio || "", profilePic: u.profilePic || "",
             followers: u.followers || [], following: u.following || [],
             bookmarks: u.bookmarks || [], theme: u.theme || "light",
+            twoFAEnabled: u.twoFAEnabled || false,
             isActive: !!isActive, createdAt: u.createdAt
         }});
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
@@ -226,11 +300,27 @@ app.put('/api/user/profile', async (req, res) => {
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
-        const { email, oldPassword, newPassword } = req.body;
+        const { email, oldPassword, newPassword, twoFACode } = req.body;
         const u = await User.findOne({ email });
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
         if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
+
+        if (u.twoFAEnabled && u.twoFASecret) {
+            if (!twoFACode) {
+                return res.status(200).json({ success: false, requires2FA: true, message: "2FA code din" });
+            }
+            const verified = speakeasy.totp.verify({
+                secret: u.twoFASecret,
+                encoding: 'base32',
+                token: twoFACode,
+                window: 1
+            });
+            if (!verified) {
+                return res.status(400).json({ success: false, requires2FA: true, message: "Bhul 2FA code!" });
+            }
+        }
+
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
