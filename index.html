@@ -829,7 +829,52 @@ async function likePost(postId){if(!currentUser){alert("Login korun");return;}tr
 async function reactPost(postId,reaction){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/posts/reaction",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,reaction:reaction})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
 async function votePoll(postId,optionIndex){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/posts/vote",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,optionIndex:optionIndex})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
 async function commentPost(postId){if(!currentUser){alert("Login korun");return;}const text=prompt("Comment likhun:");if(!text) return;try{const res=await fetch(BACKEND_URL+"/api/posts/comment",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId,username:currentUser.username,text:text})});const data=await res.json();if(data.success) loadPosts();}catch(e){}}
-async function sharePost(postId){try{const res=await fetch(BACKEND_URL+"/api/posts/share",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId})});const data=await res.json();if(data.success){alert("🔗 Shared!");loadPosts();}}catch(e){}}
+
+async function sharePost(postId){
+    const postUrl=window.location.origin+"/post/"+postId;
+    const shareText="Check out this post on Searchbook! 🌙 "+postUrl;
+    const choice=prompt(
+        "🔗 Share korun:\n\n"+
+        "1. 💬 WhatsApp\n"+
+        "2. 📘 Facebook Feed\n"+
+        "3. 💌 Facebook Messenger\n"+
+        "4. 📸 Instagram Story\n"+
+        "5. ✉️ Instagram Message\n"+
+        "6. 📋 Copy Link\n\n"+
+        "Number din (1-6):"
+    );
+    let url=null;
+    if(choice==="1"){
+        url="https://wa.me/?text="+encodeURIComponent(shareText);
+    } else if(choice==="2"){
+        url="https://www.facebook.com/sharer/sharer.php?u="+encodeURIComponent(postUrl);
+    } else if(choice==="3"){
+        url="https://www.facebook.com/dialog/send?link="+encodeURIComponent(postUrl)+"&app_id=123456789&redirect_uri="+encodeURIComponent(postUrl);
+    } else if(choice==="4"){
+        await navigator.clipboard.writeText(shareText);
+        alert("📋 Post link copied!\n\nInstagram open hobe — Story te paste korun।");
+        url="https://www.instagram.com/";
+    } else if(choice==="5"){
+        await navigator.clipboard.writeText(shareText);
+        alert("📋 Post link copied!\n\nInstagram open hobe — Message e paste korun।");
+        url="https://www.instagram.com/direct/inbox/";
+    } else if(choice==="6"){
+        await navigator.clipboard.writeText(postUrl);
+        alert("📋 Post link copied!");
+        url=null;
+    }
+    if(url){
+        window.open(url,"_blank");
+    }
+    if(choice&&choice>="1"&&choice<="5"){
+        try{
+            await fetch(BACKEND_URL+"/api/posts/share",{method:"POST",headers:authHeaders(),body:JSON.stringify({postId:postId})});
+            loadPosts();
+        } catch(e){
+            console.log("Share count failed:",e);
+        }
+    }
+}
 
 async function toggleBookmark(postId){if(!currentUser){alert("Login korun");return;}try{const res=await fetch(BACKEND_URL+"/api/user/bookmark",{method:"POST",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,postId:postId})});const data=await res.json();if(data.success){bookmarks=data.bookmarks||[];loadPosts();}}catch(e){}}
 async function loadBookmarks(){if(!currentUser) return;try{const res=await fetch(BACKEND_URL+"/api/user/bookmarks/"+currentUser.email,{headers:authHeaders()});const data=await res.json();if(data.success) bookmarks=data.posts.map(function(p){return p._id;});}catch(e){}}
@@ -938,15 +983,12 @@ async function changePassword(){
     const newPassword=document.getElementById("new-pass").value;
     if(!oldPassword||!newPassword){alert("Dui password din");return;}
     if(newPassword.length<6){alert("New pass min 6 char");return;}
-
-    // Jodi 2FA enabled thake — 2FA code chai
     const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
     let twoFACode = null;
     if (twoFAEnabled) {
         twoFACode = prompt("2FA code din (6 digit):");
         if (!twoFACode) return;
     }
-
     try{
         const res=await fetch(BACKEND_URL+"/api/user/change-password",{method:"PUT",headers:authHeaders(),body:JSON.stringify({email:currentUser.email,oldPassword:oldPassword,newPassword:newPassword,twoFACode:twoFACode})});
         const data=await res.json();
