@@ -22,7 +22,7 @@ jobs:
         uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
-          java-version: '17'
+          java-version: '21'
 
       - name: Install dependencies
         run: npm install
@@ -34,7 +34,6 @@ jobs:
         run: |
           mkdir -p www
           cp index.html www/
-          cp -r .github www/ 2>/dev/null || true
 
       - name: Create Capacitor config
         run: |
