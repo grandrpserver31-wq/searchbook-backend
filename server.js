@@ -34,7 +34,10 @@ setInterval(() => {
     }
 }, 60000);
 
+// ============ OTP Store ============
 const otpStore = {};
+// Reset password store
+const resetStore = {};
 
 app.post('/api/send-otp', async (req, res) => {
     try {
@@ -62,6 +65,7 @@ app.post('/api/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
+// ============ SCHEMAS ============
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -121,6 +125,7 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
+// ============ AUTH ============
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -161,6 +166,81 @@ app.post('/api/login', async (req, res) => {
         activeUsers[user.username] = Date.now();
         res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName, theme: user.theme || "light" });
     } catch (err) { res.status(500).json({ success: false, message: "Login failed" }); }
+});
+
+// ============ FORGOT PASSWORD ============
+// Step 1: Check email + check if 2FA enabled
+app.post('/api/forgot/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        if (!email) return res.status(400).json({ success: false, message: "Email din" });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "Ei email diye kono account nai" });
+        
+        // If 2FA enabled, needs 2FA verification first
+        if (user.twoFAEnabled && user.twoFASecret) {
+            return res.json({ success: true, needs2FA: true, message: "2FA code din age" });
+        }
+        
+        // Send OTP
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        console.log(`Reset OTP for ${email}: ${otp}`);
+        res.json({ success: true, needs2FA: false, otp: otp, message: "OTP পাঠানো হয়েছে" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// Step 2: Verify 2FA and send OTP
+app.post('/api/forgot/verify-2fa', async (req, res) => {
+    try {
+        const { email, twoFACode } = req.body;
+        if (!email || !twoFACode) return res.status(400).json({ success: false, message: "Sob field din" });
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        
+        const verified = speakeasy.totp.verify({
+            secret: user.twoFASecret,
+            encoding: 'base32',
+            token: twoFACode,
+            window: 1
+        });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        
+        // Send OTP after 2FA verified
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        console.log(`Reset OTP for ${email}: ${otp}`);
+        res.json({ success: true, otp: otp, message: "2FA verified, OTP পাঠানো হয়েছে" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// Step 3: Reset password with OTP
+app.post('/api/forgot/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        if (!email || !otp || !newPassword) return res.status(400).json({ success: false, message: "Sob field din" });
+        if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Password min 6 char" });
+        
+        const stored = otpStore[email];
+        if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
+        if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
+        
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+        
+        const salt = await bcrypt.genSalt(10);
+        user.passwordHash = await bcrypt.hash(newPassword, salt);
+        await user.save();
+        delete otpStore[email];
+        res.json({ success: true, message: "Password reset successful! Ekhon login korun." });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
 // ============ 2FA APIs ============
@@ -218,6 +298,7 @@ app.post('/api/2fa/disable', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Disable failed" }); }
 });
 
+// ============ USER APIs ============
 app.post('/api/logout', (req, res) => {
     const { username } = req.body;
     if (username) delete activeUsers[username];
