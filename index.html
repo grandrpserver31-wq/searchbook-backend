@@ -25,7 +25,6 @@
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 body { background: var(--bg); color: var(--text); min-height: 100vh; transition: 0.3s; }
 
-/* DARK MODE */
 body.dark {
     --bg: #0f0e17;
     --white: #1a1a2e;
@@ -38,7 +37,6 @@ body.dark {
 body.dark input, body.dark textarea { background: #2a2a40; color: var(--text); border-color: var(--border); }
 body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { background: #1a1a2e; }
 
-/* AUTH PAGE */
 #auth-app {
     min-height: 100vh;
     display: flex;
@@ -78,7 +76,6 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
     margin-bottom: 30px;
 }
 
-/* PANEL HIDE/SHOW */
 .card { display: none; }
 .card.active { display: block; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
@@ -117,15 +114,8 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
     letter-spacing: 0.5px;
 }
 .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
-.btn:active { transform: translateY(0); }
 .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
 .btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
-.btn-outline {
-    background: transparent;
-    border: 2px solid var(--primary);
-    color: var(--primary);
-}
-.btn-outline:hover { background: var(--primary); color: white; }
 
 .link {
     color: var(--primary);
@@ -165,11 +155,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     font-family: 'Courier New', monospace;
 }
 
-/* MAIN APP */
 #main-app { display: none; }
 #main-app.active { display: block; }
 
-/* TOP BAR */
 .top-bar {
     background: var(--white);
     padding: 12px 20px;
@@ -180,7 +168,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     display: flex;
     justify-content: space-between;
     align-items: center;
-    backdrop-filter: blur(10px);
 }
 .top-logo {
     font-size: 22px;
@@ -206,7 +193,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 }
 .top-icon-btn:hover { background: var(--primary); color: white; transform: translateY(-2px); }
 
-/* LAYOUT */
 .layout {
     display: flex;
     max-width: 1200px;
@@ -215,7 +201,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     padding: 20px;
 }
 
-/* SIDEBAR */
 .sidebar {
     width: 240px;
     background: var(--white);
@@ -242,15 +227,12 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     font-size: 15px;
 }
 .sidebar-item:hover { background: linear-gradient(135deg, #f0f0ff, #e8e8ff); color: var(--primary); }
-.sidebar-item.active { background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; }
 .sidebar-item .icon { font-size: 20px; width: 26px; text-align: center; }
 
-/* MAIN CONTENT */
 .main-content { flex: 1; max-width: 620px; margin: 0 auto; }
 .main-view { display: none; animation: fadeIn 0.3s; }
 .main-view.active { display: block; }
 
-/* RIGHT SIDEBAR */
 .right-sidebar {
     width: 260px;
     background: var(--white);
@@ -271,13 +253,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     padding: 10px;
     border-radius: var(--radius-sm);
     font-size: 14px;
-    cursor: pointer;
 }
-.right-item:hover { background: var(--bg); }
 .right-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-.right-item .dot.offline { background: var(--muted); }
 
-/* POST CREATE BOX */
 .post-box {
     background: var(--white);
     padding: 20px;
@@ -324,7 +302,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 }
 .media-btn:hover { background: linear-gradient(135deg, #f0f0ff, #e8e8ff); color: var(--primary); }
 
-/* POST ITEM */
 .post-item {
     background: var(--white);
     padding: 20px;
@@ -332,9 +309,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     margin-bottom: 16px;
     box-shadow: var(--shadow-sm);
     border: 1px solid var(--border);
-    transition: 0.2s;
 }
-.post-item:hover { box-shadow: var(--shadow-md); }
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .post-header .avatar {
     width: 44px; height: 44px; border-radius: 50%;
@@ -349,7 +324,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .post-content { margin-top: 8px; font-size: 15px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
 .post-media { max-width: 100%; border-radius: var(--radius-sm); margin-top: 12px; }
 
-/* REACTIONS BAR */
 .reactions-bar {
     display: flex;
     gap: 6px;
@@ -371,7 +345,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .reaction-btn:hover { transform: scale(1.3); background: rgba(108,92,231,0.1); }
 .reaction-btn.active { background: rgba(108,92,231,0.2); transform: scale(1.15); }
 
-/* POST ACTIONS */
 .post-actions {
     display: flex;
     gap: 6px;
@@ -395,7 +368,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .action-btn.liked { color: var(--primary); background: rgba(108,92,231,0.1); }
 .action-btn.bookmarked { color: var(--warning); background: rgba(253,203,110,0.15); }
 
-/* POLL */
 .poll-box {
     margin-top: 12px;
     padding: 16px;
@@ -429,10 +401,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 }
 .poll-total { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
 .poll-creator { margin-top: 10px; padding: 14px; background: var(--bg); border-radius: var(--radius-sm); display: none; }
-.poll-creator input { margin-bottom: 8px; padding: 10px; border: 2px solid var(--border); border-radius: 8px; }
+.poll-creator input { margin-bottom: 8px; padding: 10px; border: 2px solid var(--border); border-radius: 8px; background: var(--white); }
 .poll-creator-btn { padding: 10px; font-size: 13px; margin-top: 6px; }
 
-/* ACTIVE COUNTER */
 .active-counter {
     background: linear-gradient(135deg, #e8f8f5, #d1f2eb);
     color: #00b894;
@@ -444,7 +415,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     margin-bottom: 16px;
 }
 
-/* STORIES */
 .stories-bar {
     display: flex;
     gap: 12px;
@@ -474,11 +444,8 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     background: linear-gradient(135deg, #6c5ce7, #a29bfe);
     color: white; display: flex; align-items: center; justify-content: center;
     font-size: 30px; cursor: pointer; border: 3px solid var(--white);
-    transition: 0.2s;
 }
-.add-story-btn:hover { transform: scale(1.05); }
 
-/* SEARCH RESULT */
 .search-result {
     display: flex; align-items: center; gap: 12px;
     padding: 14px; border-radius: var(--radius-sm);
@@ -497,7 +464,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .search-status.online { background: var(--accent); }
 .search-status.offline { background: var(--muted); }
 
-/* PROFILE */
 .pic-circle-lg {
     width: 100px; height: 100px; border-radius: 50%;
     object-fit: cover; border: 4px solid var(--primary);
@@ -519,7 +485,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .stat-row > span { text-align: center; font-size: 13px; color: var(--muted); }
 .stat-row b { display: block; font-size: 20px; color: var(--text); margin-bottom: 4px; }
 
-/* CHAT */
 .chat-room-item {
     display: flex; align-items: center; gap: 14px;
     padding: 14px; border-radius: var(--radius-sm);
@@ -537,7 +502,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .chat-info { flex: 1; }
 .chat-name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
 .chat-last { font-size: 13px; color: var(--muted); }
-.chat-time { font-size: 11px; color: var(--muted); }
 
 #chat-messages {
     max-height: 400px; overflow-y: auto; padding: 16px;
@@ -572,11 +536,8 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     background: linear-gradient(135deg, #6c5ce7, #a29bfe);
     color: white; border: none; padding: 0 24px;
     border-radius: 24px; cursor: pointer; font-weight: 700;
-    transition: 0.2s;
 }
-.chat-send-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 
-/* MISC */
 .center { text-align: center; }
 .feed-header {
     display: flex; justify-content: space-between;
@@ -588,7 +549,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     background: linear-gradient(135deg, #6c5ce7, #a29bfe);
     color: white; transition: 0.2s;
 }
-.small-btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-sm); }
 
 .theme-toggle {
     position: fixed; bottom: 24px; right: 24px;
@@ -596,10 +556,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     background: linear-gradient(135deg, #6c5ce7, #a29bfe);
     color: white; border: none; font-size: 24px;
     cursor: pointer; box-shadow: var(--shadow-lg);
-    z-index: 999; display: none; transition: 0.2s;
+    z-index: 999; display: none;
 }
 .theme-toggle.show { display: block; }
-.theme-toggle:hover { transform: scale(1.1) rotate(15deg); }
 
 #story-viewer {
     position: fixed; top: 0; left: 0;
@@ -623,13 +582,11 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 
 <button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-<!-- ============ AUTH PAGE ============ -->
 <div id="auth-app">
     <div class="auth-box">
         <h1 class="auth-logo">Searchbook</h1>
         <p class="auth-subtitle">Connect with friends, share your moments</p>
 
-        <!-- Login -->
         <div id="login-panel" class="card active">
             <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
             <div class="input-group"><input type="password" id="login-password" placeholder="Password"></div>
@@ -639,7 +596,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
         </div>
 
-        <!-- Register -->
         <div id="register-panel" class="card">
             <h2>Create Account</h2>
             <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
@@ -650,7 +606,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
 
-        <!-- OTP -->
         <div id="otp-panel" class="card">
             <h2>Enter OTP</h2>
             <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">OTP valid for 1 minute only</p>
@@ -660,7 +615,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <button class="btn" onclick="verifyAndSignup()">Verify & Create Account</button>
         </div>
 
-        <!-- Forgot -->
         <div id="forgot-panel" class="card">
             <h2>Find Account</h2>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Email"></div>
@@ -670,9 +624,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     </div>
 </div>
 
-<!-- ============ MAIN APP ============ -->
 <div id="main-app">
-    <!-- Top Bar -->
     <div class="top-bar">
         <div class="top-logo">Searchbook</div>
         <div class="top-icons">
@@ -686,19 +638,15 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     </div>
 
     <div class="layout">
-        <!-- Left Sidebar -->
         <div class="sidebar">
             <div class="sidebar-item" onclick="switchMainView('feed-view')"><span class="icon">🏠</span> Home</div>
             <div class="sidebar-item" onclick="switchMainView('profile-view')"><span class="icon">👤</span> My Profile</div>
             <div class="sidebar-item" onclick="switchMainView('chat-list-view')"><span class="icon">💬</span> Messages</div>
             <div class="sidebar-item" onclick="switchMainView('bookmark-view')"><span class="icon">🔖</span> Saved</div>
             <div class="sidebar-item" onclick="switchMainView('search-view')"><span class="icon">🔍</span> Search</div>
-            <div class="sidebar-item" onclick="switchMainView('feed-view')"><span class="icon">📸</span> Stories</div>
         </div>
 
-        <!-- Main Content -->
         <div class="main-content">
-            <!-- FEED VIEW -->
             <div id="feed-view" class="main-view active">
                 <div class="active-counter" id="active-counter">🟢 Loading active users...</div>
 
@@ -724,9 +672,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                     <div id="media-preview" style="margin-top:10px;"></div>
 
                     <div class="poll-creator" id="poll-creator">
-                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; background:var(--white);">
-                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px; background:var(--white);">
-                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px; background:var(--white);">
+                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px;">
+                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px;">
+                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px;">
                         <button class="btn btn-green poll-creator-btn" onclick="addPollOption()">+ Add Option</button>
                     </div>
 
@@ -737,7 +685,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
             </div>
 
-            <!-- SEARCH VIEW -->
             <div id="search-view" class="main-view">
                 <div class="post-box">
                     <h2>🔍 Search Users</h2>
@@ -748,7 +695,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 </div>
             </div>
 
-            <!-- BOOKMARK VIEW -->
             <div id="bookmark-view" class="main-view">
                 <div class="post-box">
                     <h2>🔖 Saved Posts</h2>
@@ -756,7 +702,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 </div>
             </div>
 
-            <!-- PROFILE VIEW -->
             <div id="profile-view" class="main-view">
                 <div class="post-box">
                     <h2>👤 My Profile</h2>
@@ -785,7 +730,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 </div>
             </div>
 
-            <!-- CHAT LIST VIEW -->
             <div id="chat-list-view" class="main-view">
                 <div class="post-box">
                     <h2>💬 Messages</h2>
@@ -799,7 +743,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 </div>
             </div>
 
-            <!-- CHAT WINDOW VIEW -->
             <div id="chat-window-view" class="main-view">
                 <div class="post-box">
                     <div class="feed-header">
@@ -814,7 +757,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                 </div>
             </div>
 
-            <!-- VISIT PROFILE VIEW -->
             <div id="visit-view" class="main-view">
                 <div class="post-box">
                     <div class="feed-header">
@@ -843,7 +785,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             </div>
         </div>
 
-        <!-- Right Sidebar -->
         <div class="right-sidebar">
             <h4>🟢 Active Now</h4>
             <div id="active-list"><p style="color:var(--muted); font-size:13px;">Loading...</p></div>
@@ -878,14 +819,19 @@ function authHeaders() {
     return h;
 }
 
+// ✅ FIX: Auth panel switch
 function switchPanel(id) {
     document.querySelectorAll('#auth-app .card').forEach(p => p.classList.remove('active'));
-    document.getElementById(id).classList.add('active');
+    const el = document.getElementById(id);
+    if (el) el.classList.add('active');
+    window.scrollTo(0, 0);
 }
 
+// ✅ FIX: Main app view switch
 function switchMainView(viewId) {
     document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
-    document.getElementById(viewId).classList.add('active');
+    const el = document.getElementById(viewId);
+    if (el) el.classList.add('active');
     window.scrollTo(0, 0);
     if (viewId === 'feed-view') { loadPosts(); loadStories(); loadActiveUsers(); }
     if (viewId === 'profile-view') openProfile();
@@ -998,12 +944,7 @@ async function loadActiveUsers() {
         const data = await res.json();
         document.getElementById('active-counter').textContent = "🟢 " + data.count + " users active now";
         if (data.users && data.users.length > 0) {
-            document.getElementById('active-list').innerHTML = data.users.slice(0, 10).map(u => `
-                <div class="right-item">
-                    <span class="dot"></span>
-                    <span>${escapeHtml(u)}</span>
-                </div>
-            `).join('');
+            document.getElementById('active-list').innerHTML = data.users.slice(0, 10).map(u => `<div class="right-item"><span class="dot"></span><span>${escapeHtml(u)}</span></div>`).join('');
         } else {
             document.getElementById('active-list').innerHTML = '<p style="color:var(--muted); font-size:13px;">No users active</p>';
         }
@@ -1173,47 +1114,15 @@ function renderPost(p) {
     </div>`;
 }
 
-async function likePost(postId) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try { const res = await fetch(BACKEND_URL + '/api/posts/like', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) { alert("❌ " + e.message); }
-}
-async function reactPost(postId, reaction) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try { const res = await fetch(BACKEND_URL + '/api/posts/reaction', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, reaction }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) { alert("❌ " + e.message); }
-}
-async function votePoll(postId, optionIndex) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try { const res = await fetch(BACKEND_URL + '/api/posts/vote', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, optionIndex }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) { alert("❌ " + e.message); }
-}
-async function commentPost(postId) {
-    if (!currentUser) { alert("Login korun"); return; }
-    const text = prompt("Comment likhun:");
-    if (!text) return;
-    try { const res = await fetch(BACKEND_URL + '/api/posts/comment', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, text }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) { alert("❌ " + e.message); }
-}
-async function sharePost(postId) {
-    try { const res = await fetch(BACKEND_URL + '/api/posts/share', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId }) }); const data = await res.json(); if (data.success) { alert("🔗 Shared!"); loadPosts(); } } catch (e) { alert("❌ " + e.message); }
-}
+async function likePost(postId) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + '/api/posts/like', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function reactPost(postId, reaction) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + '/api/posts/reaction', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, reaction }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function votePoll(postId, optionIndex) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + '/api/posts/vote', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, optionIndex }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function commentPost(postId) { if (!currentUser) { alert("Login korun"); return; } const text = prompt("Comment likhun:"); if (!text) return; try { const res = await fetch(BACKEND_URL + '/api/posts/comment', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId, username: currentUser.username, text }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function sharePost(postId) { try { const res = await fetch(BACKEND_URL + '/api/posts/share', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ postId }) }); const data = await res.json(); if (data.success) { alert("🔗 Shared!"); loadPosts(); } } catch (e) {} }
 
-async function toggleBookmark(postId) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try { const res = await fetch(BACKEND_URL + '/api/user/bookmark', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, postId }) }); const data = await res.json(); if (data.success) { bookmarks = data.bookmarks || []; loadPosts(); } } catch (e) { alert("❌ " + e.message); }
-}
-async function loadBookmarks() {
-    if (!currentUser) return;
-    try { const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() }); const data = await res.json(); if (data.success) bookmarks = data.posts.map(p => p._id); } catch (e) { console.log(e); }
-}
-async function openBookmarks() {
-    if (!currentUser) return;
-    const list = document.getElementById('bookmarks-list');
-    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
-    try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() });
-        const data = await res.json();
-        if (!data.posts || data.posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>';
-        else list.innerHTML = data.posts.map(p => renderPost(p)).join('');
-    } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; }
-}
+async function toggleBookmark(postId) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + '/api/user/bookmark', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, postId }) }); const data = await res.json(); if (data.success) { bookmarks = data.bookmarks || []; loadPosts(); } } catch (e) {} }
+async function loadBookmarks() { if (!currentUser) return; try { const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() }); const data = await res.json(); if (data.success) bookmarks = data.posts.map(p => p._id); } catch (e) {} }
+async function openBookmarks() { if (!currentUser) return; const list = document.getElementById('bookmarks-list'); list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>'; try { const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() }); const data = await res.json(); if (!data.posts || data.posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>'; else list.innerHTML = data.posts.map(p => renderPost(p)).join(''); } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; } }
 
 let searchTimer = null;
 async function doSearch() {
@@ -1267,7 +1176,7 @@ async function toggleFollow() {
     if (!visitUser || !currentUser) return;
     const isFollowing = (visitUser.followers || []).includes(currentUser.username);
     const endpoint = isFollowing ? '/api/user/unfollow' : '/api/user/follow';
-    try { const res = await fetch(BACKEND_URL + endpoint, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ follower: currentUser.username, following: visitUser.username }) }); const data = await res.json(); if (data.success) visitProfile(visitUser.username); } catch (e) { alert("❌ " + e.message); }
+    try { const res = await fetch(BACKEND_URL + endpoint, { method: 'POST', headers: authHeaders(), body: JSON.stringify({ follower: currentUser.username, following: visitUser.username }) }); const data = await res.json(); if (data.success) visitProfile(visitUser.username); } catch (e) {}
 }
 
 async function openProfile() {
@@ -1283,7 +1192,7 @@ async function openProfile() {
             document.getElementById('edit-fullname').value = u.fullName || "";
             document.getElementById('edit-bio').value = u.bio || "";
         }
-    } catch (e) { alert("❌ " + e.message); }
+    } catch (e) {}
 }
 
 function uploadProfilePic(input) {
@@ -1330,7 +1239,7 @@ async function openChatList() {
         const data = await res.json();
         if (!data.rooms || data.rooms.length === 0) roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet</p>';
         else roomsList.innerHTML = data.rooms.map(r => { const other = r.members.find(m => m !== currentUser.username); return `<div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')"><div class="chat-avatar">${escapeHtml(other.substring(0,1).toUpperCase())}</div><div class="chat-info"><div class="chat-name">${escapeHtml(other)}</div><div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div></div></div>`; }).join('');
-    } catch (e) { alert("❌ " + e.message); }
+    } catch (e) {}
 }
 
 let chatSearchTimer = null;
@@ -1345,7 +1254,7 @@ async function searchForChat() {
             const data = await res.json();
             if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
             results.innerHTML = data.users.filter(u => u.username !== currentUser.username).map(u => `<div class="search-result" onclick="startChatWith('${escapeHtml(u.username)}')"><div class="search-pic-wrapper"><img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}"><span class="search-status ${u.isActive ? 'online' : 'offline'}"></span></div><div><div style="font-weight:700; color:#6c5ce7;">${escapeHtml(u.username)}</div><div style="font-size:13px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div></div></div>`).join('');
-        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+        } catch (e) {}
     }, 300);
 }
 
@@ -1382,7 +1291,7 @@ async function loadMessages() {
             box.innerHTML = data.messages.map(m => `<div class="chat-msg ${m.sender === currentUser.username ? 'me' : 'other'}">${escapeHtml(m.text)}<div class="chat-msg-time">${new Date(m.createdAt).toLocaleTimeString()}</div></div>`).join('');
             if (wasAtBottom) box.scrollTop = box.scrollHeight;
         }
-    } catch (e) { console.log(e); }
+    } catch (e) {}
 }
 
 async function sendMessage() {
@@ -1390,7 +1299,7 @@ async function sendMessage() {
     const text = input.value.trim();
     if (!text || !currentRoomId) return;
     input.value = '';
-    try { const res = await fetch(BACKEND_URL + '/api/chat/message', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) { alert("❌ " + e.message); }
+    try { const res = await fetch(BACKEND_URL + '/api/chat/message', { method: 'POST', headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
 }
 
 function escapeHtml(text) {
