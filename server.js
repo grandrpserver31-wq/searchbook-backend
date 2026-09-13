@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -8,7 +9,12 @@ app.use(express.static(__dirname));
 app.use(express.json({ limit: '50mb' }));
 app.use(cors());
 
-const MONGO_URI = "mongodb+srv://grandrpserver31_db_user:Tx8SpBrESEEbb0wr@cluster0.rstum6r.mongodb.net/searchbookDB?appName=Cluster00";
+// MongoDB URI .env file থেকে আসবে — GitHub এ দেখা যাবে না
+const MONGO_URI = process.env.MONGO_URI;
+
+// Sensitive files block (safety)
+app.get('/server.js', (req, res) => res.status(403).send('Forbidden'));
+app.get('/.env', (req, res) => res.status(403).send('Forbidden'));
 
 mongoose.connect(MONGO_URI)
     .then(() => console.log("SearchBook MongoDB Connected!"))
