@@ -80,7 +80,7 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
 .card.active { display: block; animation: fadeIn 0.3s ease; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-.input-group { margin-bottom: 16px; position: relative; }
+.input-group { margin-bottom: 16px; }
 .input-group input, .input-group textarea {
     width: 100%;
     padding: 14px 16px;
@@ -111,7 +111,6 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
     cursor: pointer;
     margin-top: 8px;
     transition: 0.2s;
-    letter-spacing: 0.5px;
 }
 .btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
@@ -275,7 +274,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     min-height: 80px;
     font-family: inherit;
     background: #fafbff;
-    transition: 0.2s;
 }
 .post-box textarea:focus { border-color: var(--primary); background: var(--white); }
 
@@ -297,7 +295,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     font-size: 14px;
     color: var(--text);
     font-weight: 600;
-    transition: 0.2s;
     min-width: 80px;
 }
 .media-btn:hover { background: linear-gradient(135deg, #f0f0ff, #e8e8ff); color: var(--primary); }
@@ -340,7 +337,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     font-size: 20px;
     padding: 6px;
     border-radius: 50%;
-    transition: 0.2s;
 }
 .reaction-btn:hover { transform: scale(1.3); background: rgba(108,92,231,0.1); }
 .reaction-btn.active { background: rgba(108,92,231,0.2); transform: scale(1.15); }
@@ -362,7 +358,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     font-weight: 600;
     border-radius: var(--radius-sm);
     font-size: 13px;
-    transition: 0.2s;
 }
 .action-btn:hover { background: var(--bg); color: var(--primary); }
 .action-btn.liked { color: var(--primary); background: rgba(108,92,231,0.1); }
@@ -385,14 +380,13 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     position: relative;
     overflow: hidden;
     background: var(--white);
-    transition: 0.2s;
 }
 .poll-option:hover { border-color: var(--primary); }
 .poll-option.voted { border-color: var(--primary); }
 .poll-option-fill {
     position: absolute; top: 0; left: 0; height: 100%;
     background: linear-gradient(135deg, rgba(108,92,231,0.2), rgba(162,155,254,0.15));
-    z-index: 0; transition: 0.4s;
+    z-index: 0;
 }
 .poll-option-text {
     position: relative; z-index: 1;
@@ -427,8 +421,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     border: 1px solid var(--border);
 }
 .stories-bar::-webkit-scrollbar { height: 0; }
-.story-item { flex-shrink: 0; text-align: center; cursor: pointer; transition: 0.2s; }
-.story-item:hover { transform: scale(1.05); }
+.story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
 .story-ring {
     width: 68px; height: 68px; border-radius: 50%; padding: 3px;
     background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366, #bc1888);
@@ -451,7 +444,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     padding: 14px; border-radius: var(--radius-sm);
     cursor: pointer; margin-bottom: 8px;
     background: var(--white); border: 1px solid var(--border);
-    transition: 0.2s;
 }
 .search-result:hover { transform: translateX(4px); box-shadow: var(--shadow-sm); }
 .search-pic-wrapper { position: relative; }
@@ -490,7 +482,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     padding: 14px; border-radius: var(--radius-sm);
     cursor: pointer; margin-bottom: 8px;
     background: var(--white); border: 1px solid var(--border);
-    transition: 0.2s;
 }
 .chat-room-item:hover { transform: translateX(4px); box-shadow: var(--shadow-sm); }
 .chat-avatar {
@@ -529,7 +520,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     flex: 1; padding: 14px 18px;
     border: 2px solid var(--border); border-radius: 24px;
     outline: none; font-size: 15px;
-    background: #fafbff; transition: 0.2s;
+    background: #fafbff;
 }
 .chat-input-row input:focus { border-color: var(--primary); background: var(--white); }
 .chat-send-btn {
@@ -547,7 +538,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     padding: 10px 16px; border: none; border-radius: var(--radius-sm);
     cursor: pointer; font-weight: 700; font-size: 13px;
     background: linear-gradient(135deg, #6c5ce7, #a29bfe);
-    color: white; transition: 0.2s;
+    color: white;
 }
 
 .theme-toggle {
@@ -672,9 +663,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                     <div id="media-preview" style="margin-top:10px;"></div>
 
                     <div class="poll-creator" id="poll-creator">
-                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px;">
-                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px;">
-                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%; padding:10px; border:2px solid var(--border); border-radius:8px; margin-top:8px;">
+                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%;">
                         <button class="btn btn-green poll-creator-btn" onclick="addPollOption()">+ Add Option</button>
                     </div>
 
@@ -819,7 +810,6 @@ function authHeaders() {
     return h;
 }
 
-// ✅ FIX: Auth panel switch
 function switchPanel(id) {
     document.querySelectorAll('#auth-app .card').forEach(p => p.classList.remove('active'));
     const el = document.getElementById(id);
@@ -827,7 +817,6 @@ function switchPanel(id) {
     window.scrollTo(0, 0);
 }
 
-// ✅ FIX: Main app view switch
 function switchMainView(viewId) {
     document.querySelectorAll('.main-view').forEach(v => v.classList.remove('active'));
     const el = document.getElementById(viewId);
@@ -948,7 +937,7 @@ async function loadActiveUsers() {
         } else {
             document.getElementById('active-list').innerHTML = '<p style="color:var(--muted); font-size:13px;">No users active</p>';
         }
-    } catch (e) { console.log(e); }
+    } catch (e) {}
 }
 
 function uploadStory(input) {
@@ -984,7 +973,7 @@ async function loadStories() {
             item.innerHTML = `<div class="story-ring"><img class="story-pic" src="${first.mediaType === 'image' ? first.media : 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23333\\'/%3E%3Ctext x=\\'50\\' y=\\'55\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'white\\'%3E🎥%3C/text%3E%3C/svg%3E'}"></div><div class="story-name">${escapeHtml(username)}</div>`;
             bar.appendChild(item);
         });
-    } catch (e) { console.log(e); }
+    } catch (e) {}
 }
 
 function viewStory(username, stories) {
@@ -1136,7 +1125,7 @@ async function doSearch() {
             const data = await res.json();
             if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
             results.innerHTML = data.users.map(u => `<div class="search-result" onclick="visitProfile('${escapeHtml(u.username)}')"><div class="search-pic-wrapper"><img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}"><span class="search-status ${u.isActive ? 'online' : 'offline'}"></span></div><div><div style="font-weight:700; color:#6c5ce7;">${escapeHtml(u.username)}</div><div style="font-size:13px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div></div></div>`).join('');
-        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+        } catch (e) {}
     }, 300);
 }
 
@@ -1159,7 +1148,6 @@ async function visitProfile(username) {
             const isFollowing = (u.followers || []).includes(currentUser.username);
             const btn = document.getElementById('follow-btn');
             btn.textContent = isFollowing ? "Unfollow" : "Follow";
-            btn.style.background = isFollowing ? "linear-gradient(135deg,#e17055,#d63031)" : "linear-gradient(135deg,#00b894,#00cec9)";
             document.getElementById('msg-btn').setAttribute('onclick', `startChatWith('${escapeHtml(username)}')`);
             const pRes = await fetch(BACKEND_URL + '/api/posts/user/' + encodeURIComponent(username));
             const posts = await pRes.json();
@@ -1169,7 +1157,7 @@ async function visitProfile(username) {
             else list.innerHTML = posts.map(p => renderPost(p)).join('');
             switchMainView('visit-view');
         }
-    } catch (e) { alert("❌ " + e.message); }
+    } catch (e) {}
 }
 
 async function toggleFollow() {

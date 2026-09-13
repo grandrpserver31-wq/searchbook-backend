@@ -14,11 +14,7 @@ mongoose.connect(MONGO_URI)
     .then(() => console.log("SearchBook MongoDB Connected!"))
     .catch(err => console.error("DB Error:", err));
 
-// ==========================================
-// ACTIVE USERS TRACKER
-// ==========================================
 const activeUsers = {};
-
 app.use((req, res, next) => {
     const username = req.headers['x-username'];
     if (username) activeUsers[username] = Date.now();
@@ -28,60 +24,38 @@ app.use((req, res, next) => {
 setInterval(() => {
     const now = Date.now();
     for (const u in activeUsers) {
-        if (now - activeUsers[u] > 2 * 60 * 1000) {
-            delete activeUsers[u];
-        }
+        if (now - activeUsers[u] > 2 * 60 * 1000) delete activeUsers[u];
     }
 }, 60000);
 
-// ==========================================
-// OTP STORE (1 min expire)
-// ==========================================
 const otpStore = {};
 
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
         if (!email) return res.status(400).json({ success: false, message: "Email dorkar!" });
-
         const otp = Math.floor(100000 + Math.random() * 900000);
         otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
-
         setTimeout(() => {
-            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) {
-                delete otpStore[email];
-            }
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
         }, 61000);
-
-        console.log(`OTP generated for ${email}: ${otp}`);
+        console.log(`OTP for ${email}: ${otp}`);
         res.json({ success: true, message: "OTP generated", otp });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "OTP failed" });
-    }
+    } catch (error) { res.status(500).json({ success: false, message: "OTP failed" }); }
 });
 
 app.post('/api/verify-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
         const stored = otpStore[email];
-
         if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
-        if (Date.now() > stored.expiresAt) {
-            delete otpStore[email];
-            return res.status(400).json({ success: false, message: "OTP expire" });
-        }
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
         if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
-
         delete otpStore[email];
         res.json({ success: true, message: "OTP verified" });
-    } catch (error) {
-        res.status(500).json({ success: false, message: "Verify failed" });
-    }
+    } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
-// ==========================================
-// SCHEMAS
-// ==========================================
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -139,31 +113,18 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
-// ==========================================
-// AUTH APIs
-// ==========================================
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
         if (!username || !email || !password) return res.status(400).json({ success: false, message: "Sob field din" });
-
         const existing = await User.findOne({ $or: [{ email }, { username }] });
         if (existing) return res.status(400).json({ success: false, message: "Email/username ache" });
-
         const salt = await bcrypt.genSalt(10);
         const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({
-            username, email,
-            fullName: fullName || username,
-            passwordHash: hashedPassword
-        });
-
+        const newUser = new User({ username, email, fullName: fullName || username, passwordHash: hashedPassword });
         await newUser.save();
         res.status(201).json({ success: true, message: "Account created!" });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Signup failed" });
-    }
+    } catch (err) { res.status(500).json({ success: false, message: "Signup failed" }); }
 });
 
 app.post('/api/login', async (req, res) => {
@@ -171,22 +132,11 @@ app.post('/api/login', async (req, res) => {
         const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User nai!" });
-
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
-
         activeUsers[user.username] = Date.now();
-
-        res.json({
-            success: true,
-            username: user.username,
-            email: user.email,
-            fullName: user.fullName,
-            theme: user.theme || "light"
-        });
-    } catch (err) {
-        res.status(500).json({ success: false, message: "Login failed" });
-    }
+        res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName, theme: user.theme || "light" });
+    } catch (err) { res.status(500).json({ success: false, message: "Login failed" }); }
 });
 
 app.post('/api/logout', (req, res) => {
@@ -207,9 +157,6 @@ app.get('/api/active-users', (req, res) => {
     res.json({ success: true, count: list.length, users: list });
 });
 
-// ==========================================
-// USER APIs
-// ==========================================
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
@@ -294,7 +241,6 @@ app.put('/api/user/theme', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// BOOKMARKS
 app.post('/api/user/bookmark', async (req, res) => {
     try {
         const { email, postId } = req.body;
@@ -317,7 +263,6 @@ app.get('/api/user/bookmarks/:email', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// FOLLOW
 app.post('/api/user/follow', async (req, res) => {
     try {
         const { follower, following } = req.body;
@@ -337,17 +282,10 @@ app.post('/api/user/unfollow', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ==========================================
-// POST APIs (Algorithm)
-// ==========================================
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
-        const np = new Post({
-            username, content: content || "",
-            media: media || "", mediaType: mediaType || "text",
-            poll: poll || null
-        });
+        const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
     } catch (e) { res.status(500).json({ success: false, message: "Post failed" }); }
@@ -398,16 +336,13 @@ app.post('/api/posts/reaction', async (req, res) => {
         if (!p) return res.status(404).json({ success: false, message: "Post nai" });
         if (!p.reactions) p.reactions = {};
         if (!p.reactions[reaction]) p.reactions[reaction] = [];
-
         Object.keys(p.reactions).forEach(k => {
             const idx = p.reactions[k].indexOf(username);
             if (idx !== -1 && k !== reaction) p.reactions[k].splice(idx, 1);
         });
-
         const idx = p.reactions[reaction].indexOf(username);
         if (idx === -1) p.reactions[reaction].push(username);
         else p.reactions[reaction].splice(idx, 1);
-
         p.markModified('reactions');
         await p.save();
         res.json({ success: true, reactions: p.reactions });
@@ -449,7 +384,6 @@ app.post('/api/posts/vote', async (req, res) => {
         const { postId, username, optionIndex } = req.body;
         const p = await Post.findById(postId);
         if (!p || !p.poll) return res.status(404).json({ success: false, message: "Poll nai" });
-
         let alreadyVoted = false;
         p.poll.options.forEach((opt, i) => {
             const idx = opt.votes.indexOf(username);
@@ -458,27 +392,18 @@ app.post('/api/posts/vote', async (req, res) => {
                 if (i === optionIndex) alreadyVoted = true;
             }
         });
-
         if (!alreadyVoted) p.poll.options[optionIndex].votes.push(username);
-
         p.markModified('poll');
         await p.save();
         res.json({ success: true, poll: p.poll });
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ==========================================
-// STORIES (24h)
-// ==========================================
 app.post('/api/stories', async (req, res) => {
     try {
         const { username, media, mediaType, text } = req.body;
         if (!media) return res.status(400).json({ success: false, message: "Media dorkar" });
-        const ns = new Story({
-            username, media, mediaType: mediaType || "image",
-            text: text || "",
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        });
+        const ns = new Story({ username, media, mediaType: mediaType || "image", text: text || "", expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000) });
         await ns.save();
         res.status(201).json({ success: true, message: "Story created!" });
     } catch (e) { res.status(500).json({ success: false, message: "Story failed" }); }
@@ -497,9 +422,6 @@ app.get('/api/stories', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ==========================================
-// CHAT
-// ==========================================
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
