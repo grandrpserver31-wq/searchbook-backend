@@ -28,13 +28,15 @@ jobs:
         run: npm install
 
       - name: Install Capacitor
-        run: |
-          npm install @capacitor/core @capacitor/cli @capacitor/android
+        run: npm install @capacitor/core @capacitor/cli @capacitor/android
 
-      - name: Initialize Capacitor
+      - name: Create Capacitor config
         run: |
-          npx cap init Searchbook com.darkzone.searchbook --web-dir=.
-        continue-on-error: true
+          echo '{
+            "appId": "com.darkzone.searchbook",
+            "appName": "Searchbook",
+            "webDir": "."
+          }' > capacitor.config.json
 
       - name: Add Android platform
         run: npx cap add android
@@ -44,6 +46,12 @@ jobs:
 
       - name: Sync Capacitor
         run: npx cap sync
+
+      - name: Fix Capacitor plugins
+        run: |
+          mkdir -p android/app/src/main/assets
+          echo '{}' > android/app/src/main/assets/capacitor.plugins.json
+        continue-on-error: true
 
       - name: Build APK
         run: |
