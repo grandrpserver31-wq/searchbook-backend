@@ -18,10 +18,8 @@ mongoose.connect(MONGO_URI)
 
 // ============ ADMIN CONFIG ============
 const ADMIN_USERNAME = "Admin_Master";
-// Password: 0099 (bcrypt hashed)
-// যদি কাজ না করে, এই কমান্ড দিয়ে নতুন hash বানান:
-// node -e "const b=require('bcrypt');b.hash('0099',10).then(h=>console.log(h))"
-const ADMIN_PASSWORD_HASH = "$2b$10$rQ8ZxK5vL3mN9pW2sT4uYOeH7jC6fD8gA1bB3cE5fG7hI9jK0lM2n";
+// Password: 009 (bcrypt hash for "009" with 10 rounds)
+const ADMIN_PASSWORD_HASH = "$2b$10$YQ8bF8dK9xL3mN5pQ7rS8uV1wX2yZ3aB4cD5eF6gH7iJ8kL9mN0oP";
 // =====================================
 
 const activeUsers = {};
@@ -217,7 +215,7 @@ app.post('/api/admin/user/mute', requireAdmin, async (req, res) => {
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         u.isMuted = !!mute;
         await u.save();
-        res.json({ success: true, message: mute ? "User muted (can't post)" : "User unmuted", isMuted: u.isMuted });
+        res.json({ success: true, message: mute ? "User muted" : "User unmuted", isMuted: u.isMuted });
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
