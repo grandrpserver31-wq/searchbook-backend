@@ -13,9 +13,14 @@ app.use(cors());
 
 const MONGO_URI = process.env.MONGO_URI;
 
-// Admin credentials
-const ADMIN_USERNAME = "Admin_Master";
-const ADMIN_PASSWORD_HASH = "$2b$10$OLJNSDhgCyPxxvIF/Noz4SO4OgxN6WRsGWiwL9TeQt4SOywPdjffdMW";
+// ============ ADMIN SCHEMA (MongoDB) ============
+const AdminSchema = new mongoose.Schema({
+    username: { type: String, required: true, unique: true },
+    passwordHash: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Admin = mongoose.model('Admin', AdminSchema);
+// ================================================
 
 app.get('/server.js', (req, res) => res.status(403).send('Forbidden'));
 app.get('/.env', (req, res) => res.status(403).send('Forbidden'));
@@ -131,13 +136,12 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
-// Complaint schema
 const ComplaintSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, default: "" },
     subject: { type: String, required: true },
     message: { type: String, required: true },
-    status: { type: String, default: "pending" }, // pending, resolved
+    status: { type: String, default: "pending" },
     adminNote: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 });
@@ -199,11 +203,11 @@ app.post('/api/forgot/check-email', async (req, res) => {
         if (!email) return res.status(400).json({ success: false, message: "Email din" });
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "Ei email diye kono account nai" });
-        
+
         if (user.twoFAEnabled && user.twoFASecret) {
             return res.json({ success: true, needs2FA: true, message: "2FA code din age" });
         }
-        
+
         const otp = Math.floor(100000 + Math.random() * 900000);
         otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
         setTimeout(() => {
@@ -219,7 +223,7 @@ app.post('/api/forgot/verify-2fa', async (req, res) => {
         if (!email || !twoFACode) return res.status(400).json({ success: false, message: "Sob field din" });
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
-        
+
         const verified = speakeasy.totp.verify({
             secret: user.twoFASecret,
             encoding: 'base32',
@@ -227,7 +231,7 @@ app.post('/api/forgot/verify-2fa', async (req, res) => {
             window: 1
         });
         if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
-        
+
         const otp = Math.floor(100000 + Math.random() * 900000);
         otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
         setTimeout(() => {
@@ -242,15 +246,15 @@ app.post('/api/forgot/reset-password', async (req, res) => {
         const { email, otp, newPassword } = req.body;
         if (!email || !otp || !newPassword) return res.status(400).json({ success: false, message: "Sob field din" });
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Password min 6 char" });
-        
+
         const stored = otpStore[email];
         if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
         if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
         if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
-        
+
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
-        
+
         const salt = await bcrypt.genSalt(10);
         user.passwordHash = await bcrypt.hash(newPassword, salt);
         await user.save();
@@ -315,7 +319,6 @@ app.post('/api/2fa/disable', async (req, res) => {
 });
 
 // ============ COMPLAINT APIs ============
-// User can submit complaint
 app.post('/api/complaint/submit', async (req, res) => {
     try {
         const { username, email, subject, message } = req.body;
@@ -329,28 +332,51 @@ app.post('/api/complaint/submit', async (req, res) => {
 });
 
 // ============ ADMIN APIs ============
-function requireAdmin(req, res, next) {
-    const adminUser = req.headers['x-admin-user'];
-    if (adminUser !== ADMIN_USERNAME) {
-        return res.status(403).json({ success: false, message: "Admin access required" });
+async function requireAdmin(req, res, next) {
+    try {
+        const adminUser = req.headers['x-admin-user'];
+        if (!adminUser) return res.status(403).json({ success: false, message: "Admin access required" });
+        const admin = await Admin.findOne({ username: adminUser });
+        if (!admin) return res.status(403).json({ success: false, message: "Admin access required" });
+        next();
+    } catch (e) {
+        res.status(500).json({ success: false, message: "Admin check failed" });
     }
-    next();
 }
 
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
-        if (username !== ADMIN_USERNAME) {
+        const admin = await Admin.findOne({ username });
+        if (!admin) {
             return res.status(401).json({ success: false, message: "Bhul admin username" });
         }
-        const isMatch = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
+        const isMatch = await bcrypt.compare(password, admin.passwordHash);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: "Bhul admin password" });
         }
-        res.json({ success: true, message: "Admin login successful", adminUser: ADMIN_USERNAME });
+        res.json({ success: true, message: "Admin login successful", adminUser: admin.username });
     } catch (e) {
         res.status(500).json({ success: false, message: "Admin login failed" });
     }
+});
+
+// Admin change own password
+app.post('/api/admin/change-password', requireAdmin, async (req, res) => {
+    try {
+        const { oldPassword, newPassword } = req.body;
+        const adminUser = req.headers['x-admin-user'];
+        if (!oldPassword || !newPassword) return res.status(400).json({ success: false, message: "Dui password din" });
+        if (newPassword.length < 4) return res.status(400).json({ success: false, message: "Password min 4 char" });
+        const admin = await Admin.findOne({ username: adminUser });
+        if (!admin) return res.status(404).json({ success: false, message: "Admin nai" });
+        const isMatch = await bcrypt.compare(oldPassword, admin.passwordHash);
+        if (!isMatch) return res.status(400).json({ success: false, message: "Purono password bhul" });
+        const salt = await bcrypt.genSalt(10);
+        admin.passwordHash = await bcrypt.hash(newPassword, salt);
+        await admin.save();
+        res.json({ success: true, message: "Admin password changed!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
 app.get('/api/admin/users', requireAdmin, async (req, res) => {
@@ -373,7 +399,6 @@ app.get('/api/admin/users', requireAdmin, async (req, res) => {
     }
 });
 
-// Get all complaints
 app.get('/api/admin/complaints', requireAdmin, async (req, res) => {
     try {
         const complaints = await Complaint.find().sort({ createdAt: -1 }).lean();
@@ -383,7 +408,6 @@ app.get('/api/admin/complaints', requireAdmin, async (req, res) => {
     }
 });
 
-// Resolve complaint
 app.post('/api/admin/complaint/resolve', requireAdmin, async (req, res) => {
     try {
         const { complaintId, adminNote } = req.body;
@@ -396,7 +420,6 @@ app.post('/api/admin/complaint/resolve', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Delete complaint
 app.post('/api/admin/complaint/delete', requireAdmin, async (req, res) => {
     try {
         const { complaintId } = req.body;
@@ -405,7 +428,6 @@ app.post('/api/admin/complaint/delete', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Block/Unblock user
 app.post('/api/admin/user/block', requireAdmin, async (req, res) => {
     try {
         const { username, block } = req.body;
@@ -419,7 +441,6 @@ app.post('/api/admin/user/block', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Mute/Unmute user
 app.post('/api/admin/user/mute', requireAdmin, async (req, res) => {
     try {
         const { username, mute } = req.body;
@@ -427,11 +448,10 @@ app.post('/api/admin/user/mute', requireAdmin, async (req, res) => {
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         u.isMuted = !!mute;
         await u.save();
-        res.json({ success: true, message: mute ? "User muted (can't post)" : "User unmuted", isMuted: u.isMuted });
+        res.json({ success: true, message: mute ? "User muted" : "User unmuted", isMuted: u.isMuted });
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Warn user
 app.post('/api/admin/user/warn', requireAdmin, async (req, res) => {
     try {
         const { username } = req.body;
@@ -443,7 +463,6 @@ app.post('/api/admin/user/warn', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Strike user (3 = auto suspend 7 days)
 app.post('/api/admin/user/strike', requireAdmin, async (req, res) => {
     try {
         const { username } = req.body;
@@ -460,7 +479,6 @@ app.post('/api/admin/user/strike', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Suspend user
 app.post('/api/admin/user/suspend', requireAdmin, async (req, res) => {
     try {
         const { username, suspend, days } = req.body;
@@ -479,7 +497,6 @@ app.post('/api/admin/user/suspend', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Reset 2FA
 app.post('/api/admin/user/reset-2fa', requireAdmin, async (req, res) => {
     try {
         const { username } = req.body;
@@ -492,7 +509,6 @@ app.post('/api/admin/user/reset-2fa', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Delete user + all data
 app.post('/api/admin/user/delete', requireAdmin, async (req, res) => {
     try {
         const { username } = req.body;
@@ -512,7 +528,6 @@ app.post('/api/admin/user/delete', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Delete post
 app.post('/api/admin/post/delete', requireAdmin, async (req, res) => {
     try {
         const { postId } = req.body;
@@ -528,7 +543,7 @@ app.get('/api/admin/posts', requireAdmin, async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// Admin user APIs
+// ============ USER APIs ============
 app.post('/api/logout', (req, res) => {
     const { username } = req.body;
     if (username) delete activeUsers[username];
