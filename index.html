@@ -1,396 +1,1161 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Searchbook - Connect and Share</title>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    
-    <style>
-        :root {
-            --bg-color: #f0f2f5;
-            --white: #ffffff;
-            --primary-blue: #1877f2;
-            --text-main: #1c1e21;
-            --text-muted: #606770;
-            --border-color: #dddfe2;
-        }
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Helvetica, Arial, sans-serif; }
-        body { background-color: var(--bg-color); color: var(--text-main); display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px 0; }
-        .container { display: flex; flex-direction: column; align-items: center; width: 100%; max-width: 400px; padding: 20px; }
-        .container.wide { max-width: 600px; }
-        .logo-text { font-size: 40px; font-weight: 800; color: var(--primary-blue); margin-bottom: 20px; letter-spacing: -1px; }
-        .card { background: var(--white); width: 100%; padding: 25px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); border: 1px solid var(--border-color); }
-        .input-group { margin-bottom: 15px; }
-        .input-group input, .input-group textarea { width: 100%; padding: 14px; font-size: 16px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; background: #fcfcfc; font-family: inherit; }
-        .input-group input:focus, .input-group textarea:focus { border-color: var(--primary-blue); box-shadow: 0 0 0 2px rgba(24, 119, 242, 0.2); }
-        .btn-primary { width: 100%; background: var(--primary-blue); color: white; border: none; padding: 12px; font-size: 18px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 10px; transition: 0.2s; }
-        .btn-primary:hover { background: #166fe5; }
-        .btn-primary:disabled { background: #8ab4f8; cursor: not-allowed; }
-        .btn-success { background: #42b72a; width: auto; padding: 12px 20px; margin: 20px auto 0 auto; display: block; }
-        .btn-success:hover { background: #36a420; }
-        .divider { border-bottom: 1px solid var(--border-color); margin: 20px 0; }
-        .link-text { color: var(--primary-blue); font-size: 14px; text-align: center; display: block; margin-top: 15px; text-decoration: none; cursor: pointer; }
-        .link-text:hover { text-decoration: underline; }
-        .panel { display: none; }
-        .active-panel { display: block; }
-        .header-title { font-size: 20px; margin-bottom: 15px; text-align: center; color: var(--text-main); }
-        .timer { text-align: center; font-size: 16px; color: #e74c3c; margin-bottom: 15px; font-weight: bold; background: #fdecea; padding: 10px; border-radius: 6px; }
-        .otp-display { text-align: center; font-size: 28px; color: #1877f2; margin-bottom: 15px; font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed #1877f2; }
-        .note { font-size: 12px; color: #e74c3c; text-align: center; margin-bottom: 15px; }
-        
-        /* Feed Styles */
-        .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border-color); }
-        .feed-header h2 { color: var(--primary-blue); margin: 0; }
-        .logout-btn { background: #e74c3c; color: white; border: none; padding: 8px 15px; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: bold; }
-        .logout-btn:hover { background: #c0392b; }
-        .post-box { background: #fcfcfc; padding: 15px; border-radius: 8px; margin-bottom: 20px; border: 1px solid var(--border-color); }
-        .post-box textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border-color); border-radius: 6px; outline: none; resize: vertical; min-height: 80px; font-family: inherit; }
-        .post-item { background: #fcfcfc; border: 1px solid var(--border-color); border-radius: 8px; padding: 15px; margin-bottom: 12px; }
-        .post-item .post-user { color: var(--primary-blue); font-weight: bold; }
-        .post-item .post-time { color: var(--text-muted); font-size: 12px; }
-        .post-item .post-content { margin-top: 8px; color: var(--text-main); white-space: pre-wrap; word-wrap: break-word; }
-        .user-info { background: #e7f3ff; padding: 12px; border-radius: 6px; margin-bottom: 15px; text-align: center; color: var(--primary-blue); font-weight: bold; }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Searchbook</title>
+<style>
+:root { --blue: #1877f2; --white: #fff; --bg: #f0f2f5; --text: #1c1e21; --muted: #606770; --border: #dddfe2; --green: #42b72a; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; transition: 0.3s; }
+
+/* DARK MODE */
+body.dark { --bg: #18191a; --white: #242526; --text: #e4e6eb; --muted: #b0b3b8; --border: #3a3b3c; }
+body.dark .card { background: #242526; }
+body.dark input, body.dark textarea { background: #3a3b3c; color: #e4e6eb; border-color: #3a3b3c; }
+body.dark .post-item, body.dark .search-result, body.dark .chat-room-item { background: #3a3b3c; border-color: #4e4f50; }
+body.dark .media-btn { background: #3a3b3c; color: #e4e6eb; }
+body.dark #chat-messages { background: #3a3b3c; }
+body.dark .chat-msg.other { background: #4e4f50; color: #e4e6eb; }
+
+.container { max-width: 500px; margin: 0 auto; padding: 20px; }
+.logo { font-size: 40px; font-weight: 800; color: var(--blue); text-align: center; margin-bottom: 20px; }
+.card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: 0.3s; }
+.input-group { margin-bottom: 15px; }
+.input-group input, .input-group textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit; background: var(--white); color: var(--text); }
+.input-group input:focus, .input-group textarea:focus { border-color: var(--blue); }
+.btn { width: 100%; background: var(--blue); color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 8px; }
+.btn:hover { background: #166fe5; }
+.btn-green { background: #42b72a; }
+.btn-green:hover { background: #36a420; }
+.btn-red { background: #e74c3c; }
+.btn-red:hover { background: #c0392b; }
+.link { color: var(--blue); font-size: 14px; text-align: center; display: block; margin-top: 12px; cursor: pointer; }
+.divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
+.panel { display: none; }
+.active { display: block; }
+h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text); }
+.timer { text-align: center; color: #e74c3c; font-weight: bold; padding: 10px; background: #fdecea; border-radius: 6px; margin-bottom: 12px; }
+.otp-display { text-align: center; font-size: 28px; color: var(--blue); font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed var(--blue); margin-bottom: 12px; }
+.post-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; background: #fcfcfc; transition: 0.3s; }
+.post-user { color: var(--blue); font-weight: bold; cursor: pointer; }
+.post-time { color: var(--muted); font-size: 12px; }
+.post-content { margin-top: 8px; word-wrap: break-word; white-space: pre-wrap; color: var(--text); }
+.post-media { max-width: 100%; border-radius: 8px; margin-top: 10px; }
+.feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+.feed-header h2 { margin: 0; text-align: left; }
+.header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
+.small-btn { padding: 8px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; color: white; }
+.pic-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); }
+.pic-wrapper { position: relative; display: inline-block; }
+.status-dot { position: absolute; bottom: 5px; right: 5px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; }
+.status-dot.online { background: #42b72a; }
+.status-dot.offline { background: #333; }
+.center { text-align: center; }
+.media-btns { display: flex; gap: 8px; margin-top: 8px; }
+.media-btn { flex: 1; padding: 10px; border: 2px dashed var(--border); border-radius: 6px; background: var(--white); cursor: pointer; font-size: 14px; color: var(--text); }
+.media-btn:hover { border-color: var(--blue); color: var(--blue); }
+.post-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; }
+.action-btn { flex: 1; padding: 8px; background: transparent; border: none; cursor: pointer; color: var(--muted); font-weight: bold; border-radius: 6px; font-size: 13px; }
+.action-btn:hover { background: rgba(24,119,242,0.1); color: var(--blue); }
+.action-btn.liked { color: #1877f2; }
+.action-btn.bookmarked { color: #f39c12; }
+.search-result { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.search-result:hover { background: rgba(24,119,242,0.05); }
+.search-pic-wrapper { position: relative; }
+.search-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
+.search-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
+.search-status.online { background: #42b72a; }
+.search-status.offline { background: #333; }
+.stat-row { display: flex; gap: 15px; justify-content: center; margin: 10px 0; font-size: 13px; color: var(--muted); }
+.stat-row b { color: var(--text); }
+.active-counter { background: #eafaf1; color: #27ae60; padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 12px; border: 1px solid #c3e6cb; }
+
+/* STORIES */
+.stories-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
+.story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
+.story-ring { width: 65px; height: 65px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366); }
+.story-ring.seen { background: #b0b3b8; }
+.story-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
+.story-name { font-size: 11px; color: var(--text); margin-top: 4px; max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.add-story-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 3px solid var(--white); }
+
+/* STORY VIEWER */
+#story-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; }
+#story-viewer.active { display: flex; }
+.story-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; color: white; }
+.story-viewer-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.story-viewer-media { max-width: 100%; max-height: 80vh; border-radius: 12px; }
+
+/* REACTIONS */
+.reactions-bar { display: flex; gap: 4px; margin-top: 8px; padding: 6px; background: rgba(24,119,242,0.08); border-radius: 20px; }
+.reaction-btn { flex: 1; background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; transition: 0.2s; }
+.reaction-btn:hover { background: rgba(24,119,242,0.15); transform: scale(1.2); }
+.reaction-btn.active { background: rgba(24,119,242,0.25); }
+
+/* POLL */
+.poll-box { margin-top: 12px; padding: 15px; background: rgba(24,119,242,0.05); border-radius: 8px; border: 1px solid var(--border); }
+.poll-question { font-weight: bold; margin-bottom: 12px; color: var(--text); }
+.poll-option { padding: 12px; border: 2px solid var(--border); border-radius: 6px; margin-bottom: 8px; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
+.poll-option:hover { border-color: var(--blue); }
+.poll-option.voted { border-color: var(--blue); background: rgba(24,119,242,0.1); }
+.poll-option-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(24,119,242,0.15); z-index: 0; transition: 0.3s; }
+.poll-option-text { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 14px; }
+.poll-total { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
+
+/* POLL CREATE */
+.poll-creator { margin-top: 8px; padding: 12px; background: rgba(24,119,242,0.05); border-radius: 6px; display: none; }
+.poll-creator input { margin-bottom: 6px; padding: 10px; font-size: 14px; }
+.poll-creator-btn { padding: 8px; font-size: 13px; margin-top: 4px; }
+
+/* CHAT */
+.chat-room-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
+.chat-room-item:hover { background: rgba(24,119,242,0.05); }
+.chat-avatar { width: 45px; height: 45px; border-radius: 50%; background: #1877f2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
+.chat-info { flex: 1; }
+.chat-name { font-weight: bold; color: var(--text); }
+.chat-last { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.chat-time { font-size: 11px; color: var(--muted); }
+#chat-messages { max-height: 400px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; margin-bottom: 12px; }
+.chat-msg { padding: 10px 14px; margin-bottom: 8px; border-radius: 18px; max-width: 75%; word-wrap: break-word; }
+.chat-msg.me { background: #1877f2; color: white; margin-left: auto; text-align: right; }
+.chat-msg.other { background: #e4e6eb; color: #1c1e21; }
+.chat-msg-time { font-size: 10px; opacity: 0.7; margin-top: 3px; }
+.chat-input-row { display: flex; gap: 8px; }
+.chat-input-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; font-size: 15px; }
+.chat-send-btn { background: #1877f2; color: white; border: none; padding: 0 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
+
+/* DARK MODE TOGGLE */
+.theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--blue); color: white; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999; display: none; }
+.theme-toggle.show { display: block; }
+</style>
 </head>
 <body>
 
-    <div class="container" id="main-container">
-        <h1 class="logo-text">Searchbook</h1>
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-        <!-- Login Panel -->
-        <div id="login-panel" class="card active-panel">
-            <div class="input-group">
-                <input type="email" id="login-email" placeholder="Email address">
-            </div>
-            <div class="input-group">
-                <input type="password" id="login-password" placeholder="Password">
-            </div>
-            <button class="btn-primary" onclick="handleLogin()">Log In</button>
-            <span class="link-text" onclick="switchPanel('forgot-panel')">Forgotten password?</span>
-            <div class="divider"></div>
-            <button class="btn-primary btn-success" onclick="switchPanel('register-panel')">Create new account</button>
-        </div>
+<div class="container">
+    <h1 class="logo">Searchbook</h1>
 
-        <!-- Register Panel -->
-        <div id="register-panel" class="card panel">
-            <h2 class="header-title">Create a new account</h2>
-            <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 15px;">It's quick and easy.</p>
-            <div class="input-group">
-                <input type="text" id="reg-name" placeholder="Full Name">
-            </div>
-            <div class="input-group">
-                <input type="text" id="reg-username" placeholder="Username (e.g. riyad_ahmed)">
-            </div>
-            <div class="input-group">
-                <input type="email" id="reg-email" placeholder="Email address">
-            </div>
-            <div class="input-group">
-                <input type="password" id="reg-password" placeholder="New password">
-            </div>
-            <button class="btn-primary btn-success" onclick="sendRegistrationOTP()">Sign Up & Send OTP</button>
-            <span class="link-text" onclick="switchPanel('login-panel')">Already have an account?</span>
-        </div>
-
-        <!-- OTP Panel -->
-        <div id="otp-panel" class="card panel">
-            <h2 class="header-title">Enter Security Code</h2>
-            <p style="font-size: 14px; color: var(--text-muted); text-align: center; margin-bottom: 15px;">
-                Ei OTP ta <b>1 minute</b> er jonno valid. Tarpor expire hoye jabe.
-            </p>
-            <div id="otp-display" class="otp-display">------</div>
-            <div id="timer" class="timer">⏱️ OTP expires in 60 seconds</div>
-            <p class="note">⚠️ Ei OTP shudhu apnar browser e dekhacche. Onno kew dekhতে parbe na.</p>
-            <div class="input-group">
-                <input type="text" id="reg-otp" placeholder="Enter 6-digit code" maxlength="6" style="text-align: center; font-size: 20px; letter-spacing: 3px;">
-            </div>
-            <button class="btn-primary" onclick="verifyOTPAndCreateAccount()">Continue</button>
-        </div>
-
-        <!-- Forgot Panel -->
-        <div id="forgot-panel" class="card panel">
-            <h2 class="header-title">Find Your Account</h2>
-            <p style="font-size: 14px; color: var(--text-muted); margin-bottom: 15px;">
-                Please enter your email address to search for your account.
-            </p>
-            <div class="input-group">
-                <input type="email" id="reset-email" placeholder="Email address">
-            </div>
-            <button class="btn-primary" onclick="sendResetOTP()">Search & Send Code</button>
-            <span class="link-text" onclick="switchPanel('login-panel')">Cancel</span>
-        </div>
-
-        <!-- Feed Panel -->
-        <div id="feed-panel" class="card panel">
-            <div class="feed-header">
-                <h2>Feed</h2>
-                <button class="logout-btn" onclick="handleLogout()">Logout</button>
-            </div>
-
-            <div class="user-info" id="user-info">Welcome!</div>
-
-            <div class="post-box">
-                <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                <button class="btn-primary" style="margin-top: 10px;" onclick="createPost()">Post</button>
-            </div>
-
-            <div class="divider"></div>
-
-            <h3 style="margin-bottom: 15px; color: var(--text-main);">Recent Posts</h3>
-            <div id="posts-list">
-                <p style="text-align: center; color: var(--text-muted);">Loading posts...</p>
-            </div>
-        </div>
-
+    <!-- Login -->
+    <div id="login-panel" class="card active">
+        <div class="input-group"><input type="email" id="login-email" placeholder="Email"></div>
+        <div class="input-group"><input type="password" id="login-password" placeholder="Password"></div>
+        <button class="btn" onclick="handleLogin()">Log In</button>
+        <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
+        <div class="divider"></div>
+        <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
     </div>
 
-    <script>
-        function switchPanel(panelId) {
-            document.querySelectorAll('.panel, .active-panel').forEach(p => {
-                p.classList.remove('active-panel');
-                p.classList.add('panel');
-            });
-            document.getElementById(panelId).classList.remove('panel');
-            document.getElementById(panelId).classList.add('active-panel');
+    <!-- Register -->
+    <div id="register-panel" class="card">
+        <h2>Create Account</h2>
+        <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
+        <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
+        <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
+        <div class="input-group"><input type="password" id="reg-password" placeholder="Password (min 6 char)"></div>
+        <button class="btn btn-green" onclick="sendOTP()">Sign Up & Send OTP</button>
+        <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
+    </div>
+
+    <!-- OTP -->
+    <div id="otp-panel" class="card">
+        <h2>Enter OTP</h2>
+        <p style="text-align:center; color:#606770; font-size:13px; margin-bottom:10px;">OTP valid for 1 minute only</p>
+        <div id="otp-display" class="otp-display">------</div>
+        <div id="timer" class="timer">⏱️ 60 seconds left</div>
+        <div class="input-group"><input type="text" id="reg-otp" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:5px;"></div>
+        <button class="btn" onclick="verifyAndSignup()">Verify & Create Account</button>
+    </div>
+
+    <!-- Forgot -->
+    <div id="forgot-panel" class="card">
+        <h2>Find Account</h2>
+        <div class="input-group"><input type="email" id="reset-email" placeholder="Email"></div>
+        <button class="btn" onclick="alert('Coming soon!')">Search</button>
+        <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
+    </div>
+
+    <!-- Feed -->
+    <div id="feed-panel" class="card">
+        <div class="feed-header">
+            <h2>Feed</h2>
+            <div class="header-btns">
+                <button class="small-btn" style="background:#f39c12;" onclick="switchPanel('search-panel')">🔍</button>
+                <button class="small-btn" style="background:#9b59b6;" onclick="openChatList()">💬</button>
+                <button class="small-btn" style="background:#e67e22;" onclick="openBookmarks()">🔖</button>
+                <button class="small-btn" style="background:#1877f2;" onclick="openProfile()">👤</button>
+                <button class="small-btn" style="background:#e74c3c;" onclick="handleLogout()">⎋</button>
+            </div>
+        </div>
+
+        <div class="active-counter" id="active-counter">🟢 Loading...</div>
+
+        <!-- Stories Bar -->
+        <div class="stories-bar" id="stories-bar">
+            <div class="story-item" onclick="document.getElementById('story-input').click()">
+                <div class="add-story-btn">+</div>
+                <div class="story-name">Your Story</div>
+            </div>
+        </div>
+        <input type="file" id="story-input" accept="image/*,video/*" style="display:none;" onchange="uploadStory(this)">
+
+        <div id="feed-user-info" style="text-align:center; padding:10px; background:rgba(24,119,242,0.1); border-radius:6px; margin-bottom:15px; color:#1877f2; font-weight:bold;"></div>
+        
+        <div class="input-group"><textarea id="post-content" placeholder="What's on your mind?" style="min-height:70px;"></textarea></div>
+        <div class="media-btns">
+            <button class="media-btn" onclick="document.getElementById('image-input').click()">📷 Photo</button>
+            <button class="media-btn" onclick="document.getElementById('video-input').click()">🎥 Video</button>
+            <button class="media-btn" onclick="togglePollCreator()">📊 Poll</button>
+        </div>
+        <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this, 'image')">
+        <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
+        <div id="media-preview" style="margin-top:10px;"></div>
+
+        <!-- Poll Creator -->
+        <div class="poll-creator" id="poll-creator">
+            <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px;">
+            <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;">
+            <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;">
+            <button class="btn poll-creator-btn" style="background:#42b72a;" onclick="addPollOption()">+ Add Option</button>
+        </div>
+
+        <button class="btn" onclick="createPost()">Post</button>
+        
+        <div class="divider"></div>
+        <h3 style="margin-bottom:12px; color:var(--text);">🔥 Trending Posts</h3>
+        <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- Search -->
+    <div id="search-panel" class="card">
+        <div class="feed-header">
+            <h2>Search</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="search-input" placeholder="Username ba full name likhun..." oninput="doSearch()">
+        </div>
+        <div id="search-results"></div>
+    </div>
+
+    <!-- Bookmarks -->
+    <div id="bookmarks-panel" class="card">
+        <div class="feed-header">
+            <h2>🔖 Saved</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
+        </div>
+        <div id="bookmarks-list"></div>
+    </div>
+
+    <!-- Visit Profile -->
+    <div id="visit-panel" class="card">
+        <div class="feed-header">
+            <h2>Profile</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
+        </div>
+        <div class="center">
+            <div class="pic-wrapper">
+                <img id="visit-pic" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
+                <span class="status-dot offline" id="visit-status"></span>
+            </div>
+            <h3 id="visit-name" style="margin-top:10px;"></h3>
+            <p id="visit-bio" style="color:var(--muted); margin-top:5px;"></p>
+            <div class="stat-row">
+                <span><b id="visit-posts">0</b> Posts</span>
+                <span><b id="visit-followers">0</b> Followers</span>
+                <span><b id="visit-following">0</b> Following</span>
+            </div>
+            <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
+            <button class="btn" style="background:#9b59b6; margin-top:8px;" id="msg-btn" onclick="startChatWith('')">💬 Message</button>
+        </div>
+        <div class="divider"></div>
+        <h3 style="margin-bottom:12px; color:var(--text);">Posts</h3>
+        <div id="visit-posts-list"></div>
+    </div>
+
+    <!-- Profile -->
+    <div id="profile-panel" class="card">
+        <div class="feed-header">
+            <h2>My Profile</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
+        </div>
+
+        <div class="center">
+            <div class="pic-wrapper">
+                <img id="profile-pic-display" class="pic-circle" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
+                <span class="status-dot online"></span>
+            </div>
+            <h3 id="profile-name" style="margin-top:10px;"></h3>
+            <p id="profile-bio" style="color:var(--muted); margin-top:5px;"></p>
+        </div>
+
+        <div class="divider"></div>
+        <h3 style="margin-bottom:12px; color:var(--text);">Edit Profile</h3>
+        
+        <div class="input-group">
+            <label style="font-size:12px; color:var(--muted);">Profile Picture</label>
+            <input type="file" id="profile-pic-input" accept="image/*" onchange="uploadProfilePic(this)">
+        </div>
+        <div class="input-group"><input type="text" id="edit-fullname" placeholder="Full Name"></div>
+        <div class="input-group"><textarea id="edit-bio" placeholder="Bio" style="min-height:60px;"></textarea></div>
+        <button class="btn" onclick="updateProfile()">Save Profile</button>
+
+        <div class="divider"></div>
+        <h3 style="margin-bottom:12px; color:var(--text);">⚙️ Change Password</h3>
+        <div class="input-group"><input type="password" id="old-pass" placeholder="Old Password"></div>
+        <div class="input-group"><input type="password" id="new-pass" placeholder="New Password"></div>
+        <button class="btn btn-red" onclick="changePassword()">Change Password</button>
+    </div>
+
+    <!-- Chat List -->
+    <div id="chat-list-panel" class="card">
+        <div class="feed-header">
+            <h2>💬 Messages</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
+        </div>
+        <div class="input-group">
+            <input type="text" id="chat-user-search" placeholder="Username diye search korun" oninput="searchForChat()">
+        </div>
+        <div id="chat-search-results"></div>
+        <div class="divider"></div>
+        <h3 style="margin-bottom:12px; color:var(--text);">Your Chats</h3>
+        <div id="chat-rooms-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+    </div>
+
+    <!-- Chat Window -->
+    <div id="chat-window-panel" class="card">
+        <div class="feed-header">
+            <h2 id="chat-with-name">Chat</h2>
+            <button class="small-btn" style="background:#1877f2;" onclick="openChatList()">Back</button>
+        </div>
+        <div id="chat-messages"></div>
+        <div class="chat-input-row">
+            <input type="text" id="chat-input" placeholder="Message likhun..." onkeypress="if(event.key==='Enter') sendMessage()">
+            <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+        </div>
+    </div>
+</div>
+
+<!-- Story Viewer -->
+<div id="story-viewer" onclick="closeStory()">
+    <div class="story-viewer-header">
+        <span id="story-viewer-name" style="font-weight:bold;"></span>
+        <span style="cursor:pointer; font-size:24px;" onclick="closeStory()">✕</span>
+    </div>
+    <div class="story-viewer-content">
+        <div id="story-viewer-media-container"></div>
+    </div>
+</div>
+
+<script>
+const BACKEND_URL = "https://searchbook-backend.onrender.com";
+let currentUser = null;
+let otpTimer = null, otpExpireTime = null;
+let selectedMedia = null, selectedMediaType = null;
+let visitUser = null;
+let currentRoomId = null, currentChatWith = null;
+let chatRefreshTimer = null, heartbeatTimer = null, activeRefreshTimer = null;
+let bookmarks = [];
+let currentTheme = "light";
+
+function authHeaders() {
+    const h = { 'Content-Type': 'application/json' };
+    if (currentUser) h['x-username'] = currentUser.username;
+    return h;
+}
+
+function switchPanel(id) {
+    document.querySelectorAll('.card').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0, 0);
+}
+
+// ============ DARK MODE ============
+function applyTheme(theme) {
+    currentTheme = theme;
+    if (theme === 'dark') {
+        document.body.classList.add('dark');
+        document.getElementById('theme-toggle').textContent = '☀️';
+    } else {
+        document.body.classList.remove('dark');
+        document.getElementById('theme-toggle').textContent = '🌙';
+    }
+}
+
+async function toggleTheme() {
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    applyTheme(newTheme);
+    if (currentUser) {
+        fetch(BACKEND_URL + '/api/user/theme', {
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({ email: currentUser.email, theme: newTheme })
+        }).catch(() => {});
+    }
+}
+
+// ============ OTP ============
+async function sendOTP() {
+    const name = document.getElementById('reg-name').value.trim();
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    if (!name || !username || !email || !password) { alert("Sob field din"); return; }
+    if (password.length < 6) { alert("Password min 6 char"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/send-otp', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('otp-display').textContent = data.otp;
+            alert("OTP: " + data.otp + "\n\n1 minute por expire hobe!");
+            switchPanel('otp-panel');
+            otpExpireTime = Date.now() + 60000;
+            startTimer();
+        } else { alert("❌ " + data.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function startTimer() {
+    if (otpTimer) clearInterval(otpTimer);
+    otpTimer = setInterval(() => {
+        const rem = Math.max(0, Math.floor((otpExpireTime - Date.now()) / 1000));
+        document.getElementById('timer').textContent = `⏱️ ${rem} seconds left`;
+        if (rem <= 0) {
+            clearInterval(otpTimer);
+            document.getElementById('timer').textContent = "❌ OTP expired!";
+            document.getElementById('otp-display').textContent = "------";
         }
+    }, 1000);
+}
 
-        const BACKEND_URL = "https://searchbook-backend.onrender.com";
-
-        let otpTimer = null;
-        let otpExpireTime = null;
-
-        // ================= REGISTER OTP =================
-        async function sendRegistrationOTP() {
-            const email = document.getElementById('reg-email').value.trim();
-            const name = document.getElementById('reg-name').value.trim();
-            const username = document.getElementById('reg-username').value.trim();
-            const password = document.getElementById('reg-password').value;
-
-            if (!email || !name || !username || !password) {
-                alert("Please fill in all fields.");
-                return;
-            }
-
-            try {
-                const response = await fetch(BACKEND_URL + '/api/send-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    document.getElementById('otp-display').textContent = data.otp;
-                    document.getElementById('otp-display').style.color = "#1877f2";
-                    alert("✅ OTP Generated!\n\nYour OTP: " + data.otp + "\n\n⚠️ Ei OTP 1 minute por expire hoye jabe!");
-                    switchPanel('otp-panel');
-                    otpExpireTime = Date.now() + 60 * 1000;
-                    startTimer();
-                } else {
-                    alert("❌ Failed: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            }
-        }
-
-        function startTimer() {
+async function verifyAndSignup() {
+    const otp = document.getElementById('reg-otp').value.trim();
+    const username = document.getElementById('reg-username').value.trim();
+    const email = document.getElementById('reg-email').value.trim();
+    const password = document.getElementById('reg-password').value;
+    const fullName = document.getElementById('reg-name').value.trim();
+    if (!otp) { alert("OTP din"); return; }
+    if (Date.now() > otpExpireTime) { alert("OTP expire!"); return; }
+    try {
+        const vRes = await fetch(BACKEND_URL + '/api/verify-otp', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, otp })
+        });
+        const vData = await vRes.json();
+        if (!vData.success) { alert("❌ " + vData.message); return; }
+        const sRes = await fetch(BACKEND_URL + '/api/signup', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password, fullName })
+        });
+        const sData = await sRes.json();
+        if (sData.success) {
+            alert("✅ Account created!");
             if (otpTimer) clearInterval(otpTimer);
-            
-            otpTimer = setInterval(() => {
-                const remaining = Math.max(0, Math.floor((otpExpireTime - Date.now()) / 1000));
-                document.getElementById('timer').textContent = `⏱️ OTP expires in ${remaining} seconds`;
-                
-                if (remaining <= 0) {
-                    clearInterval(otpTimer);
-                    document.getElementById('timer').textContent = "❌ OTP expired! Please request new OTP.";
-                    document.getElementById('otp-display').textContent = "------";
-                    document.getElementById('otp-display').style.color = "#e74c3c";
-                }
-            }, 1000);
-        }
-
-        async function verifyOTPAndCreateAccount() {
-            const enteredOTP = document.getElementById('reg-otp').value.trim();
-            const username = document.getElementById('reg-username').value.trim();
-            const email = document.getElementById('reg-email').value.trim();
-            const password = document.getElementById('reg-password').value;
-
-            if (!enteredOTP) {
-                alert("Please enter the OTP code.");
-                return;
-            }
-
-            if (Date.now() > otpExpireTime) {
-                alert("❌ OTP expire hoye geche! Abar Sign Up & Send OTP e click korun.");
-                return;
-            }
-
-            try {
-                const verifyResponse = await fetch(BACKEND_URL + '/api/verify-otp', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, otp: enteredOTP })
-                });
-
-                const verifyData = await verifyResponse.json();
-
-                if (!verifyData.success) {
-                    alert("❌ " + verifyData.message);
-                    return;
-                }
-
-                const signupResponse = await fetch(BACKEND_URL + '/api/signup', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username, email, password })
-                });
-
-                const signupData = await signupResponse.json();
-
-                if (signupData.success) {
-                    alert("✅ Account created successfully! Welcome to Searchbook.");
-                    if (otpTimer) clearInterval(otpTimer);
-                    switchPanel('login-panel');
-                } else {
-                    alert("❌ Signup failed: " + signupData.message);
-                }
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            }
-        }
-
-        // ================= LOGIN =================
-        async function handleLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-
-            if (!email || !password) {
-                alert("Please fill email and password.");
-                return;
-            }
-
-            try {
-                const response = await fetch(BACKEND_URL + '/api/login', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ email, password })
-                });
-
-                const data = await response.json();
-
-                if (data.success) {
-                    // User info save korun
-                    window.currentUser = {
-                        username: data.username,
-                        email: email
-                    };
-                    
-                    // User info dekhান
-                    document.getElementById('user-info').textContent = "👋 Welcome, " + data.username + "!";
-                    
-                    // Feed panel e jao
-                    switchPanel('feed-panel');
-                    
-                    // Container wide korun
-                    document.getElementById('main-container').classList.add('wide');
-                    
-                    // Posts load korun
-                    loadPosts();
-                } else {
-                    alert("❌ Login failed: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            }
-        }
-
-        // ================= FEED =================
-        async function loadPosts() {
-            const postsList = document.getElementById('posts-list');
-            postsList.innerHTML = '<p style="text-align: center; color: #606770;">Loading posts...</p>';
-            
-            try {
-                const response = await fetch(BACKEND_URL + '/api/posts');
-                const posts = await response.json();
-                
-                if (posts.length === 0) {
-                    postsList.innerHTML = '<p style="text-align: center; color: #606770;">No posts yet. Be the first to post!</p>';
-                    return;
-                }
-                
-                postsList.innerHTML = posts.map(post => `
-                    <div class="post-item">
-                        <div style="display: flex; justify-content: space-between; align-items: center;">
-                            <span class="post-user">${escapeHtml(post.username)}</span>
-                            <span class="post-time">${new Date(post.createdAt).toLocaleString()}</span>
-                        </div>
-                        <div class="post-content">${escapeHtml(post.content)}</div>
-                    </div>
-                `).join('');
-                
-            } catch (error) {
-                console.error("Posts load failed:", error);
-                postsList.innerHTML = '<p style="text-align: center; color: #e74c3c;">Failed to load posts.</p>';
-            }
-        }
-
-        async function createPost() {
-            const content = document.getElementById('post-content').value.trim();
-            
-            if (!content) {
-                alert("Please write something.");
-                return;
-            }
-            
-            if (!window.currentUser) {
-                alert("Please login first.");
-                return;
-            }
-            
-            try {
-                const response = await fetch(BACKEND_URL + '/api/posts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({
-                        username: window.currentUser.username,
-                        content: content
-                    })
-                });
-                
-                const data = await response.json();
-                
-                if (data.success) {
-                    document.getElementById('post-content').value = '';
-                    loadPosts();
-                } else {
-                    alert("❌ Failed: " + data.message);
-                }
-            } catch (error) {
-                alert("❌ Error: " + error.message);
-            }
-        }
-
-        // ================= LOGOUT =================
-        function handleLogout() {
-            window.currentUser = null;
-            document.getElementById('login-email').value = '';
-            document.getElementById('login-password').value = '';
-            document.getElementById('main-container').classList.remove('wide');
             switchPanel('login-panel');
-        }
+        } else { alert("❌ " + sData.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
 
-        // ================= HELPERS =================
-        function escapeHtml(text) {
-            const div = document.createElement('div');
-            div.textContent = text;
-            return div.innerHTML;
-        }
+// ============ LOGIN ============
+async function handleLogin() {
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+    if (!email || !password) { alert("Email + password din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/login', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            document.getElementById('feed-user-info').textContent = "👋 Welcome, " + data.username + "!";
+            document.getElementById('theme-toggle').classList.add('show');
+            applyTheme(data.theme || 'light');
+            switchPanel('feed-panel');
+            loadPosts();
+            loadStories();
+            startHeartbeat();
+            loadActiveCount();
+            loadBookmarks();
+        } else { alert("❌ " + data.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
 
-        async function sendResetOTP() {
-            alert("Password reset feature coming soon!");
+function handleLogout() {
+    if (currentUser) {
+        fetch(BACKEND_URL + '/api/logout', {
+            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username })
+        }).catch(() => {});
+    }
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+    if (activeRefreshTimer) clearInterval(activeRefreshTimer);
+    currentUser = null;
+    document.getElementById('theme-toggle').classList.remove('show');
+    document.body.classList.remove('dark');
+    switchPanel('login-panel');
+}
+
+function startHeartbeat() {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(() => {
+        if (currentUser) {
+            fetch(BACKEND_URL + '/api/heartbeat', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username })
+            }).catch(() => {});
         }
-    </script>
+    }, 30000);
+}
+
+async function loadActiveCount() {
+    try {
+        const res = await fetch(BACKEND_URL + '/api/active-users');
+        const data = await res.json();
+        document.getElementById('active-counter').textContent = "🟢 " + data.count + " users active now";
+    } catch (e) { console.log(e); }
+}
+
+// ============ STORIES ============
+function uploadStory(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { alert("Max 8MB"); return; }
+
+    const isVideo = file.type.startsWith('video');
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+        try {
+            const res = await fetch(BACKEND_URL + '/api/stories', {
+                method: 'POST',
+                headers: authHeaders(),
+                body: JSON.stringify({
+                    username: currentUser.username,
+                    media: e.target.result,
+                    mediaType: isVideo ? 'video' : 'image',
+                    text: ""
+                })
+            });
+            const data = await res.json();
+            if (data.success) {
+                alert("✅ Story uploaded! 24 hours thakbe.");
+                loadStories();
+            } else { alert("❌ " + data.message); }
+        } catch (err) { alert("❌ " + err.message); }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function loadStories() {
+    try {
+        const res = await fetch(BACKEND_URL + '/api/stories');
+        const data = await res.json();
+        const bar = document.getElementById('stories-bar');
+
+        // Age er sob story item (nijer add chara) remove
+        bar.innerHTML = `
+            <div class="story-item" onclick="document.getElementById('story-input').click()">
+                <div class="add-story-btn">+</div>
+                <div class="story-name">Your Story</div>
+            </div>
+        `;
+
+        if (!data.stories) return;
+
+        Object.keys(data.stories).forEach(username => {
+            const userStories = data.stories[username];
+            const first = userStories[0];
+            const item = document.createElement('div');
+            item.className = 'story-item';
+            item.onclick = () => viewStory(username, userStories);
+            item.innerHTML = `
+                <div class="story-ring">
+                    <img class="story-pic" src="${first.mediaType === 'image' ? first.media : 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23333\\'/%3E%3Ctext x=\\'50\\' y=\\'55\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'white\\'%3E🎥%3C/text%3E%3C/svg%3E'}">
+                </div>
+                <div class="story-name">${escapeHtml(username)}</div>
+            `;
+            bar.appendChild(item);
+        });
+    } catch (e) { console.log(e); }
+}
+
+function viewStory(username, stories) {
+    document.getElementById('story-viewer-name').textContent = username;
+    const container = document.getElementById('story-viewer-media-container');
+    let html = '';
+    stories.forEach(s => {
+        if (s.mediaType === 'video') {
+            html += `<video src="${s.media}" controls autoplay class="story-viewer-media"></video>`;
+        } else {
+            html += `<img src="${s.media}" class="story-viewer-media">`;
+        }
+    });
+    container.innerHTML = html;
+    document.getElementById('story-viewer').classList.add('active');
+}
+
+function closeStory() {
+    document.getElementById('story-viewer').classList.remove('active');
+    document.getElementById('story-viewer-media-container').innerHTML = '';
+}
+
+// ============ POST ============
+function handleMedia(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        selectedMedia = e.target.result;
+        selectedMediaType = type;
+        const preview = document.getElementById('media-preview');
+        if (type === 'image') preview.innerHTML = `<img src="${selectedMedia}" style="max-width:100%; border-radius:6px;">`;
+        else preview.innerHTML = `<video src="${selectedMedia}" controls style="max-width:100%; border-radius:6px;"></video>`;
+    };
+    reader.readAsDataURL(file);
+}
+
+function togglePollCreator() {
+    const p = document.getElementById('poll-creator');
+    p.style.display = p.style.display === 'block' ? 'none' : 'block';
+}
+
+function addPollOption() {
+    const container = document.getElementById('poll-creator');
+    const count = container.querySelectorAll('.poll-opt').length;
+    if (count >= 5) { alert("Max 5 option"); return; }
+    const inp = document.createElement('input');
+    inp.type = 'text';
+    inp.className = 'poll-opt';
+    inp.placeholder = 'Option ' + (count + 1);
+    inp.style.cssText = 'width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;';
+    container.insertBefore(inp, container.querySelector('.poll-creator-btn'));
+}
+
+async function createPost() {
+    const content = document.getElementById('post-content').value.trim();
+    const pollQ = document.getElementById('poll-q').value.trim();
+    const pollOpts = Array.from(document.querySelectorAll('.poll-opt')).map(i => i.value.trim()).filter(v => v);
+
+    let poll = null;
+    if (pollQ && pollOpts.length >= 2) {
+        poll = { question: pollQ, options: pollOpts.map(t => ({ text: t, votes: [] })) };
+    }
+
+    if (!content && !selectedMedia && !poll) { alert("Kichu likhun ba media/poll din"); return; }
+    if (!currentUser) { alert("Login korun"); return; }
+
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({
+                username: currentUser.username,
+                content: content,
+                media: selectedMedia || "",
+                mediaType: selectedMediaType || "text",
+                poll
+            })
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById('post-content').value = '';
+            document.getElementById('media-preview').innerHTML = '';
+            document.getElementById('poll-creator').style.display = 'none';
+            document.getElementById('poll-q').value = '';
+            document.querySelectorAll('.poll-opt').forEach((opt, i) => { if (i < 2) opt.value = ''; });
+            selectedMedia = null; selectedMediaType = null;
+            loadPosts();
+        } else { alert("❌ " + data.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function loadPosts() {
+    const list = document.getElementById('posts-list');
+    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts');
+        const posts = await res.json();
+        if (posts.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts yet</p>'; return; }
+        list.innerHTML = posts.map(p => renderPost(p)).join('');
+        posts.forEach(p => {
+            fetch(BACKEND_URL + '/api/posts/view', {
+                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId: p._id })
+            }).catch(() => {});
+        });
+    } catch (e) { list.innerHTML = '<p style="color:#e74c3c; text-align:center;">Load failed</p>'; }
+}
+
+function renderPost(p) {
+    let mediaHtml = '';
+    if (p.media) {
+        if (p.mediaType === 'video') mediaHtml = `<video src="${p.media}" controls class="post-media"></video>`;
+        else mediaHtml = `<img src="${p.media}" class="post-media">`;
+    }
+
+    // Reactions
+    const reactions = p.reactions || {};
+    const userReaction = currentUser ? Object.keys(reactions).find(k => reactions[k]?.includes(currentUser.username)) : null;
+    const totalReactions = Object.values(reactions).reduce((s, arr) => s + (arr?.length || 0), 0);
+
+    const reactionEmojis = { love: '❤️', haha: '😂', sad: '😢', angry: '😡', wow: '😮' };
+
+    let reactionsHtml = `
+        <div class="reactions-bar">
+            ${Object.keys(reactionEmojis).map(k => `
+                <button class="reaction-btn ${userReaction === k ? 'active' : ''}" onclick="reactPost('${p._id}', '${k}')" title="${k}">${reactionEmojis[k]}</button>
+            `).join('')}
+        </div>
+    `;
+
+    // Poll
+    let pollHtml = '';
+    if (p.poll) {
+        const totalVotes = p.poll.options.reduce((s, o) => s + o.votes.length, 0);
+        pollHtml = `
+            <div class="poll-box">
+                <div class="poll-question">📊 ${escapeHtml(p.poll.question)}</div>
+                ${p.poll.options.map((opt, i) => {
+                    const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
+                    const voted = currentUser && opt.votes.includes(currentUser.username);
+                    return `
+                        <div class="poll-option ${voted ? 'voted' : ''}" onclick="votePoll('${p._id}', ${i})">
+                            <div class="poll-option-fill" style="width:${pct}%"></div>
+                            <div class="poll-option-text">
+                                <span>${escapeHtml(opt.text)}</span>
+                                <span><b>${pct}%</b> (${opt.votes.length})</span>
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+                <div class="poll-total">${totalVotes} votes</div>
+            </div>
+        `;
+    }
+
+    const liked = currentUser && p.likes && p.likes.includes(currentUser.username);
+    const isBookmarked = currentUser && bookmarks.includes(p._id);
+    const likeCount = p.likes ? p.likes.length : 0;
+    const commentCount = p.comments ? p.comments.length : 0;
+    const shareCount = p.shares || 0;
+    const viewCount = p.views || 0;
+
+    return `
+        <div class="post-item" id="post-${p._id}">
+            <div style="display:flex; justify-content:space-between;">
+                <span class="post-user" onclick="visitProfile('${escapeHtml(p.username)}')">${escapeHtml(p.username)}</span>
+                <span class="post-time">${new Date(p.createdAt).toLocaleString()}</span>
+            </div>
+            <div class="post-content">${escapeHtml(p.content)}</div>
+            ${mediaHtml}
+            ${pollHtml}
+            <div style="margin-top:8px; font-size:12px; color:var(--muted);">
+                ${viewCount} views · ${likeCount} likes · ${commentCount} comments · ${shareCount} shares · ${totalReactions} reactions
+            </div>
+            ${reactionsHtml}
+            <div class="post-actions">
+                <button class="action-btn ${liked ? 'liked' : ''}" onclick="likePost('${p._id}')">👍 Like</button>
+                <button class="action-btn" onclick="commentPost('${p._id}')">💬 Comment</button>
+                <button class="action-btn" onclick="sharePost('${p._id}')">🔗 Share</button>
+                <button class="action-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${p._id}')">${isBookmarked ? '🔖' : '📑'}</button>
+            </div>
+        </div>
+    `;
+}
+
+async function likePost(postId) {
+    if (!currentUser) { alert("Login korun"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts/like', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ postId, username: currentUser.username })
+        });
+        const data = await res.json();
+        if (data.success) loadPosts();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function reactPost(postId, reaction) {
+    if (!currentUser) { alert("Login korun"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts/reaction', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ postId, username: currentUser.username, reaction })
+        });
+        const data = await res.json();
+        if (data.success) loadPosts();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function votePoll(postId, optionIndex) {
+    if (!currentUser) { alert("Login korun"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts/vote', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ postId, username: currentUser.username, optionIndex })
+        });
+        const data = await res.json();
+        if (data.success) loadPosts();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function commentPost(postId) {
+    if (!currentUser) { alert("Login korun"); return; }
+    const text = prompt("Comment likhun:");
+    if (!text) return;
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts/comment', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ postId, username: currentUser.username, text })
+        });
+        const data = await res.json();
+        if (data.success) { alert("✅ Comment added!"); loadPosts(); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function sharePost(postId) {
+    try {
+        const res = await fetch(BACKEND_URL + '/api/posts/share', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ postId })
+        });
+        const data = await res.json();
+        if (data.success) { alert("🔗 Shared!"); loadPosts(); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ============ BOOKMARK ============
+async function toggleBookmark(postId) {
+    if (!currentUser) { alert("Login korun"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/bookmark', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ email: currentUser.email, postId })
+        });
+        const data = await res.json();
+        if (data.success) {
+            bookmarks = data.bookmarks || [];
+            loadPosts();
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function loadBookmarks() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, {
+            headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) bookmarks = data.posts.map(p => p._id);
+    } catch (e) { console.log(e); }
+}
+
+async function openBookmarks() {
+    if (!currentUser) return;
+    const list = document.getElementById('bookmarks-list');
+    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, {
+            headers: authHeaders()
+        });
+        const data = await res.json();
+        if (!data.posts || data.posts.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>';
+        } else {
+            list.innerHTML = data.posts.map(p => renderPost(p)).join('');
+        }
+        switchPanel('bookmarks-panel');
+    } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; }
+}
+
+// ============ SEARCH ============
+let searchTimer = null;
+async function doSearch() {
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(async () => {
+        const q = document.getElementById('search-input').value.trim();
+        const results = document.getElementById('search-results');
+        if (!q) { results.innerHTML = ''; return; }
+        try {
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
+                headers: authHeaders()
+            });
+            const data = await res.json();
+            if (!data.users || data.users.length === 0) {
+                results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>';
+                return;
+            }
+            results.innerHTML = data.users.map(u => `
+                <div class="search-result" onclick="visitProfile('${escapeHtml(u.username)}')">
+                    <div class="search-pic-wrapper">
+                        <img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}">
+                        <span class="search-status ${u.isActive ? 'online' : 'offline'}"></span>
+                    </div>
+                    <div>
+                        <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
+                        <div style="font-size:12px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+    }, 300);
+}
+
+// ============ VISIT PROFILE ============
+async function visitProfile(username) {
+    if (!username) return;
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), {
+            headers: authHeaders()
+        });
+        const data = await res.json();
+        if (data.success) {
+            const u = data.user;
+            visitUser = u;
+            document.getElementById('visit-name').textContent = u.fullName || u.username;
+            document.getElementById('visit-bio').textContent = u.bio || "No bio yet";
+            document.getElementById('visit-pic').src = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
+
+            const sd = document.getElementById('visit-status');
+            if (u.isActive) { sd.classList.remove('offline'); sd.classList.add('online'); }
+            else { sd.classList.remove('online'); sd.classList.add('offline'); }
+
+            document.getElementById('visit-followers').textContent = (u.followers || []).length;
+            document.getElementById('visit-following').textContent = (u.following || []).length;
+
+            const isFollowing = (u.followers || []).includes(currentUser.username);
+            const btn = document.getElementById('follow-btn');
+            btn.textContent = isFollowing ? "Unfollow" : "Follow";
+            btn.style.background = isFollowing ? "#e74c3c" : "#42b72a";
+
+            document.getElementById('msg-btn').setAttribute('onclick', `startChatWith('${escapeHtml(username)}')`);
+
+            const pRes = await fetch(BACKEND_URL + '/api/posts/user/' + encodeURIComponent(username));
+            const posts = await pRes.json();
+            document.getElementById('visit-posts').textContent = posts.length;
+            const list = document.getElementById('visit-posts-list');
+            if (posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts</p>';
+            else list.innerHTML = posts.map(p => renderPost(p)).join('');
+
+            switchPanel('visit-panel');
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function toggleFollow() {
+    if (!visitUser || !currentUser) return;
+    const isFollowing = (visitUser.followers || []).includes(currentUser.username);
+    const endpoint = isFollowing ? '/api/user/unfollow' : '/api/user/follow';
+    try {
+        const res = await fetch(BACKEND_URL + endpoint, {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ follower: currentUser.username, following: visitUser.username })
+        });
+        const data = await res.json();
+        if (data.success) visitProfile(visitUser.username);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ============ PROFILE ============
+async function openProfile() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/' + currentUser.email, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const u = data.user;
+            document.getElementById('profile-name').textContent = u.fullName || u.username;
+            document.getElementById('profile-bio').textContent = u.bio || "No bio yet";
+            if (u.profilePic) document.getElementById('profile-pic-display').src = u.profilePic;
+            document.getElementById('edit-fullname').value = u.fullName || "";
+            document.getElementById('edit-bio').value = u.bio || "";
+            switchPanel('profile-panel');
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function uploadProfilePic(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = (e) => {
+        document.getElementById('profile-pic-display').src = e.target.result;
+        document.getElementById('profile-pic-display').dataset.newPic = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function updateProfile() {
+    const fullName = document.getElementById('edit-fullname').value.trim();
+    const bio = document.getElementById('edit-bio').value.trim();
+    const picEl = document.getElementById('profile-pic-display');
+    const profilePic = picEl.dataset.newPic || "";
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/profile', {
+            method: 'PUT', headers: authHeaders(),
+            body: JSON.stringify({ email: currentUser.email, profilePic, fullName, bio })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Profile updated!");
+            delete picEl.dataset.newPic;
+            openProfile();
+        } else { alert("❌ " + data.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById('old-pass').value;
+    const newPassword = document.getElementById('new-pass').value;
+    if (!oldPassword || !newPassword) { alert("Dui password din"); return; }
+    if (newPassword.length < 6) { alert("New pass min 6 char"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/user/change-password', {
+            method: 'PUT', headers: authHeaders(),
+            body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword })
+        });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Password changed!");
+            document.getElementById('old-pass').value = '';
+            document.getElementById('new-pass').value = '';
+        } else { alert("❌ " + data.message); }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ============ CHAT ============
+async function openChatList() {
+    if (!currentUser) { alert("Login korun"); return; }
+    const roomsList = document.getElementById('chat-rooms-list');
+    roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + '/api/chat/rooms/' + currentUser.username, { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.rooms || data.rooms.length === 0) {
+            roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet. Search korun!</p>';
+        } else {
+            roomsList.innerHTML = data.rooms.map(r => {
+                const other = r.members.find(m => m !== currentUser.username);
+                return `
+                    <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
+                        <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
+                        <div class="chat-info">
+                            <div class="chat-name">${escapeHtml(other)}</div>
+                            <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        switchPanel('chat-list-panel');
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+let chatSearchTimer = null;
+async function searchForChat() {
+    if (chatSearchTimer) clearTimeout(chatSearchTimer);
+    chatSearchTimer = setTimeout(async () => {
+        const q = document.getElementById('chat-user-search').value.trim();
+        const results = document.getElementById('chat-search-results');
+        if (!q) { results.innerHTML = ''; return; }
+        try {
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), { headers: authHeaders() });
+            const data = await res.json();
+            if (!data.users || data.users.length === 0) {
+                results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>';
+                return;
+            }
+            results.innerHTML = data.users.filter(u => u.username !== currentUser.username).map(u => `
+                <div class="search-result" onclick="startChatWith('${escapeHtml(u.username)}')">
+                    <div class="search-pic-wrapper">
+                        <img class="search-pic" src="${u.profilePic || 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Ccircle cx=\\'50\\' cy=\\'50\\' r=\\'50\\' fill=\\'%23ddd\\'/%3E%3Ccircle cx=\\'50\\' cy=\\'40\\' r=\\'15\\' fill=\\'%23999\\'/%3E%3Cpath d=\\'M20 90 Q50 60 80 90\\' fill=\\'%23999\\'/%3E%3C/svg%3E'}">
+                        <span class="search-status ${u.isActive ? 'online' : 'offline'}"></span>
+                    </div>
+                    <div>
+                        <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
+                        <div style="font-size:12px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div>
+                    </div>
+                </div>
+            `).join('');
+        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+    }, 300);
+}
+
+async function startChatWith(username) {
+    if (!currentUser) { alert("Login korun"); return; }
+    if (!username) { alert("Username din"); return; }
+    if (username === currentUser.username) { alert("Nijer sathe chat korte parben na"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + '/api/chat/room', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ user1: currentUser.username, user2: username })
+        });
+        const data = await res.json();
+        if (data.success) openChat(username, data.room._id);
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function openChat(username, roomId) {
+    currentRoomId = roomId;
+    currentChatWith = username;
+    document.getElementById('chat-with-name').textContent = "💬 " + username;
+    switchPanel('chat-window-panel');
+    await loadMessages();
+    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+    chatRefreshTimer = setInterval(loadMessages, 3000);
+}
+
+async function loadMessages() {
+    if (!currentRoomId) return;
+    try {
+        const res = await fetch(BACKEND_URL + '/api/chat/messages/' + currentRoomId, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const box = document.getElementById('chat-messages');
+            const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+            box.innerHTML = data.messages.map(m => `
+                <div class="chat-msg ${m.sender === currentUser.username ? 'me' : 'other'}">
+                    ${escapeHtml(m.text)}
+                    <div class="chat-msg-time">${new Date(m.createdAt).toLocaleTimeString()}</div>
+                </div>
+            `).join('');
+            if (wasAtBottom) box.scrollTop = box.scrollHeight;
+        }
+    } catch (e) { console.log(e); }
+}
+
+async function sendMessage() {
+    const input = document.getElementById('chat-input');
+    const text = input.value.trim();
+    if (!text || !currentRoomId) return;
+    input.value = '';
+    try {
+        const res = await fetch(BACKEND_URL + '/api/chat/message', {
+            method: 'POST', headers: authHeaders(),
+            body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text })
+        });
+        const data = await res.json();
+        if (data.success) await loadMessages();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ============ HELPERS ============
+function escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+setInterval(() => { if (currentUser) loadActiveCount(); }, 60000);
+</script>
 </body>
 </html>
