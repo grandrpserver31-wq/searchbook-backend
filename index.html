@@ -7,25 +7,12 @@
 <style>
 :root { --blue: #1877f2; --white: #fff; --bg: #f0f2f5; --text: #1c1e21; --muted: #606770; --border: #dddfe2; --green: #42b72a; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Segoe UI', Arial, sans-serif; }
-body { background: var(--bg); color: var(--text); min-height: 100vh; transition: 0.3s; }
-
-body.dark { --bg: #18191a; --white: #242526; --text: #e4e6eb; --muted: #b0b3b8; --border: #3a3b3c; }
-body.dark .card { background: #242526; }
-body.dark input, body.dark textarea { background: #3a3b3c; color: #e4e6eb; border-color: #3a3b3c; }
-body.dark .post-item, body.dark .search-result, body.dark .chat-room-item { background: #3a3b3c; border-color: #4e4f50; }
-body.dark .media-btn { background: #3a3b3c; color: #e4e6eb; }
-body.dark #chat-messages { background: #3a3b3c; }
-body.dark .chat-msg.other { background: #4e4f50; color: #e4e6eb; }
-
+body { background: var(--bg); color: var(--text); min-height: 100vh; }
 .container { max-width: 500px; margin: 0 auto; padding: 20px; }
 .logo { font-size: 40px; font-weight: 800; color: var(--blue); text-align: center; margin-bottom: 20px; }
-
-/* ✅ GURUTTOPURNO: Panel hide/show */
-.card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; transition: 0.3s; display: none; }
-.card.active { display: block; }
-
+.card { background: var(--white); padding: 25px; border-radius: 8px; box-shadow: 0 2px 8px rgba(0,0,0,0.1); margin-bottom: 20px; }
 .input-group { margin-bottom: 15px; }
-.input-group input, .input-group textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit; background: var(--white); color: var(--text); }
+.input-group input, .input-group textarea { width: 100%; padding: 12px; font-size: 15px; border: 1px solid var(--border); border-radius: 6px; outline: none; font-family: inherit; }
 .input-group input:focus, .input-group textarea:focus { border-color: var(--blue); }
 .btn { width: 100%; background: var(--blue); color: white; border: none; padding: 12px; font-size: 16px; font-weight: bold; border-radius: 6px; cursor: pointer; margin-top: 8px; }
 .btn:hover { background: #166fe5; }
@@ -35,34 +22,35 @@ body.dark .chat-msg.other { background: #4e4f50; color: #e4e6eb; }
 .btn-red:hover { background: #c0392b; }
 .link { color: var(--blue); font-size: 14px; text-align: center; display: block; margin-top: 12px; cursor: pointer; }
 .divider { border-bottom: 1px solid var(--border); margin: 15px 0; }
-h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text); }
+.panel { display: none; }
+.active { display: block; }
+h2 { text-align: center; margin-bottom: 15px; font-size: 20px; }
 .timer { text-align: center; color: #e74c3c; font-weight: bold; padding: 10px; background: #fdecea; border-radius: 6px; margin-bottom: 12px; }
 .otp-display { text-align: center; font-size: 28px; color: var(--blue); font-weight: bold; letter-spacing: 8px; background: #e7f3ff; padding: 15px; border-radius: 6px; border: 2px dashed var(--blue); margin-bottom: 12px; }
-.post-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; background: #fcfcfc; transition: 0.3s; }
+.post-item { border: 1px solid var(--border); border-radius: 8px; padding: 15px; margin-bottom: 12px; background: #fcfcfc; }
 .post-user { color: var(--blue); font-weight: bold; cursor: pointer; }
 .post-time { color: var(--muted); font-size: 12px; }
-.post-content { margin-top: 8px; word-wrap: break-word; white-space: pre-wrap; color: var(--text); }
+.post-content { margin-top: 8px; word-wrap: break-word; white-space: pre-wrap; }
 .post-media { max-width: 100%; border-radius: 8px; margin-top: 10px; }
 .feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
 .feed-header h2 { margin: 0; text-align: left; }
-.header-btns { display: flex; gap: 6px; flex-wrap: wrap; }
-.small-btn { padding: 8px 10px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 12px; color: white; }
-.pic-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); }
+.header-btns { display: flex; gap: 8px; }
+.small-btn { padding: 8px 12px; border: none; border-radius: 6px; cursor: pointer; font-weight: bold; font-size: 13px; color: white; }
+.pic-circle { width: 80px; height: 80px; border-radius: 50%; object-fit: cover; border: 3px solid var(--blue); position: relative; }
 .pic-wrapper { position: relative; display: inline-block; }
 .status-dot { position: absolute; bottom: 5px; right: 5px; width: 18px; height: 18px; border-radius: 50%; border: 3px solid white; }
 .status-dot.online { background: #42b72a; }
 .status-dot.offline { background: #333; }
 .center { text-align: center; }
 .media-btns { display: flex; gap: 8px; margin-top: 8px; }
-.media-btn { flex: 1; padding: 10px; border: 2px dashed var(--border); border-radius: 6px; background: var(--white); cursor: pointer; font-size: 14px; color: var(--text); }
+.media-btn { flex: 1; padding: 10px; border: 2px dashed var(--border); border-radius: 6px; background: white; cursor: pointer; font-size: 14px; }
 .media-btn:hover { border-color: var(--blue); color: var(--blue); }
-.post-actions { display: flex; gap: 6px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 13px; flex-wrap: wrap; }
-.action-btn { flex: 1; padding: 8px; background: transparent; border: none; cursor: pointer; color: var(--muted); font-weight: bold; border-radius: 6px; font-size: 13px; }
-.action-btn:hover { background: rgba(24,119,242,0.1); color: var(--blue); }
+.post-actions { display: flex; gap: 10px; margin-top: 10px; padding-top: 10px; border-top: 1px solid var(--border); font-size: 14px; }
+.action-btn { flex: 1; padding: 8px; background: transparent; border: none; cursor: pointer; color: var(--muted); font-weight: bold; border-radius: 6px; }
+.action-btn:hover { background: #f0f2f5; color: var(--blue); }
 .action-btn.liked { color: #1877f2; }
-.action-btn.bookmarked { color: #f39c12; }
 .search-result { display: flex; align-items: center; gap: 10px; padding: 10px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.search-result:hover { background: rgba(24,119,242,0.05); }
+.search-result:hover { background: #f0f2f5; }
 .search-pic-wrapper { position: relative; }
 .search-pic { width: 40px; height: 40px; border-radius: 50%; object-fit: cover; }
 .search-status { position: absolute; bottom: 0; right: 0; width: 12px; height: 12px; border-radius: 50%; border: 2px solid white; }
@@ -70,46 +58,21 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 .search-status.offline { background: #333; }
 .stat-row { display: flex; gap: 15px; justify-content: center; margin: 10px 0; font-size: 13px; color: var(--muted); }
 .stat-row b { color: var(--text); }
+
+/* Active counter */
 .active-counter { background: #eafaf1; color: #27ae60; padding: 8px 12px; border-radius: 6px; text-align: center; font-size: 13px; font-weight: bold; margin-bottom: 12px; border: 1px solid #c3e6cb; }
 
-.stories-bar { display: flex; gap: 10px; overflow-x: auto; padding: 10px 0; margin-bottom: 15px; border-bottom: 1px solid var(--border); }
-.story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
-.story-ring { width: 65px; height: 65px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg, #f09433, #e6683c, #dc2743, #cc2366); }
-.story-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
-.story-name { font-size: 11px; color: var(--text); margin-top: 4px; max-width: 65px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.add-story-btn { width: 65px; height: 65px; border-radius: 50%; background: var(--blue); color: white; display: flex; align-items: center; justify-content: center; font-size: 28px; cursor: pointer; border: 3px solid var(--white); }
-
-#story-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; }
-#story-viewer.active { display: flex; }
-.story-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 15px; color: white; }
-.story-viewer-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
-.story-viewer-media { max-width: 100%; max-height: 80vh; border-radius: 12px; }
-
-.reactions-bar { display: flex; gap: 4px; margin-top: 8px; padding: 6px; background: rgba(24,119,242,0.08); border-radius: 20px; }
-.reaction-btn { flex: 1; background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; transition: 0.2s; }
-.reaction-btn:hover { background: rgba(24,119,242,0.15); transform: scale(1.2); }
-.reaction-btn.active { background: rgba(24,119,242,0.25); }
-
-.poll-box { margin-top: 12px; padding: 15px; background: rgba(24,119,242,0.05); border-radius: 8px; border: 1px solid var(--border); }
-.poll-question { font-weight: bold; margin-bottom: 12px; color: var(--text); }
-.poll-option { padding: 12px; border: 2px solid var(--border); border-radius: 6px; margin-bottom: 8px; cursor: pointer; position: relative; overflow: hidden; transition: 0.2s; }
-.poll-option:hover { border-color: var(--blue); }
-.poll-option.voted { border-color: var(--blue); background: rgba(24,119,242,0.1); }
-.poll-option-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(24,119,242,0.15); z-index: 0; transition: 0.3s; }
-.poll-option-text { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 14px; }
-.poll-total { text-align: center; font-size: 12px; color: var(--muted); margin-top: 8px; }
-.poll-creator { margin-top: 8px; padding: 12px; background: rgba(24,119,242,0.05); border-radius: 6px; display: none; }
-.poll-creator input { margin-bottom: 6px; padding: 10px; font-size: 14px; }
-.poll-creator-btn { padding: 8px; font-size: 13px; margin-top: 4px; }
-
+/* Chat */
 .chat-room-item { display: flex; align-items: center; gap: 12px; padding: 12px; border-bottom: 1px solid var(--border); cursor: pointer; }
-.chat-room-item:hover { background: rgba(24,119,242,0.05); }
+.chat-room-item:hover { background: #f0f2f5; }
 .chat-avatar { width: 45px; height: 45px; border-radius: 50%; background: #1877f2; color: white; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; }
 .chat-info { flex: 1; }
 .chat-name { font-weight: bold; color: var(--text); }
 .chat-last { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .chat-time { font-size: 11px; color: var(--muted); }
-#chat-messages { max-height: 400px; overflow-y: auto; padding: 10px; background: rgba(0,0,0,0.03); border-radius: 8px; margin-bottom: 12px; }
+
+/* Chat Window */
+#chat-messages { max-height: 400px; overflow-y: auto; padding: 10px; background: #fcfcfc; border-radius: 8px; margin-bottom: 12px; }
 .chat-msg { padding: 10px 14px; margin-bottom: 8px; border-radius: 18px; max-width: 75%; word-wrap: break-word; }
 .chat-msg.me { background: #1877f2; color: white; margin-left: auto; text-align: right; }
 .chat-msg.other { background: #e4e6eb; color: #1c1e21; }
@@ -117,19 +80,14 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
 .chat-input-row { display: flex; gap: 8px; }
 .chat-input-row input { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 20px; outline: none; font-size: 15px; }
 .chat-send-btn { background: #1877f2; color: white; border: none; padding: 0 18px; border-radius: 20px; cursor: pointer; font-weight: bold; }
-
-.theme-toggle { position: fixed; bottom: 20px; right: 20px; width: 50px; height: 50px; border-radius: 50%; background: var(--blue); color: white; border: none; font-size: 22px; cursor: pointer; box-shadow: 0 4px 12px rgba(0,0,0,0.3); z-index: 999; display: none; }
-.theme-toggle.show { display: block; }
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
-
 <div class="container">
     <h1 class="logo">Searchbook</h1>
 
-    <!-- Login (default active) -->
+    <!-- Login -->
     <div id="login-panel" class="card active">
         <div class="input-group"><input type="email" id="login-email" placeholder="Email"></div>
         <div class="input-group"><input type="password" id="login-password" placeholder="Password"></div>
@@ -153,7 +111,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
     <!-- OTP -->
     <div id="otp-panel" class="card">
         <h2>Enter OTP</h2>
-        <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:10px;">OTP valid for 1 minute only</p>
+        <p style="text-align:center; color:#606770; font-size:13px; margin-bottom:10px;">OTP valid for 1 minute only</p>
         <div id="otp-display" class="otp-display">------</div>
         <div id="timer" class="timer">⏱️ 60 seconds left</div>
         <div class="input-group"><input type="text" id="reg-otp" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:5px;"></div>
@@ -168,53 +126,38 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <span class="link" onclick="switchPanel('login-panel')">Cancel</span>
     </div>
 
-    <!-- Feed (login er por shudhu ei ta dekhаbe) -->
+    <!-- Feed -->
     <div id="feed-panel" class="card">
         <div class="feed-header">
             <h2>Feed</h2>
             <div class="header-btns">
                 <button class="small-btn" style="background:#f39c12;" onclick="switchPanel('search-panel')">🔍</button>
                 <button class="small-btn" style="background:#9b59b6;" onclick="openChatList()">💬</button>
-                <button class="small-btn" style="background:#e67e22;" onclick="openBookmarks()">🔖</button>
-                <button class="small-btn" style="background:#1877f2;" onclick="openProfile()">👤</button>
-                <button class="small-btn" style="background:#e74c3c;" onclick="handleLogout()">⎋</button>
+                <button class="small-btn" style="background:#1877f2;" onclick="openProfile()">Profile</button>
+                <button class="small-btn" style="background:#e74c3c;" onclick="handleLogout()">Logout</button>
             </div>
         </div>
 
-        <div class="active-counter" id="active-counter">🟢 Loading...</div>
-
-        <div class="stories-bar" id="stories-bar">
-            <div class="story-item" onclick="document.getElementById('story-input').click()">
-                <div class="add-story-btn">+</div>
-                <div class="story-name">Your Story</div>
-            </div>
+        <!-- Active Counter -->
+        <div class="active-counter" id="active-counter">
+            🟢 Loading active users...
         </div>
-        <input type="file" id="story-input" accept="image/*,video/*" style="display:none;" onchange="uploadStory(this)">
 
-        <div id="feed-user-info" style="text-align:center; padding:10px; background:rgba(24,119,242,0.1); border-radius:6px; margin-bottom:15px; color:#1877f2; font-weight:bold;"></div>
+        <div id="feed-user-info" style="text-align:center; padding:10px; background:#e7f3ff; border-radius:6px; margin-bottom:15px; color:#1877f2; font-weight:bold;"></div>
         
         <div class="input-group"><textarea id="post-content" placeholder="What's on your mind?" style="min-height:70px;"></textarea></div>
         <div class="media-btns">
             <button class="media-btn" onclick="document.getElementById('image-input').click()">📷 Photo</button>
             <button class="media-btn" onclick="document.getElementById('video-input').click()">🎥 Video</button>
-            <button class="media-btn" onclick="togglePollCreator()">📊 Poll</button>
         </div>
         <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this, 'image')">
         <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
         <div id="media-preview" style="margin-top:10px;"></div>
-
-        <div class="poll-creator" id="poll-creator">
-            <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px;">
-            <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;">
-            <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;">
-            <button class="btn poll-creator-btn" style="background:#42b72a;" onclick="addPollOption()">+ Add Option</button>
-        </div>
-
         <button class="btn" onclick="createPost()">Post</button>
         
         <div class="divider"></div>
-        <h3 style="margin-bottom:12px; color:var(--text);">🔥 Trending Posts</h3>
-        <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+        <h3 style="margin-bottom:12px;">🔥 Trending Posts</h3>
+        <div id="posts-list"><p style="text-align:center; color:#606770;">Loading...</p></div>
     </div>
 
     <!-- Search -->
@@ -229,15 +172,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <div id="search-results"></div>
     </div>
 
-    <!-- Bookmarks -->
-    <div id="bookmarks-panel" class="card">
-        <div class="feed-header">
-            <h2>🔖 Saved</h2>
-            <button class="small-btn" style="background:#1877f2;" onclick="switchPanel('feed-panel')">Back</button>
-        </div>
-        <div id="bookmarks-list"></div>
-    </div>
-
     <!-- Visit Profile -->
     <div id="visit-panel" class="card">
         <div class="feed-header">
@@ -250,21 +184,21 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
                 <span class="status-dot offline" id="visit-status"></span>
             </div>
             <h3 id="visit-name" style="margin-top:10px;"></h3>
-            <p id="visit-bio" style="color:var(--muted); margin-top:5px;"></p>
+            <p id="visit-bio" style="color:#606770; margin-top:5px;"></p>
             <div class="stat-row">
                 <span><b id="visit-posts">0</b> Posts</span>
                 <span><b id="visit-followers">0</b> Followers</span>
                 <span><b id="visit-following">0</b> Following</span>
             </div>
             <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
-            <button class="btn" style="background:#9b59b6; margin-top:8px;" id="msg-btn" onclick="startChatWith('')">💬 Message</button>
+            <button class="btn" style="background:#9b59b6; margin-top:8px;" onclick="startChatWith('')">💬 Message</button>
         </div>
         <div class="divider"></div>
-        <h3 style="margin-bottom:12px; color:var(--text);">Posts</h3>
+        <h3 style="margin-bottom:12px;">Posts</h3>
         <div id="visit-posts-list"></div>
     </div>
 
-    <!-- Profile (Self) -->
+    <!-- Profile -->
     <div id="profile-panel" class="card">
         <div class="feed-header">
             <h2>My Profile</h2>
@@ -277,14 +211,14 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
                 <span class="status-dot online"></span>
             </div>
             <h3 id="profile-name" style="margin-top:10px;"></h3>
-            <p id="profile-bio" style="color:var(--muted); margin-top:5px;"></p>
+            <p id="profile-bio" style="color:#606770; margin-top:5px;"></p>
         </div>
 
         <div class="divider"></div>
-        <h3 style="margin-bottom:12px; color:var(--text);">Edit Profile</h3>
+        <h3 style="margin-bottom:12px;">Edit Profile</h3>
         
         <div class="input-group">
-            <label style="font-size:12px; color:var(--muted);">Profile Picture</label>
+            <label style="font-size:12px; color:#606770;">Profile Picture</label>
             <input type="file" id="profile-pic-input" accept="image/*" onchange="uploadProfilePic(this)">
         </div>
         <div class="input-group"><input type="text" id="edit-fullname" placeholder="Full Name"></div>
@@ -292,7 +226,7 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         <button class="btn" onclick="updateProfile()">Save Profile</button>
 
         <div class="divider"></div>
-        <h3 style="margin-bottom:12px; color:var(--text);">⚙️ Change Password</h3>
+        <h3 style="margin-bottom:12px;">⚙️ Change Password</h3>
         <div class="input-group"><input type="password" id="old-pass" placeholder="Old Password"></div>
         <div class="input-group"><input type="password" id="new-pass" placeholder="New Password"></div>
         <button class="btn btn-red" onclick="changePassword()">Change Password</button>
@@ -309,8 +243,8 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
         </div>
         <div id="chat-search-results"></div>
         <div class="divider"></div>
-        <h3 style="margin-bottom:12px; color:var(--text);">Your Chats</h3>
-        <div id="chat-rooms-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+        <h3 style="margin-bottom:12px;">Your Chats</h3>
+        <div id="chat-rooms-list"><p style="text-align:center; color:#606770;">Loading...</p></div>
     </div>
 
     <!-- Chat Window -->
@@ -327,16 +261,6 @@ h2 { text-align: center; margin-bottom: 15px; font-size: 20px; color: var(--text
     </div>
 </div>
 
-<div id="story-viewer" onclick="closeStory()">
-    <div class="story-viewer-header">
-        <span id="story-viewer-name" style="font-weight:bold;"></span>
-        <span style="cursor:pointer; font-size:24px;" onclick="closeStory()">✕</span>
-    </div>
-    <div class="story-viewer-content">
-        <div id="story-viewer-media-container"></div>
-    </div>
-</div>
-
 <script>
 const BACKEND_URL = "https://searchbook-backend.onrender.com";
 let currentUser = null;
@@ -344,68 +268,50 @@ let otpTimer = null, otpExpireTime = null;
 let selectedMedia = null, selectedMediaType = null;
 let visitUser = null;
 let currentRoomId = null, currentChatWith = null;
-let chatRefreshTimer = null, heartbeatTimer = null, activeRefreshTimer = null;
-let bookmarks = [];
-let currentTheme = "light";
+let chatRefreshTimer = null, activeRefreshTimer = null, heartbeatTimer = null;
 
+// ============ HEADERS HELPER ============
 function authHeaders() {
     const h = { 'Content-Type': 'application/json' };
     if (currentUser) h['x-username'] = currentUser.username;
     return h;
 }
 
-/* ✅ GURUTTOPURNO: Panel switch — ekta panel dekhаbe, baki hide */
+// ============ PANEL SWITCH ============
 function switchPanel(id) {
     document.querySelectorAll('.card').forEach(p => p.classList.remove('active'));
-    const el = document.getElementById(id);
-    if (el) el.classList.add('active');
+    document.getElementById(id).classList.add('active');
     window.scrollTo(0, 0);
 }
 
-// ============ DARK MODE ============
-function applyTheme(theme) {
-    currentTheme = theme;
-    if (theme === 'dark') {
-        document.body.classList.add('dark');
-        document.getElementById('theme-toggle').textContent = '☀️';
-    } else {
-        document.body.classList.remove('dark');
-        document.getElementById('theme-toggle').textContent = '🌙';
-    }
-}
-
-async function toggleTheme() {
-    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    applyTheme(newTheme);
-    if (currentUser) {
-        fetch(BACKEND_URL + '/api/user/theme', {
-            method: 'PUT', headers: authHeaders(),
-            body: JSON.stringify({ email: currentUser.email, theme: newTheme })
-        }).catch(() => {});
-    }
-}
-
-// ============ OTP ============
+// ============ OTP FLOW ============
 async function sendOTP() {
     const name = document.getElementById('reg-name').value.trim();
     const username = document.getElementById('reg-username').value.trim();
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
+
     if (!name || !username || !email || !password) { alert("Sob field din"); return; }
     if (password.length < 6) { alert("Password min 6 char"); return; }
+
     try {
         const res = await fetch(BACKEND_URL + '/api/send-otp', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email })
         });
         const data = await res.json();
+
         if (data.success) {
             document.getElementById('otp-display').textContent = data.otp;
+            document.getElementById('otp-display').style.color = "#1877f2";
             alert("OTP: " + data.otp + "\n\n1 minute por expire hobe!");
             switchPanel('otp-panel');
             otpExpireTime = Date.now() + 60000;
             startTimer();
-        } else { alert("❌ " + data.message); }
+        } else {
+            alert("❌ " + data.message);
+        }
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -418,6 +324,7 @@ function startTimer() {
             clearInterval(otpTimer);
             document.getElementById('timer').textContent = "❌ OTP expired!";
             document.getElementById('otp-display').textContent = "------";
+            document.getElementById('otp-display').style.color = "#e74c3c";
         }
     }, 1000);
 }
@@ -428,20 +335,26 @@ async function verifyAndSignup() {
     const email = document.getElementById('reg-email').value.trim();
     const password = document.getElementById('reg-password').value;
     const fullName = document.getElementById('reg-name').value.trim();
+
     if (!otp) { alert("OTP din"); return; }
     if (Date.now() > otpExpireTime) { alert("OTP expire!"); return; }
+
     try {
         const vRes = await fetch(BACKEND_URL + '/api/verify-otp', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, otp })
         });
         const vData = await vRes.json();
         if (!vData.success) { alert("❌ " + vData.message); return; }
+
         const sRes = await fetch(BACKEND_URL + '/api/signup', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username, email, password, fullName })
         });
         const sData = await sRes.json();
+
         if (sData.success) {
             alert("✅ Account created!");
             if (otpTimer) clearInterval(otpTimer);
@@ -454,27 +367,24 @@ async function verifyAndSignup() {
 async function handleLogin() {
     const email = document.getElementById('login-email').value.trim();
     const password = document.getElementById('login-password').value;
+
     if (!email || !password) { alert("Email + password din"); return; }
+
     try {
         const res = await fetch(BACKEND_URL + '/api/login', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ email, password })
         });
         const data = await res.json();
+
         if (data.success) {
             currentUser = { username: data.username, email: data.email, fullName: data.fullName };
             document.getElementById('feed-user-info').textContent = "👋 Welcome, " + data.username + "!";
-            document.getElementById('theme-toggle').classList.add('show');
-            applyTheme(data.theme || 'light');
-
-            /* ✅ Login er por shudhu Feed panel dekhаbe */
             switchPanel('feed-panel');
-
             loadPosts();
-            loadStories();
             startHeartbeat();
             loadActiveCount();
-            loadBookmarks();
         } else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
@@ -482,7 +392,8 @@ async function handleLogin() {
 function handleLogout() {
     if (currentUser) {
         fetch(BACKEND_URL + '/api/logout', {
-            method: 'POST', headers: { 'Content-Type': 'application/json' },
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ username: currentUser.username })
         }).catch(() => {});
     }
@@ -490,21 +401,23 @@ function handleLogout() {
     if (chatRefreshTimer) clearInterval(chatRefreshTimer);
     if (activeRefreshTimer) clearInterval(activeRefreshTimer);
     currentUser = null;
-    document.getElementById('theme-toggle').classList.remove('show');
-    document.body.classList.remove('dark');
+    document.getElementById('login-email').value = '';
+    document.getElementById('login-password').value = '';
     switchPanel('login-panel');
 }
 
+// ============ HEARTBEAT (Active) ============
 function startHeartbeat() {
     if (heartbeatTimer) clearInterval(heartbeatTimer);
     heartbeatTimer = setInterval(() => {
         if (currentUser) {
             fetch(BACKEND_URL + '/api/heartbeat', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser.username })
             }).catch(() => {});
         }
-    }, 30000);
+    }, 30000); // 30 second
 }
 
 async function loadActiveCount() {
@@ -515,145 +428,49 @@ async function loadActiveCount() {
     } catch (e) { console.log(e); }
 }
 
-// ============ STORIES ============
-function uploadStory(input) {
-    const file = input.files[0];
-    if (!file) return;
-    if (file.size > 8 * 1024 * 1024) { alert("Max 8MB"); return; }
-    const isVideo = file.type.startsWith('video');
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        try {
-            const res = await fetch(BACKEND_URL + '/api/stories', {
-                method: 'POST', headers: authHeaders(),
-                body: JSON.stringify({
-                    username: currentUser.username,
-                    media: e.target.result,
-                    mediaType: isVideo ? 'video' : 'image',
-                    text: ""
-                })
-            });
-            const data = await res.json();
-            if (data.success) {
-                alert("✅ Story uploaded! 24 hours thakbe.");
-                loadStories();
-            } else { alert("❌ " + data.message); }
-        } catch (err) { alert("❌ " + err.message); }
-    };
-    reader.readAsDataURL(file);
-}
-
-async function loadStories() {
-    try {
-        const res = await fetch(BACKEND_URL + '/api/stories');
-        const data = await res.json();
-        const bar = document.getElementById('stories-bar');
-        bar.innerHTML = `
-            <div class="story-item" onclick="document.getElementById('story-input').click()">
-                <div class="add-story-btn">+</div>
-                <div class="story-name">Your Story</div>
-            </div>
-        `;
-        if (!data.stories) return;
-        Object.keys(data.stories).forEach(username => {
-            const userStories = data.stories[username];
-            const first = userStories[0];
-            const item = document.createElement('div');
-            item.className = 'story-item';
-            item.onclick = () => viewStory(username, userStories);
-            item.innerHTML = `
-                <div class="story-ring">
-                    <img class="story-pic" src="${first.mediaType === 'image' ? first.media : 'data:image/svg+xml,%3Csvg xmlns=\\'http://www.w3.org/2000/svg\\' viewBox=\\'0 0 100 100\\'%3E%3Crect width=\\'100\\' height=\\'100\\' fill=\\'%23333\\'/%3E%3Ctext x=\\'50\\' y=\\'55\\' font-size=\\'40\\' text-anchor=\\'middle\\' fill=\\'white\\'%3E🎥%3C/text%3E%3C/svg%3E'}">
-                </div>
-                <div class="story-name">${escapeHtml(username)}</div>
-            `;
-            bar.appendChild(item);
-        });
-    } catch (e) { console.log(e); }
-}
-
-function viewStory(username, stories) {
-    document.getElementById('story-viewer-name').textContent = username;
-    const container = document.getElementById('story-viewer-media-container');
-    let html = '';
-    stories.forEach(s => {
-        if (s.mediaType === 'video') html += `<video src="${s.media}" controls autoplay class="story-viewer-media"></video>`;
-        else html += `<img src="${s.media}" class="story-viewer-media">`;
-    });
-    container.innerHTML = html;
-    document.getElementById('story-viewer').classList.add('active');
-}
-
-function closeStory() {
-    document.getElementById('story-viewer').classList.remove('active');
-    document.getElementById('story-viewer-media-container').innerHTML = '';
-}
-
 // ============ POST ============
 function handleMedia(input, type) {
     const file = input.files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+
     const reader = new FileReader();
     reader.onload = (e) => {
         selectedMedia = e.target.result;
         selectedMediaType = type;
         const preview = document.getElementById('media-preview');
-        if (type === 'image') preview.innerHTML = `<img src="${selectedMedia}" style="max-width:100%; border-radius:6px;">`;
-        else preview.innerHTML = `<video src="${selectedMedia}" controls style="max-width:100%; border-radius:6px;"></video>`;
+        if (type === 'image') {
+            preview.innerHTML = `<img src="${selectedMedia}" style="max-width:100%; border-radius:6px;">`;
+        } else {
+            preview.innerHTML = `<video src="${selectedMedia}" controls style="max-width:100%; border-radius:6px;"></video>`;
+        }
     };
     reader.readAsDataURL(file);
 }
 
-function togglePollCreator() {
-    const p = document.getElementById('poll-creator');
-    p.style.display = p.style.display === 'block' ? 'none' : 'block';
-}
-
-function addPollOption() {
-    const container = document.getElementById('poll-creator');
-    const count = container.querySelectorAll('.poll-opt').length;
-    if (count >= 5) { alert("Max 5 option"); return; }
-    const inp = document.createElement('input');
-    inp.type = 'text';
-    inp.className = 'poll-opt';
-    inp.placeholder = 'Option ' + (count + 1);
-    inp.style.cssText = 'width:100%; padding:10px; border:1px solid var(--border); border-radius:6px; margin-top:6px;';
-    container.insertBefore(inp, container.querySelector('.poll-creator-btn'));
-}
-
 async function createPost() {
     const content = document.getElementById('post-content').value.trim();
-    const pollQ = document.getElementById('poll-q').value.trim();
-    const pollOpts = Array.from(document.querySelectorAll('.poll-opt')).map(i => i.value.trim()).filter(v => v);
-
-    let poll = null;
-    if (pollQ && pollOpts.length >= 2) {
-        poll = { question: pollQ, options: pollOpts.map(t => ({ text: t, votes: [] })) };
-    }
-
-    if (!content && !selectedMedia && !poll) { alert("Kichu likhun ba media/poll din"); return; }
+    if (!content && !selectedMedia) { alert("Kichu likhun ba media din"); return; }
     if (!currentUser) { alert("Login korun"); return; }
 
     try {
         const res = await fetch(BACKEND_URL + '/api/posts', {
-            method: 'POST', headers: authHeaders(),
+            method: 'POST',
+            headers: authHeaders(),
             body: JSON.stringify({
                 username: currentUser.username,
                 content: content,
                 media: selectedMedia || "",
-                mediaType: selectedMediaType || "text",
-                poll
+                mediaType: selectedMediaType || "text"
             })
         });
         const data = await res.json();
+
         if (data.success) {
             document.getElementById('post-content').value = '';
             document.getElementById('media-preview').innerHTML = '';
-            document.getElementById('poll-creator').style.display = 'none';
-            document.getElementById('poll-q').value = '';
-            document.querySelectorAll('.poll-opt').forEach((opt, i) => { if (i < 2) opt.value = ''; });
-            selectedMedia = null; selectedMediaType = null;
+            selectedMedia = null;
+            selectedMediaType = null;
             loadPosts();
         } else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
@@ -661,67 +478,42 @@ async function createPost() {
 
 async function loadPosts() {
     const list = document.getElementById('posts-list');
-    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    list.innerHTML = '<p style="text-align:center;">Loading...</p>';
+
     try {
         const res = await fetch(BACKEND_URL + '/api/posts');
         const posts = await res.json();
-        if (posts.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts yet</p>'; return; }
+
+        if (posts.length === 0) {
+            list.innerHTML = '<p style="text-align:center; color:#606770;">No posts yet</p>';
+            return;
+        }
+
         list.innerHTML = posts.map(p => renderPost(p)).join('');
+
         posts.forEach(p => {
             fetch(BACKEND_URL + '/api/posts/view', {
-                method: 'POST', headers: { 'Content-Type': 'application/json' },
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ postId: p._id })
             }).catch(() => {});
         });
-    } catch (e) { list.innerHTML = '<p style="color:#e74c3c; text-align:center;">Load failed</p>'; }
+    } catch (e) {
+        list.innerHTML = '<p style="color:#e74c3c; text-align:center;">Load failed</p>';
+    }
 }
 
 function renderPost(p) {
     let mediaHtml = '';
     if (p.media) {
-        if (p.mediaType === 'video') mediaHtml = `<video src="${p.media}" controls class="post-media"></video>`;
-        else mediaHtml = `<img src="${p.media}" class="post-media">`;
-    }
-
-    const reactions = p.reactions || {};
-    const userReaction = currentUser ? Object.keys(reactions).find(k => reactions[k]?.includes(currentUser.username)) : null;
-    const totalReactions = Object.values(reactions).reduce((s, arr) => s + (arr?.length || 0), 0);
-    const reactionEmojis = { love: '❤️', haha: '😂', sad: '😢', angry: '😡', wow: '😮' };
-
-    let reactionsHtml = `
-        <div class="reactions-bar">
-            ${Object.keys(reactionEmojis).map(k => `
-                <button class="reaction-btn ${userReaction === k ? 'active' : ''}" onclick="reactPost('${p._id}', '${k}')">${reactionEmojis[k]}</button>
-            `).join('')}
-        </div>
-    `;
-
-    let pollHtml = '';
-    if (p.poll) {
-        const totalVotes = p.poll.options.reduce((s, o) => s + o.votes.length, 0);
-        pollHtml = `
-            <div class="poll-box">
-                <div class="poll-question">📊 ${escapeHtml(p.poll.question)}</div>
-                ${p.poll.options.map((opt, i) => {
-                    const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
-                    const voted = currentUser && opt.votes.includes(currentUser.username);
-                    return `
-                        <div class="poll-option ${voted ? 'voted' : ''}" onclick="votePoll('${p._id}', ${i})">
-                            <div class="poll-option-fill" style="width:${pct}%"></div>
-                            <div class="poll-option-text">
-                                <span>${escapeHtml(opt.text)}</span>
-                                <span><b>${pct}%</b> (${opt.votes.length})</span>
-                            </div>
-                        </div>
-                    `;
-                }).join('')}
-                <div class="poll-total">${totalVotes} votes</div>
-            </div>
-        `;
+        if (p.mediaType === 'video') {
+            mediaHtml = `<video src="${p.media}" controls class="post-media"></video>`;
+        } else {
+            mediaHtml = `<img src="${p.media}" class="post-media">`;
+        }
     }
 
     const liked = currentUser && p.likes && p.likes.includes(currentUser.username);
-    const isBookmarked = currentUser && bookmarks.includes(p._id);
     const likeCount = p.likes ? p.likes.length : 0;
     const commentCount = p.comments ? p.comments.length : 0;
     const shareCount = p.shares || 0;
@@ -735,16 +527,13 @@ function renderPost(p) {
             </div>
             <div class="post-content">${escapeHtml(p.content)}</div>
             ${mediaHtml}
-            ${pollHtml}
-            <div style="margin-top:8px; font-size:12px; color:var(--muted);">
-                ${viewCount} views · ${likeCount} likes · ${commentCount} comments · ${shareCount} shares · ${totalReactions} reactions
+            <div style="margin-top:8px; font-size:12px; color:#606770;">
+                ${viewCount} views · ${likeCount} likes · ${commentCount} comments · ${shareCount} shares
             </div>
-            ${reactionsHtml}
             <div class="post-actions">
                 <button class="action-btn ${liked ? 'liked' : ''}" onclick="likePost('${p._id}')">👍 Like</button>
                 <button class="action-btn" onclick="commentPost('${p._id}')">💬 Comment</button>
                 <button class="action-btn" onclick="sharePost('${p._id}')">🔗 Share</button>
-                <button class="action-btn ${isBookmarked ? 'bookmarked' : ''}" onclick="toggleBookmark('${p._id}')">${isBookmarked ? '🔖' : '📑'}</button>
             </div>
         </div>
     `;
@@ -754,32 +543,9 @@ async function likePost(postId) {
     if (!currentUser) { alert("Login korun"); return; }
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/like', {
-            method: 'POST', headers: authHeaders(),
+            method: 'POST',
+            headers: authHeaders(),
             body: JSON.stringify({ postId, username: currentUser.username })
-        });
-        const data = await res.json();
-        if (data.success) loadPosts();
-    } catch (e) { alert("❌ " + e.message); }
-}
-
-async function reactPost(postId, reaction) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + '/api/posts/reaction', {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ postId, username: currentUser.username, reaction })
-        });
-        const data = await res.json();
-        if (data.success) loadPosts();
-    } catch (e) { alert("❌ " + e.message); }
-}
-
-async function votePoll(postId, optionIndex) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + '/api/posts/vote', {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ postId, username: currentUser.username, optionIndex })
         });
         const data = await res.json();
         if (data.success) loadPosts();
@@ -790,9 +556,11 @@ async function commentPost(postId) {
     if (!currentUser) { alert("Login korun"); return; }
     const text = prompt("Comment likhun:");
     if (!text) return;
+
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/comment', {
-            method: 'POST', headers: authHeaders(),
+            method: 'POST',
+            headers: authHeaders(),
             body: JSON.stringify({ postId, username: currentUser.username, text })
         });
         const data = await res.json();
@@ -803,47 +571,16 @@ async function commentPost(postId) {
 async function sharePost(postId) {
     try {
         const res = await fetch(BACKEND_URL + '/api/posts/share', {
-            method: 'POST', headers: authHeaders(),
+            method: 'POST',
+            headers: authHeaders(),
             body: JSON.stringify({ postId })
         });
         const data = await res.json();
-        if (data.success) { alert("🔗 Shared!"); loadPosts(); }
+        if (data.success) {
+            alert("🔗 Share count increased!");
+            loadPosts();
+        }
     } catch (e) { alert("❌ " + e.message); }
-}
-
-// ============ BOOKMARK ============
-async function toggleBookmark(postId) {
-    if (!currentUser) { alert("Login korun"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmark', {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ email: currentUser.email, postId })
-        });
-        const data = await res.json();
-        if (data.success) { bookmarks = data.bookmarks || []; loadPosts(); }
-    } catch (e) { alert("❌ " + e.message); }
-}
-
-async function loadBookmarks() {
-    if (!currentUser) return;
-    try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() });
-        const data = await res.json();
-        if (data.success) bookmarks = data.posts.map(p => p._id);
-    } catch (e) { console.log(e); }
-}
-
-async function openBookmarks() {
-    if (!currentUser) return;
-    const list = document.getElementById('bookmarks-list');
-    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
-    try {
-        const res = await fetch(BACKEND_URL + '/api/user/bookmarks/' + currentUser.email, { headers: authHeaders() });
-        const data = await res.json();
-        if (!data.posts || data.posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>';
-        else list.innerHTML = data.posts.map(p => renderPost(p)).join('');
-        switchPanel('bookmarks-panel');
-    } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; }
 }
 
 // ============ SEARCH ============
@@ -854,10 +591,18 @@ async function doSearch() {
         const q = document.getElementById('search-input').value.trim();
         const results = document.getElementById('search-results');
         if (!q) { results.innerHTML = ''; return; }
+
         try {
-            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), { headers: authHeaders() });
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
+                headers: authHeaders()
+            });
             const data = await res.json();
-            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
+
+            if (!data.users || data.users.length === 0) {
+                results.innerHTML = '<p style="text-align:center; color:#606770;">No user found</p>';
+                return;
+            }
+
             results.innerHTML = data.users.map(u => `
                 <div class="search-result" onclick="visitProfile('${escapeHtml(u.username)}')">
                     <div class="search-pic-wrapper">
@@ -866,30 +611,43 @@ async function doSearch() {
                     </div>
                     <div>
                         <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
-                        <div style="font-size:12px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div>
+                        <div style="font-size:12px; color:#606770;">${escapeHtml(u.fullName || '')}</div>
                     </div>
                 </div>
             `).join('');
-        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+        } catch (e) {
+            results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>';
+        }
     }, 300);
 }
 
 // ============ VISIT PROFILE ============
 async function visitProfile(username) {
     if (!username) return;
+    
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), { headers: authHeaders() });
+        const res = await fetch(BACKEND_URL + '/api/user/username/' + encodeURIComponent(username), {
+            headers: authHeaders()
+        });
         const data = await res.json();
+
         if (data.success) {
             const u = data.user;
             visitUser = u;
+
             document.getElementById('visit-name').textContent = u.fullName || u.username;
             document.getElementById('visit-bio').textContent = u.bio || "No bio yet";
             document.getElementById('visit-pic').src = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
 
-            const sd = document.getElementById('visit-status');
-            if (u.isActive) { sd.classList.remove('offline'); sd.classList.add('online'); }
-            else { sd.classList.remove('online'); sd.classList.add('offline'); }
+            // Active status
+            const statusDot = document.getElementById('visit-status');
+            if (u.isActive) {
+                statusDot.classList.remove('offline');
+                statusDot.classList.add('online');
+            } else {
+                statusDot.classList.remove('online');
+                statusDot.classList.add('offline');
+            }
 
             document.getElementById('visit-followers').textContent = (u.followers || []).length;
             document.getElementById('visit-following').textContent = (u.following || []).length;
@@ -899,14 +657,20 @@ async function visitProfile(username) {
             btn.textContent = isFollowing ? "Unfollow" : "Follow";
             btn.style.background = isFollowing ? "#e74c3c" : "#42b72a";
 
-            document.getElementById('msg-btn').setAttribute('onclick', `startChatWith('${escapeHtml(username)}')`);
-
             const pRes = await fetch(BACKEND_URL + '/api/posts/user/' + encodeURIComponent(username));
             const posts = await pRes.json();
             document.getElementById('visit-posts').textContent = posts.length;
+
             const list = document.getElementById('visit-posts-list');
-            if (posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts</p>';
-            else list.innerHTML = posts.map(p => renderPost(p)).join('');
+            if (posts.length === 0) {
+                list.innerHTML = '<p style="text-align:center; color:#606770;">No posts</p>';
+            } else {
+                list.innerHTML = posts.map(p => renderPost(p)).join('');
+            }
+
+            // Message button e username set korun
+            const msgBtn = document.querySelector('#visit-panel .btn[onclick^="startChatWith"]');
+            if (msgBtn) msgBtn.setAttribute('onclick', `startChatWith('${escapeHtml(username)}')`);
 
             switchPanel('visit-panel');
         }
@@ -915,29 +679,42 @@ async function visitProfile(username) {
 
 async function toggleFollow() {
     if (!visitUser || !currentUser) return;
+    
     const isFollowing = (visitUser.followers || []).includes(currentUser.username);
     const endpoint = isFollowing ? '/api/user/unfollow' : '/api/user/follow';
+
     try {
         const res = await fetch(BACKEND_URL + endpoint, {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ follower: currentUser.username, following: visitUser.username })
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                follower: currentUser.username,
+                following: visitUser.username
+            })
         });
         const data = await res.json();
-        if (data.success) visitProfile(visitUser.username);
+        if (data.success) {
+            visitProfile(visitUser.username);
+        }
     } catch (e) { alert("❌ " + e.message); }
 }
 
-// ============ PROFILE ============
+// ============ PROFILE (Self) ============
 async function openProfile() {
     if (!currentUser) return;
+
     try {
-        const res = await fetch(BACKEND_URL + '/api/user/' + currentUser.email, { headers: authHeaders() });
+        const res = await fetch(BACKEND_URL + '/api/user/' + currentUser.email, {
+            headers: authHeaders()
+        });
         const data = await res.json();
+
         if (data.success) {
             const u = data.user;
             document.getElementById('profile-name').textContent = u.fullName || u.username;
             document.getElementById('profile-bio').textContent = u.bio || "No bio yet";
             if (u.profilePic) document.getElementById('profile-pic-display').src = u.profilePic;
+
             document.getElementById('edit-fullname').value = u.fullName || "";
             document.getElementById('edit-bio').value = u.bio || "";
             switchPanel('profile-panel');
@@ -949,6 +726,7 @@ function uploadProfilePic(input) {
     const file = input.files[0];
     if (!file) return;
     if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+
     const reader = new FileReader();
     reader.onload = (e) => {
         document.getElementById('profile-pic-display').src = e.target.result;
@@ -962,54 +740,86 @@ async function updateProfile() {
     const bio = document.getElementById('edit-bio').value.trim();
     const picEl = document.getElementById('profile-pic-display');
     const profilePic = picEl.dataset.newPic || "";
+
     try {
         const res = await fetch(BACKEND_URL + '/api/user/profile', {
-            method: 'PUT', headers: authHeaders(),
-            body: JSON.stringify({ email: currentUser.email, profilePic, fullName, bio })
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                email: currentUser.email,
+                profilePic,
+                fullName,
+                bio
+            })
         });
         const data = await res.json();
-        if (data.success) { alert("✅ Profile updated!"); delete picEl.dataset.newPic; openProfile(); }
-        else { alert("❌ " + data.message); }
+
+        if (data.success) {
+            alert("✅ Profile updated!");
+            delete picEl.dataset.newPic;
+            openProfile();
+        } else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
 async function changePassword() {
     const oldPassword = document.getElementById('old-pass').value;
     const newPassword = document.getElementById('new-pass').value;
+
     if (!oldPassword || !newPassword) { alert("Dui password din"); return; }
     if (newPassword.length < 6) { alert("New pass min 6 char"); return; }
+
     try {
         const res = await fetch(BACKEND_URL + '/api/user/change-password', {
-            method: 'PUT', headers: authHeaders(),
-            body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword })
+            method: 'PUT',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                email: currentUser.email,
+                oldPassword,
+                newPassword
+            })
         });
         const data = await res.json();
-        if (data.success) { alert("✅ Password changed!"); document.getElementById('old-pass').value = ''; document.getElementById('new-pass').value = ''; }
-        else { alert("❌ " + data.message); }
+
+        if (data.success) {
+            alert("✅ Password changed!");
+            document.getElementById('old-pass').value = '';
+            document.getElementById('new-pass').value = '';
+        } else { alert("❌ " + data.message); }
     } catch (e) { alert("❌ " + e.message); }
 }
 
 // ============ CHAT ============
 async function openChatList() {
     if (!currentUser) { alert("Login korun"); return; }
+
     const roomsList = document.getElementById('chat-rooms-list');
-    roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    roomsList.innerHTML = '<p style="text-align:center;">Loading...</p>';
+
     try {
-        const res = await fetch(BACKEND_URL + '/api/chat/rooms/' + currentUser.username, { headers: authHeaders() });
+        const res = await fetch(BACKEND_URL + '/api/chat/rooms/' + currentUser.username, {
+            headers: authHeaders()
+        });
         const data = await res.json();
-        if (!data.rooms || data.rooms.length === 0) roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet. Search korun!</p>';
-        else roomsList.innerHTML = data.rooms.map(r => {
-            const other = r.members.find(m => m !== currentUser.username);
-            return `
-                <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
-                    <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
-                    <div class="chat-info">
-                        <div class="chat-name">${escapeHtml(other)}</div>
-                        <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
+
+        if (!data.rooms || data.rooms.length === 0) {
+            roomsList.innerHTML = '<p style="text-align:center; color:#606770;">No chats yet. Search korun!</p>';
+        } else {
+            roomsList.innerHTML = data.rooms.map(r => {
+                const other = r.members.find(m => m !== currentUser.username);
+                return `
+                    <div class="chat-room-item" onclick="openChat('${escapeHtml(other)}', '${r._id}')">
+                        <div class="chat-avatar">${escapeHtml(other.substring(0, 1).toUpperCase())}</div>
+                        <div class="chat-info">
+                            <div class="chat-name">${escapeHtml(other)}</div>
+                            <div class="chat-last">${escapeHtml(r.lastMessage || 'No messages')}</div>
+                        </div>
+                        <div class="chat-time">${r.lastTime ? new Date(r.lastTime).toLocaleDateString() : ''}</div>
                     </div>
-                </div>
-            `;
-        }).join('');
+                `;
+            }).join('');
+        }
+
         switchPanel('chat-list-panel');
     } catch (e) { alert("❌ " + e.message); }
 }
@@ -1021,10 +831,18 @@ async function searchForChat() {
         const q = document.getElementById('chat-user-search').value.trim();
         const results = document.getElementById('chat-search-results');
         if (!q) { results.innerHTML = ''; return; }
+
         try {
-            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), { headers: authHeaders() });
+            const res = await fetch(BACKEND_URL + '/api/search/users/' + encodeURIComponent(q), {
+                headers: authHeaders()
+            });
             const data = await res.json();
-            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
+
+            if (!data.users || data.users.length === 0) {
+                results.innerHTML = '<p style="text-align:center; color:#606770;">No user found</p>';
+                return;
+            }
+
             results.innerHTML = data.users.filter(u => u.username !== currentUser.username).map(u => `
                 <div class="search-result" onclick="startChatWith('${escapeHtml(u.username)}')">
                     <div class="search-pic-wrapper">
@@ -1033,11 +851,13 @@ async function searchForChat() {
                     </div>
                     <div>
                         <div style="font-weight:bold; color:#1877f2;">${escapeHtml(u.username)}</div>
-                        <div style="font-size:12px; color:var(--muted);">${escapeHtml(u.fullName || '')}</div>
+                        <div style="font-size:12px; color:#606770;">${escapeHtml(u.fullName || '')}</div>
                     </div>
                 </div>
             `).join('');
-        } catch (e) { results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>'; }
+        } catch (e) {
+            results.innerHTML = '<p style="color:#e74c3c; text-align:center;">Search failed</p>';
+        }
     }, 300);
 }
 
@@ -1045,14 +865,23 @@ async function startChatWith(username) {
     if (!currentUser) { alert("Login korun"); return; }
     if (!username) { alert("Username din"); return; }
     if (username === currentUser.username) { alert("Nijer sathe chat korte parben na"); return; }
+
     try {
         const res = await fetch(BACKEND_URL + '/api/chat/room', {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ user1: currentUser.username, user2: username })
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                user1: currentUser.username,
+                user2: username
+            })
         });
         const data = await res.json();
-        if (data.success) openChat(username, data.room._id);
-        else alert("❌ " + data.message);
+
+        if (data.success) {
+            openChat(username, data.room._id);
+        } else {
+            alert("❌ " + data.message);
+        }
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1060,8 +889,11 @@ async function openChat(username, roomId) {
     currentRoomId = roomId;
     currentChatWith = username;
     document.getElementById('chat-with-name').textContent = "💬 " + username;
+
     switchPanel('chat-window-panel');
     await loadMessages();
+
+    // Auto refresh
     if (chatRefreshTimer) clearInterval(chatRefreshTimer);
     chatRefreshTimer = setInterval(loadMessages, 3000);
 }
@@ -1069,17 +901,22 @@ async function openChat(username, roomId) {
 async function loadMessages() {
     if (!currentRoomId) return;
     try {
-        const res = await fetch(BACKEND_URL + '/api/chat/messages/' + currentRoomId, { headers: authHeaders() });
+        const res = await fetch(BACKEND_URL + '/api/chat/messages/' + currentRoomId, {
+            headers: authHeaders()
+        });
         const data = await res.json();
+
         if (data.success) {
             const box = document.getElementById('chat-messages');
             const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+
             box.innerHTML = data.messages.map(m => `
                 <div class="chat-msg ${m.sender === currentUser.username ? 'me' : 'other'}">
                     ${escapeHtml(m.text)}
                     <div class="chat-msg-time">${new Date(m.createdAt).toLocaleTimeString()}</div>
                 </div>
             `).join('');
+
             if (wasAtBottom) box.scrollTop = box.scrollHeight;
         }
     } catch (e) { console.log(e); }
@@ -1089,14 +926,23 @@ async function sendMessage() {
     const input = document.getElementById('chat-input');
     const text = input.value.trim();
     if (!text || !currentRoomId) return;
+
     input.value = '';
+
     try {
         const res = await fetch(BACKEND_URL + '/api/chat/message', {
-            method: 'POST', headers: authHeaders(),
-            body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text })
+            method: 'POST',
+            headers: authHeaders(),
+            body: JSON.stringify({
+                roomId: currentRoomId,
+                sender: currentUser.username,
+                text
+            })
         });
         const data = await res.json();
-        if (data.success) await loadMessages();
+        if (data.success) {
+            await loadMessages();
+        }
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1107,7 +953,12 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-setInterval(() => { if (currentUser) loadActiveCount(); }, 60000);
+// ============ AUTO REFRESH ACTIVE COUNT ============
+setInterval(() => {
+    if (currentUser) {
+        loadActiveCount();
+    }
+}, 60000); // protti 1 minute
 </script>
 </body>
 </html>
