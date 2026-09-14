@@ -34,7 +34,6 @@ setInterval(() => {
 
 const otpStore = {};
 
-// ===== OTP =====
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
@@ -59,7 +58,6 @@ app.post('/api/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
-// ===== PASSWORD STRENGTH VALIDATION (Backend) =====
 function evaluatePasswordStrength(pwd) {
     if (!pwd || pwd.length < 6) return { level: "invalid", score: 0 };
     const checks = {
@@ -86,7 +84,6 @@ function evaluatePasswordStrength(pwd) {
     return { level, score };
 }
 
-// ===== SCHEMAS =====
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -165,7 +162,6 @@ const ComplaintSchema = new mongoose.Schema({
 });
 const Complaint = mongoose.model('Complaint', ComplaintSchema);
 
-// ===== SIGNUP =====
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -184,7 +180,7 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, twoFACode } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User nai!" });
         if (user.isBlocked) return res.status(403).json({ success: false, message: "Apnar account block kora hoyeche!" });
@@ -193,6 +189,12 @@ app.post('/api/login', async (req, res) => {
         }
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
+        if (user.twoFAEnabled) {
+            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
+            const speakeasy = require('speakeasy');
+            const verified = speakeasy.totp.verify({ secret: user.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        }
         activeUsers[user.username] = Date.now();
         user.lastActive = new Date();
         await user.save();
@@ -221,7 +223,6 @@ app.get('/api/active-users', (req, res) => {
     res.json({ success: true, count: list.length, users: list });
 });
 
-// ===== USER APIs =====
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
@@ -286,12 +287,18 @@ app.put('/api/user/profile', async (req, res) => {
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
-        const { email, oldPassword, newPassword } = req.body;
+        const { email, oldPassword, newPassword, twoFACode } = req.body;
         const u = await User.findOne({ email });
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
         if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+        if (u.twoFAEnabled) {
+            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
+            const speakeasy = require('speakeasy');
+            const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        }
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
@@ -348,7 +355,6 @@ app.post('/api/user/unfollow', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ===== DELETE SELF ACCOUNT =====
 app.post('/api/user/delete-self', async (req, res) => {
     try {
         const { email, password } = req.body;
@@ -371,7 +377,6 @@ app.post('/api/user/delete-self', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Delete failed: " + e.message }); }
 });
 
-// ===== POSTS =====
 app.post('/api/posts/delete-own', async (req, res) => {
     try {
         const { postId, username } = req.body;
@@ -395,7 +400,6 @@ app.post('/api/posts', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Post failed" }); }
 });
 
-// ===== CONTENT RECOMMENDATION FEED =====
 app.get('/api/feed/:username', async (req, res) => {
     try {
         const currentUsername = req.params.username;
@@ -529,7 +533,6 @@ app.post('/api/posts/vote', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ===== STORIES =====
 app.post('/api/stories', async (req, res) => {
     try {
         const { username, media, mediaType, text } = req.body;
@@ -553,7 +556,6 @@ app.get('/api/stories', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ===== CHAT =====
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
@@ -588,9 +590,6 @@ app.get('/api/chat/messages/:roomId', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ==================================================================
-// ✅ ALGORITHM #1: FOLLOW RECOMMENDATION
-// ==================================================================
 app.get('/api/recommend/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
@@ -632,9 +631,6 @@ app.get('/api/recommend/:username', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
-// ==================================================================
-// ✅ ALGORITHM #3: SMART NOTIFICATION
-// ==================================================================
 app.get('/api/notifications/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
@@ -676,9 +672,6 @@ app.get('/api/notifications/:username', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
-// ==================================================================
-// ✅ ALGORITHM #4: FAKE ACCOUNT DETECTION
-// ==================================================================
 async function detectFakeScore(user) {
     let score = 0;
     const reasons = [];
@@ -697,7 +690,6 @@ async function detectFakeScore(user) {
     return { score, reasons, isFake: score >= 5 };
 }
 
-// ===== COMPLAINT =====
 app.post('/api/complaint/submit', async (req, res) => {
     try {
         const { username, email, subject, message } = req.body;
@@ -708,7 +700,6 @@ app.post('/api/complaint/submit', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
-// ===== ADMIN =====
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 
@@ -943,7 +934,6 @@ app.post('/api/admin/post/delete', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ===== 2FA =====
 app.post('/api/2fa/setup', async (req, res) => {
     try {
         const { email } = req.body;
@@ -988,7 +978,6 @@ app.post('/api/2fa/disable', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
-// ===== FORGOT PASSWORD =====
 app.post('/api/forgot/check-email', async (req, res) => {
     try {
         const { email } = req.body;
