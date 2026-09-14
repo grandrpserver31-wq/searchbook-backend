@@ -62,6 +62,7 @@ app.post('/api/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
+// ============ UPDATED USER SCHEMA (নতুন field যোগ করা হয়েছে) ============
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -73,6 +74,16 @@ const UserSchema = new mongoose.Schema({
     following: { type: [String], default: [] },
     bookmarks: { type: [String], default: [] },
     theme: { type: String, default: "light" },
+    // ===== NEW FIELDS (Admin Panel + 2FA + Moderation এর জন্য) =====
+    twoFAEnabled: { type: Boolean, default: false },
+    twoFASecret: { type: String, default: "" },
+    isBlocked: { type: Boolean, default: false },
+    isSuspended: { type: Boolean, default: false },
+    isMuted: { type: Boolean, default: false },
+    suspendedUntil: { type: Date, default: null },
+    warnings: { type: Number, default: 0 },
+    strikes: { type: Number, default: 0 },
+    lastActive: { type: Date, default: Date.now },
     createdAt: { type: Date, default: Date.now }
 });
 const User = mongoose.model('User', UserSchema);
@@ -119,6 +130,18 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
+// ============ COMPLAINT SCHEMA (Admin Panel এর জন্য) ============
+const ComplaintSchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    email: { type: String, default: "" },
+    subject: { type: String, required: true },
+    message: { type: String, required: true },
+    status: { type: String, default: "pending" }, // pending / resolved
+    adminNote: { type: String, default: "" },
+    createdAt: { type: Date, default: Date.now }
+});
+const Complaint = mongoose.model('Complaint', ComplaintSchema);
+
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -135,12 +158,37 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, twoFACode } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User nai!" });
+
+        // ===== Check blocked/suspended =====
+        if (user.isBlocked) return res.status(403).json({ success: false, message: "Apnar account block kora hoyeche!" });
+        if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
+            return res.status(403).json({ success: false, message: "Account suspended until " + user.suspendedUntil.toLocaleDateString() });
+        }
+
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
+
+        // ===== 2FA check =====
+        if (user.twoFAEnabled) {
+            if (!twoFACode) {
+                return res.json({ success: false, requires2FA: true, message: "2FA code din" });
+            }
+            const speakeasy = require('speakeasy');
+            const verified = speakeasy.totp.verify({
+                secret: user.twoFASecret,
+                encoding: 'base32',
+                token: twoFACode,
+                window: 1
+            });
+            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        }
+
         activeUsers[user.username] = Date.now();
+        user.lastActive = new Date();
+        await user.save();
         res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName, theme: user.theme || "light" });
     } catch (err) { res.status(500).json({ success: false, message: "Login failed" }); }
 });
@@ -151,9 +199,13 @@ app.post('/api/logout', (req, res) => {
     res.json({ success: true });
 });
 
-app.post('/api/heartbeat', (req, res) => {
+app.post('/api/heartbeat', async (req, res) => {
     const { username } = req.body;
-    if (username) activeUsers[username] = Date.now();
+    if (username) {
+        activeUsers[username] = Date.now();
+        // Update lastActive in DB
+        try { await User.updateOne({ username }, { lastActive: new Date() }); } catch (e) {}
+    }
     res.json({ success: true });
 });
 
@@ -174,6 +226,7 @@ app.get('/api/user/:email', async (req, res) => {
             bio: u.bio || "", profilePic: u.profilePic || "",
             followers: u.followers || [], following: u.following || [],
             bookmarks: u.bookmarks || [], theme: u.theme || "light",
+            twoFAEnabled: u.twoFAEnabled || false,
             isActive: !!isActive, createdAt: u.createdAt
         }});
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
@@ -226,12 +279,21 @@ app.put('/api/user/profile', async (req, res) => {
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
-        const { email, oldPassword, newPassword } = req.body;
+        const { email, oldPassword, newPassword, twoFACode } = req.body;
         const u = await User.findOne({ email });
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
         if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+
+        // ===== 2FA check =====
+        if (u.twoFAEnabled) {
+            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
+            const speakeasy = require('speakeasy');
+            const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        }
+
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
@@ -288,9 +350,70 @@ app.post('/api/user/unfollow', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
+// ============ NEW #1: USER নিজের Account Delete করার API ============
+app.post('/api/user/delete-self', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        if (!email || !password) return res.status(400).json({ success: false, message: "Email + password din" });
+
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+
+        // Password verify
+        const match = await bcrypt.compare(password, user.passwordHash);
+        if (!match) return res.status(400).json({ success: false, message: "Password bhul!" });
+
+        const username = user.username;
+
+        // Delete all user data
+        await Post.deleteMany({ username });
+        await Story.deleteMany({ username });
+        await Message.deleteMany({ $or: [{ sender: username }, { text: { $regex: username } }] });
+        await Room.deleteMany({ members: username });
+        await Complaint.deleteMany({ username });
+
+        // Remove user from others' followers/following lists
+        await User.updateMany({ followers: username }, { $pull: { followers: username } });
+        await User.updateMany({ following: username }, { $pull: { following: username } });
+
+        // Delete user
+        await User.deleteOne({ email });
+
+        // Remove from active users
+        delete activeUsers[username];
+
+        console.log(`🗑️ Account deleted: ${username} (${email})`);
+        res.json({ success: true, message: "Account permanently deleted. Sob data muche geche." });
+    } catch (e) {
+        console.error("Delete account error:", e);
+        res.status(500).json({ success: false, message: "Delete failed: " + e.message });
+    }
+});
+
+// ============ NEW #2: নিজের Post Delete করার API ============
+app.post('/api/posts/delete-own', async (req, res) => {
+    try {
+        const { postId, username } = req.body;
+        if (!postId || !username) return res.status(400).json({ success: false, message: "postId + username din" });
+
+        const post = await Post.findById(postId);
+        if (!post) return res.status(404).json({ success: false, message: "Post nai" });
+        if (post.username !== username) return res.status(403).json({ success: false, message: "Ei post apnar na!" });
+
+        await Post.deleteOne({ _id: postId });
+        console.log(`🗑️ Post deleted: ${postId} by ${username}`);
+        res.json({ success: true, message: "Post deleted!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Delete failed: " + e.message }); }
+});
+
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
+
+        // Check if user is muted
+        const u = await User.findOne({ username });
+        if (u && u.isMuted) return res.status(403).json({ success: false, message: "Apni mute kora achen, post korte parben na" });
+
         const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
@@ -462,6 +585,380 @@ app.get('/api/chat/messages/:roomId', async (req, res) => {
     try {
         const msgs = await Message.find({ roomId: req.params.roomId }).sort({ createdAt: 1 }).limit(200);
         res.json({ success: true, messages: msgs });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// ==================== COMPLAINT SYSTEM ====================
+app.post('/api/complaint/submit', async (req, res) => {
+    try {
+        const { username, email, subject, message } = req.body;
+        if (!username || !subject || !message) return res.status(400).json({ success: false, message: "Sob field din" });
+        const c = new Complaint({ username, email: email || "", subject, message });
+        await c.save();
+        console.log(`📢 Complaint from ${username}: ${subject}`);
+        res.json({ success: true, message: "Complaint submitted. Admin shiggiri dekhe nebe." });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+// ==================== 2FA SYSTEM (NEW) ====================
+app.post('/api/2fa/setup', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+
+        const speakeasy = require('speakeasy');
+        const QRCode = require('qrcode');
+
+        const secret = speakeasy.generateSecret({ name: `Searchbook (${u.username})`, length: 20 });
+        u.twoFASecret = secret.base32;
+        await u.save();
+
+        const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+        res.json({ success: true, secret: secret.base32, qrCode });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/2fa/verify', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFASecret) return res.status(400).json({ success: false, message: "Setup korte hobe age" });
+
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+
+        u.twoFAEnabled = true;
+        await u.save();
+        res.json({ success: true, message: "2FA enabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/2fa/disable', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA already off" });
+
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+
+        u.twoFAEnabled = false;
+        u.twoFASecret = "";
+        await u.save();
+        res.json({ success: true, message: "2FA disabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+// ==================== FORGOT PASSWORD WITH 2FA ====================
+app.post('/api/forgot/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "Ei email e kono account nai" });
+
+        if (u.twoFAEnabled) {
+            return res.json({ success: true, needs2FA: true, message: "2FA code din" });
+        }
+
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        console.log(`Forgot OTP for ${email}: ${otp}`);
+        res.json({ success: true, needs2FA: false, otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/forgot/verify-2fa', async (req, res) => {
+    try {
+        const { email, twoFACode } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA off" });
+
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => {
+            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
+        }, 61000);
+        res.json({ success: true, otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/forgot/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const stored = otpStore[email];
+        if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
+        if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
+        if (!newPassword || newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+
+        const salt = await bcrypt.genSalt(10);
+        u.passwordHash = await bcrypt.hash(newPassword, salt);
+        await u.save();
+        delete otpStore[email];
+        res.json({ success: true, message: "Password reset successful!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+// ==================== ADMIN PANEL APIS ====================
+const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
+const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
+
+function isAdmin(req) {
+    return req.headers['x-admin-user'] === ADMIN_USERNAME;
+}
+
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        res.json({ success: true, adminUser: ADMIN_USERNAME });
+    } else {
+        res.status(401).json({ success: false, message: "Bhul credentials" });
+    }
+});
+
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const users = await User.find().sort({ createdAt: -1 });
+        const now = Date.now();
+        const list = users.map(u => ({
+            username: u.username,
+            email: u.email,
+            fullName: u.fullName || "",
+            isActive: !!(activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000)),
+            isBlocked: !!u.isBlocked,
+            isSuspended: !!(u.isSuspended && u.suspendedUntil && u.suspendedUntil > new Date()),
+            isMuted: !!u.isMuted,
+            suspendedUntil: u.suspendedUntil,
+            warnings: u.warnings || 0,
+            strikes: u.strikes || 0,
+            twoFAEnabled: u.twoFAEnabled || false,
+            lastActive: u.lastActive || u.createdAt,
+            createdAt: u.createdAt
+        }));
+        const activeCount = list.filter(u => u.isActive).length;
+        res.json({ success: true, users: list, totalCount: list.length, activeCount });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/admin/user/block', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username, block } = req.body;
+        await User.updateOne({ username }, { isBlocked: block });
+        if (block) delete activeUsers[username];
+        res.json({ success: true, message: block ? "User blocked!" : "User unblocked!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/mute', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username, mute } = req.body;
+        await User.updateOne({ username }, { isMuted: mute });
+        res.json({ success: true, message: mute ? "User muted!" : "User unmuted!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/warn', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username } = req.body;
+        const u = await User.findOneAndUpdate({ username }, { $inc: { warnings: 1 } }, { new: true });
+        res.json({ success: true, message: `Warning #${u.warnings} added to ${username}` });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/strike', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username } = req.body;
+        const u = await User.findOneAndUpdate({ username }, { $inc: { strikes: 1 } }, { new: true });
+        if (u.strikes >= 3) {
+            const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+            u.isSuspended = true;
+            u.suspendedUntil = until;
+            await u.save();
+            res.json({ success: true, message: `⚠️ ${username} auto-suspended 7 days (3 strikes)!` });
+        } else {
+            res.json({ success: true, message: `Strike #${u.strikes} added to ${username}` });
+        }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/suspend', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username, suspend, days } = req.body;
+        if (suspend) {
+            const until = new Date(Date.now() + (days || 7) * 24 * 60 * 60 * 1000);
+            await User.updateOne({ username }, { isSuspended: true, suspendedUntil: until });
+            delete activeUsers[username];
+            res.json({ success: true, message: `${username} suspended ${days || 7} days` });
+        } else {
+            await User.updateOne({ username }, { isSuspended: false, suspendedUntil: null });
+            res.json({ success: true, message: `${username} unsuspended` });
+        }
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/reset-2fa', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username } = req.body;
+        await User.updateOne({ username }, { twoFAEnabled: false, twoFASecret: "" });
+        res.json({ success: true, message: `2FA reset for ${username}` });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/user/delete', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { username } = req.body;
+        await Post.deleteMany({ username });
+        await Story.deleteMany({ username });
+        await Message.deleteMany({ sender: username });
+        await Room.deleteMany({ members: username });
+        await Complaint.deleteMany({ username });
+        await User.updateMany({ followers: username }, { $pull: { followers: username } });
+        await User.updateMany({ following: username }, { $pull: { following: username } });
+        await User.deleteOne({ username });
+        delete activeUsers[username];
+        res.json({ success: true, message: `${username} and all data deleted` });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// ============ NEW #3: ADMIN USER DATA ANALYSIS ============
+app.get('/api/admin/user/analysis/:username', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+
+        const username = req.params.username;
+        const user = await User.findOne({ username });
+        if (!user) return res.status(404).json({ success: false, message: "User nai" });
+
+        // Fetch all stats
+        const posts = await Post.find({ username });
+        const stories = await Story.find({ username });
+        const messages = await Message.find({ sender: username });
+
+        let totalLikesReceived = 0;
+        let totalCommentsReceived = 0;
+        let totalViews = 0;
+        let totalReactionsReceived = 0;
+
+        posts.forEach(p => {
+            totalLikesReceived += (p.likes || []).length;
+            totalCommentsReceived += (p.comments || []).length;
+            totalViews += (p.views || 0);
+            totalReactionsReceived += Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0);
+        });
+
+        const stats = {
+            totalPosts: posts.length,
+            totalLikesReceived,
+            totalCommentsReceived,
+            totalViews,
+            totalReactionsReceived,
+            totalStories: stories.length,
+            totalMessages: messages.length,
+            totalFollowers: (user.followers || []).length,
+            totalFollowing: (user.following || []).length
+        };
+
+        const recentPosts = posts
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5)
+            .map(p => ({
+                _id: p._id,
+                content: p.content,
+                likes: p.likes || [],
+                comments: p.comments || [],
+                views: p.views || 0,
+                createdAt: p.createdAt
+            }));
+
+        res.json({
+            success: true,
+            user: {
+                username: user.username,
+                email: user.email,
+                fullName: user.fullName,
+                bio: user.bio,
+                profilePic: user.profilePic,
+                isBlocked: user.isBlocked,
+                isSuspended: user.isSuspended,
+                isMuted: user.isMuted,
+                suspendedUntil: user.suspendedUntil,
+                warnings: user.warnings || 0,
+                strikes: user.strikes || 0,
+                twoFAEnabled: user.twoFAEnabled || false,
+                theme: user.theme || "light",
+                lastActive: user.lastActive || user.createdAt,
+                createdAt: user.createdAt
+            },
+            stats,
+            recentPosts
+        });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.get('/api/admin/complaints', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const complaints = await Complaint.find().sort({ createdAt: -1 });
+        res.json({ success: true, complaints });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/complaint/resolve', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { complaintId, adminNote } = req.body;
+        await Complaint.updateOne({ _id: complaintId }, { status: "resolved", adminNote: adminNote || "" });
+        res.json({ success: true, message: "Complaint resolved!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/complaint/delete', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { complaintId } = req.body;
+        await Complaint.deleteOne({ _id: complaintId });
+        res.json({ success: true, message: "Complaint deleted!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.get('/api/admin/posts', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const posts = await Post.find().sort({ createdAt: -1 }).limit(100);
+        res.json({ success: true, posts });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+app.post('/api/admin/post/delete', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const { postId } = req.body;
+        await Post.deleteOne({ _id: postId });
+        res.json({ success: true, message: "Post deleted!" });
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
