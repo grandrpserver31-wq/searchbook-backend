@@ -7,8 +7,15 @@ const path = require('path');
 
 const app = express();
 
-// ============ MIDDLEWARE ============
-app.use(cors());
+// ============ CORS FIX for APK ============
+app.use(cors({
+    origin: '*',
+    credentials: false,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'x-username', 'x-admin-user']
+}));
+app.options('*', cors());
+
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
@@ -234,7 +241,7 @@ app.get('/api/active-users', (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ USER APIs ============
+// ============ USER ============
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
