@@ -7,24 +7,10 @@ const path = require('path');
 
 const app = express();
 
-// ============ MIDDLEWARE ============
+// ============ MIDDLEWARE (অর্ডার গুরুত্বপূর্ণ) ============
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
-
-// Serve static files but EXCLUDE sensitive ones
-app.use(express.static(__dirname, {
-    setHeaders: function(res, filePath) {
-        if (filePath.endsWith('server.js') || filePath.endsWith('.env')) {
-            res.status(403).end();
-        }
-    }
-}));
-
-// ============ BLOCK SENSITIVE FILES ============
-app.get('/server.js', (req, res) => res.status(403).json({ success: false, message: 'Forbidden' }));
-app.get('/.env', (req, res) => res.status(403).json({ success: false, message: 'Forbidden' }));
-app.get('/package.json', (req, res) => res.status(403).json({ success: false, message: 'Forbidden' }));
 
 // ============ ENV VARIABLES ============
 const MONGO_URI = process.env.MONGO_URI;
@@ -33,33 +19,33 @@ const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
 const PORT = process.env.PORT || 5000;
 
 if (!MONGO_URI) {
-    console.error("❌ ERROR: MONGO_URI is not set in environment variables!");
-    process.exit(1);
+    console.error("❌ ERROR: MONGO_URI not set!");
 }
 
-// ============ CHECK REQUIRED MODULES ============
-let speakeasy, QRCode;
+// ============ OPTIONAL MODULES ============
+let speakeasy = null, QRCode = null;
 try {
     speakeasy = require('speakeasy');
     QRCode = require('qrcode');
     console.log("✅ 2FA modules loaded");
 } catch (e) {
-    console.warn("⚠️ 2FA modules missing. Run: npm install speakeasy qrcode");
-    speakeasy = null;
-    QRCode = null;
+    console.warn("⚠️ 2FA modules missing: npm install speakeasy qrcode");
 }
 
-// ============ MONGODB CONNECT ============
-mongoose.connect(MONGO_URI, {
-    useNewUrlParser: true,
-    useUnifiedTopology: true,
-})
-    .then(() => console.log("✅ SearchBook MongoDB Connected!"))
-    .catch(err => {
-        console.error("❌ DB Error:", err.message);
-    });
+// ============ MONGODB ============
+mongoose.connect(MONGO_URI)
+    .then(() => console.log("✅ MongoDB Connected!"))
+    .catch(err => console.error("❌ DB Error:", err.message));
 
-// ============ ACTIVE USERS TRACKING ============
+// ============ HELPERS ============
+function errRes(res, message, code = 500) {
+    return res.status(code).json({ success: false, message: String(message) });
+}
+function okRes(res, data = {}) {
+    return res.json(Object.assign({ success: true }, data));
+}
+
+// ============ ACTIVE USERS ============
 const activeUsers = {};
 app.use((req, res, next) => {
     const username = req.headers['x-username'];
@@ -74,45 +60,9 @@ setInterval(() => {
     }
 }, 60000);
 
-// ============ OTP STORE ============
 const otpStore = {};
 
-// ============ HELPER FUNCTIONS ============
-function jsonError(res, message, code = 500) {
-    return res.status(code).json({ success: false, message: message });
-}
-
-function jsonSuccess(res, data = {}) {
-    return res.json(Object.assign({ success: true }, data));
-}
-
-function evaluatePasswordStrength(pwd) {
-    if (!pwd || pwd.length < 6) return { level: "invalid", score: 0 };
-    const checks = {
-        length8: pwd.length >= 8, length12: pwd.length >= 12,
-        lowercase: /[a-z]/.test(pwd), uppercase: /[A-Z]/.test(pwd),
-        digit: /[0-9]/.test(pwd), special: /[^A-Za-z0-9]/.test(pwd),
-        noCommon: !["12345678","123456789","password","qwerty","111111","123456","admin","000000","abc123","123123"].includes(pwd.toLowerCase()),
-        noRepeat: !/(.)\1{2,}/.test(pwd),
-        noSequence: !/(?:0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef)/i.test(pwd)
-    };
-    let score = 0;
-    if (checks.length8) score += 15;
-    if (checks.length12) score += 15;
-    if (checks.lowercase) score += 10;
-    if (checks.uppercase) score += 15;
-    if (checks.digit) score += 15;
-    if (checks.special) score += 20;
-    if (checks.noCommon) score += 5;
-    if (checks.noRepeat) score += 3;
-    if (checks.noSequence) score += 2;
-    let level = "weak";
-    if (score >= 70) level = "strong";
-    else if (score >= 50) level = "medium";
-    return { level, score };
-}
-
-// ============ MONGOOSE SCHEMAS ============
+// ============ SCHEMAS ============
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -191,138 +141,78 @@ const ComplaintSchema = new mongoose.Schema({
 });
 const Complaint = mongoose.model('Complaint', ComplaintSchema);
 
-// ============================================
-// OTP APIs
-// ============================================
+// ============ OTP ============
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) return jsonError(res, "Email dorkar!", 400);
+        if (!email) return errRes(res, "Email dorkar!", 400);
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
-        setTimeout(() => {
-            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
-        }, 61000);
-        console.log(`📧 OTP for ${email}: ${otp}`);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
+        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
+        console.log(`OTP for ${email}: ${otp}`);
         res.json({ success: true, message: "OTP generated", otp });
-    } catch (error) {
-        console.error("send-otp error:", error);
-        jsonError(res, "OTP failed: " + error.message);
-    }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/verify-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
         const stored = otpStore[email];
-        if (!stored) return jsonError(res, "OTP expire", 400);
-        if (Date.now() > stored.expiresAt) {
-            delete otpStore[email];
-            return jsonError(res, "OTP expire", 400);
-        }
-        if (stored.otp != otp) return jsonError(res, "Bhul OTP", 400);
+        if (!stored) return errRes(res, "OTP expire", 400);
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return errRes(res, "OTP expire", 400); }
+        if (stored.otp != otp) return errRes(res, "Bhul OTP", 400);
         delete otpStore[email];
-        jsonSuccess(res, { message: "OTP verified" });
-    } catch (error) {
-        console.error("verify-otp error:", error);
-        jsonError(res, "Verify failed: " + error.message);
-    }
+        okRes(res, { message: "OTP verified" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// SIGNUP
-// ============================================
+// ============ AUTH ============
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
-        if (!username || !email || !password) return jsonError(res, "Sob field din", 400);
-        if (password.length < 6) return jsonError(res, "Password min 6 char", 400);
-
+        if (!username || !email || !password) return errRes(res, "Sob field din", 400);
+        if (password.length < 6) return errRes(res, "Password min 6 char", 400);
         const existing = await User.findOne({ $or: [{ email }, { username }] });
-        if (existing) return jsonError(res, "Email/username ache", 400);
-
+        if (existing) return errRes(res, "Email/username ache", 400);
         const salt = await bcrypt.genSalt(10);
-        const hashedPassword = await bcrypt.hash(password, salt);
-
-        const newUser = new User({
-            username,
-            email,
-            fullName: fullName || username,
-            passwordHash: hashedPassword
-        });
+        const passwordHash = await bcrypt.hash(password, salt);
+        const newUser = new User({ username, email, fullName: fullName || username, passwordHash });
         await newUser.save();
-
-        const strength = evaluatePasswordStrength(password);
-        res.status(201).json({
-            success: true,
-            message: "Account created!",
-            strength: strength.level
-        });
-    } catch (err) {
-        console.error("signup error:", err);
-        jsonError(res, "Signup failed: " + err.message);
-    }
+        res.status(201).json({ success: true, message: "Account created!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// LOGIN
-// ============================================
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, twoFACode } = req.body;
-        if (!email || !password) return jsonError(res, "Email + password din", 400);
-
+        if (!email || !password) return errRes(res, "Email + password din", 400);
         const user = await User.findOne({ email });
-        if (!user) return jsonError(res, "User nai!", 400);
-
-        if (user.isBlocked) return jsonError(res, "Account block kora hoyeche!", 403);
+        if (!user) return errRes(res, "User nai!", 400);
+        if (user.isBlocked) return errRes(res, "Account block!", 403);
         if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
-            return jsonError(res, "Account suspended until " + user.suspendedUntil.toLocaleDateString(), 403);
+            return errRes(res, "Account suspended!", 403);
         }
-
         const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) return jsonError(res, "Bhul password!", 400);
-
-        // 2FA check
+        if (!isMatch) return errRes(res, "Bhul password!", 400);
         if (user.twoFAEnabled) {
-            if (!speakeasy) return jsonError(res, "2FA service unavailable", 500);
-            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
-
-            const verified = speakeasy.totp.verify({
-                secret: user.twoFASecret,
-                encoding: 'base32',
-                token: twoFACode,
-                window: 1
-            });
-            if (!verified) return jsonError(res, "Bhul 2FA code!", 400);
+            if (!speakeasy) return errRes(res, "2FA unavailable", 500);
+            if (!twoFACode) return res.json({ success: false, requires2FA: true });
+            const verified = speakeasy.totp.verify({ secret: user.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+            if (!verified) return errRes(res, "Bhul 2FA code!", 400);
         }
-
         activeUsers[user.username] = Date.now();
         user.lastActive = new Date();
         await user.save();
-
-        res.json({
-            success: true,
-            username: user.username,
-            email: user.email,
-            fullName: user.fullName,
-            theme: user.theme || "light"
-        });
-    } catch (err) {
-        console.error("login error:", err);
-        jsonError(res, "Login failed: " + err.message);
-    }
+        res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName, theme: user.theme || "light" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// LOGOUT & HEARTBEAT
-// ============================================
 app.post('/api/logout', (req, res) => {
     try {
         const { username } = req.body;
         if (username) delete activeUsers[username];
-        jsonSuccess(res);
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res);
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/heartbeat', async (req, res) => {
@@ -332,8 +222,8 @@ app.post('/api/heartbeat', async (req, res) => {
             activeUsers[username] = Date.now();
             try { await User.updateOne({ username }, { lastActive: new Date() }); } catch (e) {}
         }
-        jsonSuccess(res);
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res);
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/active-users', (req, res) => {
@@ -341,144 +231,123 @@ app.get('/api/active-users', (req, res) => {
         const now = Date.now();
         const list = Object.keys(activeUsers).filter(u => now - activeUsers[u] < 2 * 60 * 1000);
         res.json({ success: true, count: list.length, users: list });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// USER APIs
-// ============================================
+// ============ USER ============
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
-        if (!u) return jsonError(res, "User nai", 404);
+        if (!u) return errRes(res, "User nai", 404);
         const now = Date.now();
         const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
-        res.json({
-            success: true,
-            user: {
-                username: u.username, email: u.email, fullName: u.fullName || u.username,
-                bio: u.bio || "", profilePic: u.profilePic || "",
-                followers: u.followers || [], following: u.following || [],
-                bookmarks: u.bookmarks || [], theme: u.theme || "light",
-                twoFAEnabled: u.twoFAEnabled || false,
-                isActive: !!isActive, createdAt: u.createdAt
-            }
-        });
-    } catch (e) { jsonError(res, "Failed"); }
+        res.json({ success: true, user: {
+            username: u.username, email: u.email, fullName: u.fullName || u.username,
+            bio: u.bio || "", profilePic: u.profilePic || "",
+            followers: u.followers || [], following: u.following || [],
+            bookmarks: u.bookmarks || [], theme: u.theme || "light",
+            twoFAEnabled: u.twoFAEnabled || false, isActive: !!isActive, createdAt: u.createdAt
+        }});
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/user/username/:username', async (req, res) => {
     try {
         const u = await User.findOne({ username: req.params.username });
-        if (!u) return jsonError(res, "User nai", 404);
+        if (!u) return errRes(res, "User nai", 404);
         const now = Date.now();
         const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
-        res.json({
-            success: true,
-            user: {
-                username: u.username, fullName: u.fullName || u.username,
-                bio: u.bio || "", profilePic: u.profilePic || "",
-                followers: u.followers || [], following: u.following || [],
-                isActive: !!isActive, createdAt: u.createdAt
-            }
-        });
-    } catch (e) { jsonError(res, "Failed"); }
+        res.json({ success: true, user: {
+            username: u.username, fullName: u.fullName || u.username,
+            bio: u.bio || "", profilePic: u.profilePic || "",
+            followers: u.followers || [], following: u.following || [],
+            isActive: !!isActive, createdAt: u.createdAt
+        }});
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/search/users/:query', async (req, res) => {
     try {
         const q = req.params.query;
-        const users = await User.find({
-            $or: [
-                { username: { $regex: q, $options: 'i' } },
-                { fullName: { $regex: q, $options: 'i' } }
-            ]
-        }).limit(20).select('username fullName profilePic bio');
+        const users = await User.find({ $or: [
+            { username: { $regex: q, $options: 'i' } },
+            { fullName: { $regex: q, $options: 'i' } }
+        ]}).limit(20).select('username fullName profilePic bio');
         const now = Date.now();
         const list = users.map(u => ({
-            username: u.username, fullName: u.fullName,
-            profilePic: u.profilePic, bio: u.bio,
+            username: u.username, fullName: u.fullName, profilePic: u.profilePic, bio: u.bio,
             isActive: !!(activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000))
         }));
         res.json({ success: true, users: list });
-    } catch (e) { jsonError(res, "Search failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.put('/api/user/profile', async (req, res) => {
     try {
         const { email, profilePic, bio, fullName } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "User nai", 404);
+        if (!u) return errRes(res, "User nai", 404);
         if (profilePic !== undefined) u.profilePic = profilePic;
         if (bio !== undefined) u.bio = bio;
         if (fullName !== undefined) u.fullName = fullName;
         await u.save();
-        jsonSuccess(res, { message: "Profile updated!" });
-    } catch (e) { jsonError(res, "Update failed"); }
+        okRes(res, { message: "Profile updated!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
-        const { email, oldPassword, newPassword, twoFACode } = req.body;
+        const { email, oldPassword, newPassword } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "User nai", 404);
-
+        if (!u) return errRes(res, "User nai", 404);
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
-        if (!m) return jsonError(res, "Purono password bhul", 400);
-        if (newPassword.length < 6) return jsonError(res, "Min 6 char", 400);
-
-        if (u.twoFAEnabled) {
-            if (!speakeasy) return jsonError(res, "2FA unavailable");
-            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
-            const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-            if (!verified) return jsonError(res, "Bhul 2FA code!", 400);
-        }
-
+        if (!m) return errRes(res, "Purono password bhul", 400);
+        if (newPassword.length < 6) return errRes(res, "Min 6 char", 400);
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
-        jsonSuccess(res, { message: "Password changed!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Password changed!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.put('/api/user/theme', async (req, res) => {
     try {
         const { email, theme } = req.body;
         await User.updateOne({ email }, { theme });
-        jsonSuccess(res);
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res);
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/user/bookmark', async (req, res) => {
     try {
         const { email, postId } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "User nai", 404);
+        if (!u) return errRes(res, "User nai", 404);
         const idx = u.bookmarks.indexOf(postId);
         if (idx === -1) u.bookmarks.push(postId);
         else u.bookmarks.splice(idx, 1);
         await u.save();
         res.json({ success: true, bookmarks: u.bookmarks });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/user/bookmarks/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
-        if (!u) return jsonError(res, "User nai", 404);
+        if (!u) return errRes(res, "User nai", 404);
         const posts = await Post.find({ _id: { $in: u.bookmarks } });
         res.json({ success: true, posts });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/user/follow', async (req, res) => {
     try {
         const { follower, following } = req.body;
-        if (follower === following) return jsonError(res, "Nijer ke follow korte parben na", 400);
+        if (follower === following) return errRes(res, "Nijer ke follow kora jabe na", 400);
         await User.updateOne({ username: follower }, { $addToSet: { following } });
         await User.updateOne({ username: following }, { $addToSet: { followers: follower } });
-        jsonSuccess(res, { message: "Followed!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Followed!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/user/unfollow', async (req, res) => {
@@ -486,20 +355,18 @@ app.post('/api/user/unfollow', async (req, res) => {
         const { follower, following } = req.body;
         await User.updateOne({ username: follower }, { $pull: { following } });
         await User.updateOne({ username: following }, { $pull: { followers: follower } });
-        jsonSuccess(res, { message: "Unfollowed!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Unfollowed!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/user/delete-self', async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) return jsonError(res, "Email + password din", 400);
+        if (!email || !password) return errRes(res, "Email + password din", 400);
         const user = await User.findOne({ email });
-        if (!user) return jsonError(res, "User nai", 404);
-
+        if (!user) return errRes(res, "User nai", 404);
         const match = await bcrypt.compare(password, user.passwordHash);
-        if (!match) return jsonError(res, "Password bhul!", 400);
-
+        if (!match) return errRes(res, "Password bhul!", 400);
         const username = user.username;
         await Post.deleteMany({ username });
         await Story.deleteMany({ username });
@@ -510,79 +377,57 @@ app.post('/api/user/delete-self', async (req, res) => {
         await User.updateMany({ following: username }, { $pull: { following: username } });
         await User.deleteOne({ email });
         delete activeUsers[username];
-        jsonSuccess(res, { message: "Account permanently deleted." });
-    } catch (e) { jsonError(res, "Delete failed: " + e.message); }
+        okRes(res, { message: "Account deleted." });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// POST APIs
-// ============================================
+// ============ POSTS ============
 app.post('/api/posts/delete-own', async (req, res) => {
     try {
         const { postId, username } = req.body;
-        if (!postId || !username) return jsonError(res, "postId + username din", 400);
         const post = await Post.findById(postId);
-        if (!post) return jsonError(res, "Post nai", 404);
-        if (post.username !== username) return jsonError(res, "Ei post apnar na!", 403);
+        if (!post) return errRes(res, "Post nai", 404);
+        if (post.username !== username) return errRes(res, "Ei post apnar na!", 403);
         await Post.deleteOne({ _id: postId });
-        jsonSuccess(res, { message: "Post deleted!" });
-    } catch (e) { jsonError(res, "Delete failed"); }
+        okRes(res, { message: "Post deleted!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
         const u = await User.findOne({ username });
-        if (u && u.isMuted) return jsonError(res, "Apni mute kora achen", 403);
-
-        const np = new Post({
-            username,
-            content: content || "",
-            media: media || "",
-            mediaType: mediaType || "text",
-            poll: poll || null
-        });
+        if (u && u.isMuted) return errRes(res, "Apni mute achen", 403);
+        const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
-    } catch (e) { jsonError(res, "Post failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// Content Recommendation Feed
 app.get('/api/feed/:username', async (req, res) => {
     try {
         const currentUsername = req.params.username;
         const currentUser = await User.findOne({ username: currentUsername });
-        if (!currentUser) return jsonError(res, "User nai", 404);
-
+        if (!currentUser) return errRes(res, "User nai", 404);
         const following = currentUser.following || [];
         const posts = await Post.find().limit(200).lean();
         const now = Date.now();
-
-        const myLikes = [];
-        const myComments = [];
+        const myLikes = [], myComments = [];
         posts.forEach(p => {
             if (p.likes && p.likes.includes(currentUsername)) myLikes.push(p.username);
             if (p.comments) p.comments.forEach(c => { if (c.username === currentUsername) myComments.push(p.username); });
         });
-
         posts.forEach(p => {
             const age = (now - new Date(p.createdAt).getTime()) / 3600000;
-            const interestMatch = (myLikes.filter(u => u === p.username).length * 2) +
-                                  (myComments.filter(u => u === p.username).length * 3);
+            const interestMatch = (myLikes.filter(u => u === p.username).length * 2) + (myComments.filter(u => u === p.username).length * 3);
             const isFriend = following.includes(p.username) ? 1 : 0;
-            const trendingScore =
-                ((p.likes?.length || 0) * 2) +
-                ((p.comments?.length || 0) * 3) +
-                ((p.shares || 0) * 4) +
-                ((p.views || 0) * 0.3) +
-                (Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 2);
+            const trendingScore = ((p.likes?.length || 0) * 2) + ((p.comments?.length || 0) * 3) + ((p.shares || 0) * 4) + ((p.views || 0) * 0.3) + (Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 2);
             const recencyScore = Math.max(0, 48 - age) * 3;
             p.feedScore = (interestMatch * 4) + (isFriend * 3 * 100) + (trendingScore * 2) + recencyScore;
         });
-
         posts.sort((a, b) => b.feedScore - a.feedScore);
         res.json(posts.slice(0, 50));
-    } catch (e) { jsonError(res, "Feed failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/posts', async (req, res) => {
@@ -601,33 +446,33 @@ app.get('/api/posts', async (req, res) => {
         });
         posts.sort((a, b) => b.score - a.score);
         res.json(posts.slice(0, 50));
-    } catch (e) { jsonError(res, "Load failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/posts/user/:username', async (req, res) => {
     try {
         const posts = await Post.find({ username: req.params.username }).sort({ createdAt: -1 });
         res.json(posts);
-    } catch (e) { jsonError(res, "Load failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/like', async (req, res) => {
     try {
         const { postId, username } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return jsonError(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post nai", 404);
         const idx = p.likes.indexOf(username);
         if (idx === -1) p.likes.push(username); else p.likes.splice(idx, 1);
         await p.save();
         res.json({ success: true, likes: p.likes.length });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/reaction', async (req, res) => {
     try {
         const { postId, username, reaction } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return jsonError(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post nai", 404);
         if (!p.reactions) p.reactions = {};
         if (!p.reactions[reaction]) p.reactions[reaction] = [];
         Object.keys(p.reactions).forEach(k => {
@@ -640,75 +485,65 @@ app.post('/api/posts/reaction', async (req, res) => {
         p.markModified('reactions');
         await p.save();
         res.json({ success: true, reactions: p.reactions });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/comment', async (req, res) => {
     try {
         const { postId, username, text } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return jsonError(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post nai", 404);
         p.comments.push({ username, text, createdAt: new Date() });
         await p.save();
         res.json({ success: true, comments: p.comments });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/share', async (req, res) => {
     try {
         const { postId } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return jsonError(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post nai", 404);
         p.shares = (p.shares || 0) + 1;
         await p.save();
         res.json({ success: true, shares: p.shares });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/view', async (req, res) => {
     try {
         const { postId } = req.body;
         await Post.findByIdAndUpdate(postId, { $inc: { views: 1 } });
-        jsonSuccess(res);
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res);
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/posts/vote', async (req, res) => {
     try {
         const { postId, username, optionIndex } = req.body;
         const p = await Post.findById(postId);
-        if (!p || !p.poll) return jsonError(res, "Poll nai", 404);
+        if (!p || !p.poll) return errRes(res, "Poll nai", 404);
         let alreadyVoted = false;
         p.poll.options.forEach((opt, i) => {
             const idx = opt.votes.indexOf(username);
-            if (idx !== -1) {
-                opt.votes.splice(idx, 1);
-                if (i === optionIndex) alreadyVoted = true;
-            }
+            if (idx !== -1) { opt.votes.splice(idx, 1); if (i === optionIndex) alreadyVoted = true; }
         });
         if (!alreadyVoted) p.poll.options[optionIndex].votes.push(username);
         p.markModified('poll');
         await p.save();
         res.json({ success: true, poll: p.poll });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// STORY APIs
-// ============================================
+// ============ STORIES ============
 app.post('/api/stories', async (req, res) => {
     try {
         const { username, media, mediaType, text } = req.body;
-        if (!media) return jsonError(res, "Media dorkar", 400);
-        const ns = new Story({
-            username, media,
-            mediaType: mediaType || "image",
-            text: text || "",
-            expiresAt: new Date(Date.now() + 24 * 60 * 60 * 1000)
-        });
+        if (!media) return errRes(res, "Media dorkar", 400);
+        const ns = new Story({ username, media, mediaType: mediaType || "image", text: text || "", expiresAt: new Date(Date.now() + 24*60*60*1000) });
         await ns.save();
         res.status(201).json({ success: true, message: "Story created!" });
-    } catch (e) { jsonError(res, "Story failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/stories', async (req, res) => {
@@ -721,30 +556,25 @@ app.get('/api/stories', async (req, res) => {
             grouped[s.username].push(s);
         });
         res.json({ success: true, stories: grouped });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// CHAT APIs
-// ============================================
+// ============ CHAT ============
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
         const roomName = [user1, user2].sort().join('_');
         let room = await Room.findOne({ name: roomName });
-        if (!room) {
-            room = new Room({ name: roomName, members: [user1, user2] });
-            await room.save();
-        }
+        if (!room) { room = new Room({ name: roomName, members: [user1, user2] }); await room.save(); }
         res.json({ success: true, room });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/chat/rooms/:username', async (req, res) => {
     try {
         const rooms = await Room.find({ members: req.params.username }).sort({ lastTime: -1 });
         res.json({ success: true, rooms });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/chat/message', async (req, res) => {
@@ -754,30 +584,26 @@ app.post('/api/chat/message', async (req, res) => {
         await m.save();
         await Room.findByIdAndUpdate(roomId, { lastMessage: text.substring(0, 50), lastTime: new Date() });
         res.json({ success: true, message: m });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/chat/messages/:roomId', async (req, res) => {
     try {
         const msgs = await Message.find({ roomId: req.params.roomId }).sort({ createdAt: 1 }).limit(200);
         res.json({ success: true, messages: msgs });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// ALGORITHM #1: FOLLOW RECOMMENDATION
-// ============================================
+// ============ ALGORITHMS ============
 app.get('/api/recommend/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
         const me = await User.findOne({ username: myUsername });
-        if (!me) return jsonError(res, "User nai", 404);
-
+        if (!me) return errRes(res, "User nai", 404);
         const myFollowing = me.following || [];
         const allUsers = await User.find({ username: { $ne: myUsername } }).limit(200);
         const now = Date.now();
         const recommendations = [];
-
         for (const other of allUsers) {
             if (myFollowing.includes(other.username)) continue;
             const otherFollowers = other.followers || [];
@@ -786,339 +612,236 @@ app.get('/api/recommend/:username', async (req, res) => {
             const otherIsActive = !!(activeUsers[other.username] && (now - activeUsers[other.username] < 2 * 60 * 1000));
             const iAmActive = !!(activeUsers[myUsername] && (now - activeUsers[myUsername] < 2 * 60 * 1000));
             const activityMatch = (otherIsActive === iAmActive) ? 2 : 0;
-            const otherFollowerCount = otherFollowers.length;
-            const activityLevel = Math.min(5, otherFollowerCount / 10);
-            const otherFollowing = (other.following || []).length;
-            const ratioPenalty = (otherFollowing > otherFollowerCount * 3) ? -2 : 0;
-
+            const activityLevel = Math.min(5, otherFollowers.length / 10);
+            const ratioPenalty = ((other.following || []).length > otherFollowers.length * 3) ? -2 : 0;
             const totalScore = mutualScore + activityMatch + activityLevel + ratioPenalty;
             if (totalScore > 0) {
                 let reason = [];
-                if (mutualFollowers.length > 0) reason.push(mutualFollowers.length + " mutual follower" + (mutualFollowers.length > 1 ? "s" : ""));
+                if (mutualFollowers.length > 0) reason.push(mutualFollowers.length + " mutual");
                 if (otherIsActive && iAmActive) reason.push("Both active");
-                if (otherFollowerCount > 20) reason.push("Popular");
-                if (reason.length === 0) reason.push("Suggested for you");
-
+                if (otherFollowers.length > 20) reason.push("Popular");
+                if (reason.length === 0) reason.push("Suggested");
                 recommendations.push({
-                    username: other.username,
-                    fullName: other.fullName,
-                    profilePic: other.profilePic,
-                    isActive: otherIsActive,
-                    score: Math.round(totalScore * 10) / 10,
-                    reason: reason.join(" · ")
+                    username: other.username, fullName: other.fullName, profilePic: other.profilePic,
+                    isActive: otherIsActive, score: Math.round(totalScore * 10) / 10, reason: reason.join(" · ")
                 });
             }
         }
         recommendations.sort((a, b) => b.score - a.score);
         res.json({ success: true, recommendations: recommendations.slice(0, 15) });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// ALGORITHM #3: SMART NOTIFICATIONS
-// ============================================
 app.get('/api/notifications/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
         const me = await User.findOne({ username: myUsername });
-        if (!me) return jsonError(res, "User nai", 404);
-
+        if (!me) return errRes(res, "User nai", 404);
         const myFollowing = me.following || [];
         const now = Date.now();
         const notifications = [];
-
         const recentPosts = await Post.find({ username: { $in: myFollowing } }).sort({ createdAt: -1 }).limit(20);
         recentPosts.forEach(p => {
             const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
-            const interactionScore = 3;
-            const relevanceScore = ((p.likes?.length || 0) + (p.comments?.length || 0) * 2) > 5 ? 2 : 1;
-            const timeDecay = Math.max(0, 24 - ageHours) / 24;
-            const priority = (interactionScore * 3) + (relevanceScore * 2) + (timeDecay * 1);
+            const priority = 9 + ((p.likes?.length || 0) * 0.2);
             if (priority >= 8) {
                 notifications.push({
-                    icon: "📝",
-                    text: p.username + " posted: " + (p.content || "").substring(0, 60),
+                    icon: "📝", text: p.username + " posted: " + (p.content || "").substring(0, 60),
                     timeAgo: Math.round(ageHours) + "h ago",
                     priorityScore: Math.round(priority * 10) / 10,
                     priority: priority >= 12 ? "high" : priority >= 9 ? "medium" : "low"
                 });
             }
         });
-
-        const myPosts = await Post.find({ username: myUsername }).sort({ createdAt: -1 }).limit(5);
-        for (const mp of myPosts) {
-            const recentLikers = (mp.likes || []).slice(-3);
-            recentLikers.forEach(liker => {
-                notifications.push({
-                    icon: "❤️",
-                    text: liker + " liked your post",
-                    timeAgo: "Recently",
-                    priorityScore: 9.0,
-                    priority: "medium"
-                });
-            });
-        }
-
-        const newFollowers = (me.followers || []).slice(-5);
-        newFollowers.forEach(f => {
-            notifications.push({
-                icon: "👤",
-                text: f + " started following you",
-                timeAgo: "Recently",
-                priorityScore: 10.5,
-                priority: "high"
-            });
+        (me.followers || []).slice(-5).forEach(f => {
+            notifications.push({ icon: "👤", text: f + " started following you", timeAgo: "Recently", priorityScore: 10.5, priority: "high" });
         });
-
         notifications.sort((a, b) => b.priorityScore - a.priorityScore);
         res.json({ success: true, notifications: notifications.slice(0, 20) });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// ALGORITHM #4: FAKE ACCOUNT DETECTION
-// ============================================
 async function detectFakeScore(user) {
     let score = 0;
     const reasons = [];
-
-    if (!user.profilePic || user.profilePic.length < 50) { score += 1; reasons.push("No profile pic"); }
-
+    if (!user.profilePic || user.profilePic.length < 50) { score += 1; reasons.push("No pic"); }
     const postCount = await Post.countDocuments({ username: user.username });
     if (postCount === 0) { score += 2; reasons.push("No posts"); }
-    else if (postCount < 2) { score += 1; reasons.push("Very few posts"); }
-
     const followingCount = (user.following || []).length;
     const followerCount = (user.followers || []).length;
-    if (followingCount > 50 && followerCount < 5) { score += 3; reasons.push("Follows many, has few followers"); }
-    else if (followingCount > 20 && followerCount === 0) { score += 2; reasons.push("No followers"); }
-
-    const accountAgeHours = (Date.now() - new Date(user.createdAt).getTime()) / 3600000;
-    if (accountAgeHours < 1 && followingCount > 10) { score += 2; reasons.push("New account, mass following"); }
-
+    if (followingCount > 50 && followerCount < 5) { score += 3; reasons.push("Follows many"); }
     if (!user.bio || user.bio.length < 3) { score += 1; reasons.push("Empty bio"); }
-    if (!user.fullName || user.fullName === user.username) { score += 1; reasons.push("No full name"); }
-
     return { score, reasons, isFake: score >= 5 };
 }
 
-// ============================================
-// COMPLAINT APIs
-// ============================================
+// ============ COMPLAINT ============
 app.post('/api/complaint/submit', async (req, res) => {
     try {
         const { username, email, subject, message } = req.body;
-        if (!username || !subject || !message) return jsonError(res, "Sob field din", 400);
+        if (!username || !subject || !message) return errRes(res, "Sob field din", 400);
         const c = new Complaint({ username, email: email || "", subject, message });
         await c.save();
-        jsonSuccess(res, { message: "Complaint submitted." });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+        okRes(res, { message: "Complaint submitted." });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// ADMIN APIs
-// ============================================
-function isAdmin(req) {
-    return req.headers['x-admin-user'] === ADMIN_USERNAME;
-}
+// ============ ADMIN ============
+function isAdmin(req) { return req.headers['x-admin-user'] === ADMIN_USERNAME; }
 
 app.post('/api/admin/login', (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
-            res.json({ success: true, adminUser: ADMIN_USERNAME });
-        } else {
-            jsonError(res, "Bhul credentials", 401);
-        }
-    } catch (e) { jsonError(res, "Failed"); }
+    const { username, password } = req.body;
+    if (username === ADMIN_USERNAME && password === ADMIN_PASSWORD) {
+        res.json({ success: true, adminUser: ADMIN_USERNAME });
+    } else {
+        errRes(res, "Bhul credentials", 401);
+    }
 });
 
 app.get('/api/admin/users', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const users = await User.find().sort({ createdAt: -1 });
         const now = Date.now();
         const list = [];
         let flaggedCount = 0;
-
         for (const u of users) {
             const fake = await detectFakeScore(u);
             if (fake.isFake) flaggedCount++;
             list.push({
-                username: u.username,
-                email: u.email,
-                fullName: u.fullName || "",
+                username: u.username, email: u.email, fullName: u.fullName || "",
                 isActive: !!(activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000)),
                 isBlocked: !!u.isBlocked,
                 isSuspended: !!(u.isSuspended && u.suspendedUntil && u.suspendedUntil > new Date()),
-                isMuted: !!u.isMuted,
-                isFlagged: fake.isFake,
-                suspendedUntil: u.suspendedUntil,
-                warnings: u.warnings || 0,
-                strikes: u.strikes || 0,
-                twoFAEnabled: u.twoFAEnabled || false,
-                lastActive: u.lastActive || u.createdAt,
-                createdAt: u.createdAt
+                isMuted: !!u.isMuted, isFlagged: fake.isFake,
+                suspendedUntil: u.suspendedUntil, warnings: u.warnings || 0,
+                strikes: u.strikes || 0, twoFAEnabled: u.twoFAEnabled || false,
+                lastActive: u.lastActive || u.createdAt, createdAt: u.createdAt
             });
         }
-        const activeCount = list.filter(u => u.isActive).length;
-        res.json({ success: true, users: list, totalCount: list.length, activeCount, flaggedCount });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+        res.json({ success: true, users: list, totalCount: list.length, activeCount: list.filter(u => u.isActive).length, flaggedCount });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/admin/flagged-users', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const users = await User.find();
         const flagged = [];
         for (const u of users) {
             const fake = await detectFakeScore(u);
-            if (fake.isFake) flagged.push({
-                username: u.username,
-                fakeScore: fake.score,
-                reasons: fake.reasons
-            });
+            if (fake.isFake) flagged.push({ username: u.username, fakeScore: fake.score, reasons: fake.reasons });
         }
         flagged.sort((a, b) => b.fakeScore - a.fakeScore);
         res.json({ success: true, users: flagged });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/admin/user/analysis/:username', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const username = req.params.username;
         const user = await User.findOne({ username });
-        if (!user) return jsonError(res, "User not found", 404);
-
+        if (!user) return errRes(res, "User not found", 404);
         const posts = await Post.find({ username });
         const stories = await Story.find({ username });
         const messages = await Message.find({ sender: username });
-
-        let totalLikesReceived = 0, totalCommentsReceived = 0, totalViews = 0, totalReactionsReceived = 0;
+        let totalLikesReceived = 0, totalCommentsReceived = 0, totalViews = 0;
         posts.forEach(p => {
             totalLikesReceived += (p.likes || []).length;
             totalCommentsReceived += (p.comments || []).length;
             totalViews += (p.views || 0);
-            totalReactionsReceived += Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0);
         });
-
         const stats = {
-            totalPosts: posts.length,
-            totalLikesReceived,
-            totalCommentsReceived,
-            totalViews,
-            totalReactionsReceived,
-            totalStories: stories.length,
-            totalMessages: messages.length,
-            totalFollowers: (user.followers || []).length,
-            totalFollowing: (user.following || []).length
+            totalPosts: posts.length, totalLikesReceived, totalCommentsReceived, totalViews,
+            totalStories: stories.length, totalMessages: messages.length,
+            totalFollowers: (user.followers || []).length, totalFollowing: (user.following || []).length
         };
-
         const fake = await detectFakeScore(user);
-        const recentPosts = posts
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5)
-            .map(p => ({
-                _id: p._id,
-                content: p.content,
-                likes: p.likes || [],
-                comments: p.comments || [],
-                views: p.views || 0,
-                createdAt: p.createdAt
-            }));
-
         res.json({
             success: true,
-            user: {
-                username: user.username, email: user.email, fullName: user.fullName,
-                bio: user.bio, profilePic: user.profilePic, isBlocked: user.isBlocked,
-                isSuspended: user.isSuspended, isMuted: user.isMuted,
-                isFlagged: fake.isFake, fakeScore: fake.score,
+            user: { username: user.username, email: user.email, fullName: user.fullName, bio: user.bio,
+                profilePic: user.profilePic, isBlocked: user.isBlocked, isSuspended: user.isSuspended,
+                isMuted: user.isMuted, isFlagged: fake.isFake, fakeScore: fake.score,
                 suspendedUntil: user.suspendedUntil, warnings: user.warnings || 0,
                 strikes: user.strikes || 0, twoFAEnabled: user.twoFAEnabled || false,
-                theme: user.theme || "light", lastActive: user.lastActive || user.createdAt,
-                createdAt: user.createdAt
-            },
-            stats,
-            recentPosts
+                theme: user.theme || "light", lastActive: user.lastActive || user.createdAt, createdAt: user.createdAt },
+            stats, recentPosts: posts.slice(0, 5).map(p => ({ _id: p._id, content: p.content, likes: p.likes || [], comments: p.comments || [], views: p.views || 0, createdAt: p.createdAt }))
         });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/block', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username, block } = req.body;
         await User.updateOne({ username }, { isBlocked: block });
         if (block) delete activeUsers[username];
-        jsonSuccess(res, { message: block ? "User blocked!" : "User unblocked!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: block ? "User blocked!" : "User unblocked!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/mute', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username, mute } = req.body;
         await User.updateOne({ username }, { isMuted: mute });
-        jsonSuccess(res, { message: mute ? "User muted!" : "User unmuted!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: mute ? "User muted!" : "User unmuted!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/warn', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username } = req.body;
         const u = await User.findOneAndUpdate({ username }, { $inc: { warnings: 1 } }, { new: true });
-        jsonSuccess(res, { message: `Warning #${u.warnings} added to ${username}` });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: `Warning #${u.warnings} added` });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/strike', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username } = req.body;
         const u = await User.findOneAndUpdate({ username }, { $inc: { strikes: 1 } }, { new: true });
         if (u.strikes >= 3) {
-            const until = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
             u.isSuspended = true;
-            u.suspendedUntil = until;
+            u.suspendedUntil = new Date(Date.now() + 7*24*60*60*1000);
             await u.save();
-            jsonSuccess(res, { message: `⚠️ ${username} auto-suspended 7 days!` });
+            okRes(res, { message: `${username} auto-suspended 7 days!` });
         } else {
-            jsonSuccess(res, { message: `Strike #${u.strikes} added` });
+            okRes(res, { message: `Strike #${u.strikes} added` });
         }
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/suspend', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username, suspend, days } = req.body;
         if (suspend) {
-            const until = new Date(Date.now() + (days || 7) * 24 * 60 * 60 * 1000);
+            const until = new Date(Date.now() + (days || 7) * 24*60*60*1000);
             await User.updateOne({ username }, { isSuspended: true, suspendedUntil: until });
             delete activeUsers[username];
-            jsonSuccess(res, { message: `${username} suspended ${days || 7} days` });
+            okRes(res, { message: `${username} suspended` });
         } else {
             await User.updateOne({ username }, { isSuspended: false, suspendedUntil: null });
-            jsonSuccess(res, { message: `${username} unsuspended` });
+            okRes(res, { message: `${username} unsuspended` });
         }
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/reset-2fa', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username } = req.body;
         await User.updateOne({ username }, { twoFAEnabled: false, twoFASecret: "" });
-        jsonSuccess(res, { message: `2FA reset for ${username}` });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: `2FA reset` });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/user/delete', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { username } = req.body;
         await Post.deleteMany({ username });
         await Story.deleteMany({ username });
@@ -1129,195 +852,159 @@ app.post('/api/admin/user/delete', async (req, res) => {
         await User.updateMany({ following: username }, { $pull: { following: username } });
         await User.deleteOne({ username });
         delete activeUsers[username];
-        jsonSuccess(res, { message: `${username} deleted` });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: `${username} deleted` });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/admin/complaints', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const complaints = await Complaint.find().sort({ createdAt: -1 });
         res.json({ success: true, complaints });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/complaint/resolve', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { complaintId, adminNote } = req.body;
         await Complaint.updateOne({ _id: complaintId }, { status: "resolved", adminNote: adminNote || "" });
-        jsonSuccess(res, { message: "Complaint resolved!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Complaint resolved!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/complaint/delete', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { complaintId } = req.body;
         await Complaint.deleteOne({ _id: complaintId });
-        jsonSuccess(res, { message: "Complaint deleted!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Complaint deleted!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.get('/api/admin/posts', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const posts = await Post.find().sort({ createdAt: -1 }).limit(100);
         res.json({ success: true, posts });
-    } catch (e) { jsonError(res, "Failed"); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/admin/post/delete', async (req, res) => {
     try {
-        if (!isAdmin(req)) return jsonError(res, "Unauthorized", 401);
+        if (!isAdmin(req)) return errRes(res, "Unauthorized", 401);
         const { postId } = req.body;
         await Post.deleteOne({ _id: postId });
-        jsonSuccess(res, { message: "Post deleted!" });
-    } catch (e) { jsonError(res, "Failed"); }
+        okRes(res, { message: "Post deleted!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// 2FA APIs
-// ============================================
+// ============ 2FA ============
 app.post('/api/2fa/setup', async (req, res) => {
     try {
-        if (!speakeasy || !QRCode) return jsonError(res, "2FA modules not installed", 500);
+        if (!speakeasy || !QRCode) return errRes(res, "2FA not available", 500);
         const { email } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "User nai", 404);
-
+        if (!u) return errRes(res, "User nai", 404);
         const secret = speakeasy.generateSecret({ name: `Searchbook (${u.username})`, length: 20 });
         u.twoFASecret = secret.base32;
         await u.save();
-
         const qrCode = await QRCode.toDataURL(secret.otpauth_url);
         res.json({ success: true, secret: secret.base32, qrCode });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/2fa/verify', async (req, res) => {
     try {
-        if (!speakeasy) return jsonError(res, "2FA modules not installed", 500);
+        if (!speakeasy) return errRes(res, "2FA not available", 500);
         const { email, code } = req.body;
         const u = await User.findOne({ email });
-        if (!u || !u.twoFASecret) return jsonError(res, "Setup age korun", 400);
-
+        if (!u || !u.twoFASecret) return errRes(res, "Setup age korun", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return jsonError(res, "Bhul code!", 400);
-
+        if (!verified) return errRes(res, "Bhul code!", 400);
         u.twoFAEnabled = true;
         await u.save();
-        jsonSuccess(res, { message: "2FA enabled!" });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+        okRes(res, { message: "2FA enabled!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/2fa/disable', async (req, res) => {
     try {
-        if (!speakeasy) return jsonError(res, "2FA modules not installed", 500);
+        if (!speakeasy) return errRes(res, "2FA not available", 500);
         const { email, code } = req.body;
         const u = await User.findOne({ email });
-        if (!u || !u.twoFAEnabled) return jsonError(res, "2FA off", 400);
-
+        if (!u || !u.twoFAEnabled) return errRes(res, "2FA off", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return jsonError(res, "Bhul code!", 400);
-
+        if (!verified) return errRes(res, "Bhul code!", 400);
         u.twoFAEnabled = false;
         u.twoFASecret = "";
         await u.save();
-        jsonSuccess(res, { message: "2FA disabled!" });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+        okRes(res, { message: "2FA disabled!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// FORGOT PASSWORD APIs
-// ============================================
+// ============ FORGOT ============
 app.post('/api/forgot/check-email', async (req, res) => {
     try {
         const { email } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "Ei email e account nai", 404);
-
+        if (!u) return errRes(res, "Account nai", 404);
         if (u.twoFAEnabled) return res.json({ success: true, needs2FA: true });
-
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
         setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
-
         res.json({ success: true, needs2FA: false, otp });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/forgot/verify-2fa', async (req, res) => {
     try {
-        if (!speakeasy) return jsonError(res, "2FA modules not installed", 500);
+        if (!speakeasy) return errRes(res, "2FA not available", 500);
         const { email, twoFACode } = req.body;
         const u = await User.findOne({ email });
-        if (!u || !u.twoFAEnabled) return jsonError(res, "2FA off", 400);
-
+        if (!u || !u.twoFAEnabled) return errRes(res, "2FA off", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-        if (!verified) return jsonError(res, "Bhul 2FA code!", 400);
-
+        if (!verified) return errRes(res, "Bhul 2FA code!", 400);
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
-        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
-
+        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
         res.json({ success: true, otp });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+    } catch (e) { errRes(res, e.message); }
 });
 
 app.post('/api/forgot/reset-password', async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
         const stored = otpStore[email];
-        if (!stored) return jsonError(res, "OTP expire", 400);
-        if (Date.now() > stored.expiresAt) {
-            delete otpStore[email];
-            return jsonError(res, "OTP expire", 400);
-        }
-        if (stored.otp != otp) return jsonError(res, "Bhul OTP", 400);
-        if (!newPassword || newPassword.length < 6) return jsonError(res, "Min 6 char", 400);
-
+        if (!stored) return errRes(res, "OTP expire", 400);
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return errRes(res, "OTP expire", 400); }
+        if (stored.otp != otp) return errRes(res, "Bhul OTP", 400);
+        if (!newPassword || newPassword.length < 6) return errRes(res, "Min 6 char", 400);
         const u = await User.findOne({ email });
-        if (!u) return jsonError(res, "User nai", 404);
-
+        if (!u) return errRes(res, "User nai", 404);
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
         delete otpStore[email];
-        jsonSuccess(res, { message: "Password reset successful!" });
-    } catch (e) { jsonError(res, "Failed: " + e.message); }
+        okRes(res, { message: "Password reset successful!" });
+    } catch (e) { errRes(res, e.message); }
 });
 
-// ============================================
-// 404 HANDLER (for unmatched API routes)
-// ============================================
-app.use('/api/*', (req, res) => {
-    res.status(404).json({ success: false, message: "API endpoint not found: " + req.originalUrl });
+// ============ CATCH-ALL (MUST BE LAST) ============
+// API 404 handler - ensures API always returns JSON
+app.use('/api', (req, res) => {
+    res.status(404).json({ success: false, message: "API not found: " + req.originalUrl });
 });
 
-// Serve index.html for all other routes (SPA fallback)
+// SPA fallback - serve index.html for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
-// ============================================
-// GLOBAL ERROR HANDLER
-// ============================================
-app.use((err, req, res, next) => {
-    console.error("❌ Global error:", err);
-    if (req.path.startsWith('/api/')) {
-        return res.status(500).json({ success: false, message: "Server error: " + err.message });
-    }
-    res.status(500).send("Server error");
-});
-
-// ============================================
-// START SERVER
-// ============================================
+// ============ START ============
 app.listen(PORT, () => {
-    console.log(`\n════════════════════════════════════════`);
-    console.log(`✅ SearchBook Server Started`);
-    console.log(`🌐 Port: ${PORT}`);
+    console.log("═══════════════════════════════════");
+    console.log(`✅ SearchBook running on port ${PORT}`);
     console.log(`👤 Admin: ${ADMIN_USERNAME}`);
-    console.log(`📱 Ready to serve!\n`);
+    console.log(`🌐 URL: http://localhost:${PORT}`);
+    console.log("═══════════════════════════════════");
 });
