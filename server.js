@@ -7,7 +7,7 @@ const path = require('path');
 
 const app = express();
 
-// ============ MIDDLEWARE (অর্ডার গুরুত্বপূর্ণ) ============
+// ============ MIDDLEWARE ============
 app.use(cors());
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
@@ -234,7 +234,7 @@ app.get('/api/active-users', (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ USER ============
+// ============ USER APIs ============
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
@@ -989,13 +989,11 @@ app.post('/api/forgot/reset-password', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ CATCH-ALL (MUST BE LAST) ============
-// API 404 handler - ensures API always returns JSON
+// ============ CATCH-ALL ============
 app.use('/api', (req, res) => {
     res.status(404).json({ success: false, message: "API not found: " + req.originalUrl });
 });
 
-// SPA fallback - serve index.html for all other routes
 app.get('*', (req, res) => {
     res.sendFile(path.join(__dirname, 'index.html'));
 });
