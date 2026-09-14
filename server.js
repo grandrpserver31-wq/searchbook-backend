@@ -62,7 +62,7 @@ app.post('/api/verify-otp', async (req, res) => {
     } catch (error) { res.status(500).json({ success: false, message: "Verify failed" }); }
 });
 
-// ============ UPDATED USER SCHEMA (নতুন field যোগ করা হয়েছে) ============
+// ===== USER SCHEMA (নতুন field সহ) =====
 const UserSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     email: { type: String, required: true, unique: true },
@@ -74,7 +74,6 @@ const UserSchema = new mongoose.Schema({
     following: { type: [String], default: [] },
     bookmarks: { type: [String], default: [] },
     theme: { type: String, default: "light" },
-    // ===== NEW FIELDS (Admin Panel + 2FA + Moderation এর জন্য) =====
     twoFAEnabled: { type: Boolean, default: false },
     twoFASecret: { type: String, default: "" },
     isBlocked: { type: Boolean, default: false },
@@ -130,13 +129,13 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
-// ============ COMPLAINT SCHEMA (Admin Panel এর জন্য) ============
+// ===== COMPLAINT SCHEMA =====
 const ComplaintSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, default: "" },
     subject: { type: String, required: true },
     message: { type: String, required: true },
-    status: { type: String, default: "pending" }, // pending / resolved
+    status: { type: String, default: "pending" },
     adminNote: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
 });
@@ -158,11 +157,10 @@ app.post('/api/signup', async (req, res) => {
 
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password, twoFACode } = req.body;
+        const { email, password } = req.body;
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User nai!" });
 
-        // ===== Check blocked/suspended =====
         if (user.isBlocked) return res.status(403).json({ success: false, message: "Apnar account block kora hoyeche!" });
         if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
             return res.status(403).json({ success: false, message: "Account suspended until " + user.suspendedUntil.toLocaleDateString() });
@@ -170,21 +168,6 @@ app.post('/api/login', async (req, res) => {
 
         const isMatch = await bcrypt.compare(password, user.passwordHash);
         if (!isMatch) return res.status(400).json({ success: false, message: "Bhul password!" });
-
-        // ===== 2FA check =====
-        if (user.twoFAEnabled) {
-            if (!twoFACode) {
-                return res.json({ success: false, requires2FA: true, message: "2FA code din" });
-            }
-            const speakeasy = require('speakeasy');
-            const verified = speakeasy.totp.verify({
-                secret: user.twoFASecret,
-                encoding: 'base32',
-                token: twoFACode,
-                window: 1
-            });
-            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
-        }
 
         activeUsers[user.username] = Date.now();
         user.lastActive = new Date();
@@ -203,7 +186,6 @@ app.post('/api/heartbeat', async (req, res) => {
     const { username } = req.body;
     if (username) {
         activeUsers[username] = Date.now();
-        // Update lastActive in DB
         try { await User.updateOne({ username }, { lastActive: new Date() }); } catch (e) {}
     }
     res.json({ success: true });
@@ -279,21 +261,12 @@ app.put('/api/user/profile', async (req, res) => {
 
 app.put('/api/user/change-password', async (req, res) => {
     try {
-        const { email, oldPassword, newPassword, twoFACode } = req.body;
+        const { email, oldPassword, newPassword } = req.body;
         const u = await User.findOne({ email });
         if (!u) return res.status(404).json({ success: false, message: "User nai" });
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
         if (!m) return res.status(400).json({ success: false, message: "Purono password bhul" });
         if (newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
-
-        // ===== 2FA check =====
-        if (u.twoFAEnabled) {
-            if (!twoFACode) return res.json({ success: false, requires2FA: true, message: "2FA code din" });
-            const speakeasy = require('speakeasy');
-            const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-            if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
-        }
-
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
@@ -350,39 +323,28 @@ app.post('/api/user/unfollow', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ============ NEW #1: USER নিজের Account Delete করার API ============
+// ==================================================================
+// ✅ NEW #1: USER নিজের Account Delete করার API
+// ==================================================================
 app.post('/api/user/delete-self', async (req, res) => {
     try {
         const { email, password } = req.body;
         if (!email || !password) return res.status(400).json({ success: false, message: "Email + password din" });
-
         const user = await User.findOne({ email });
         if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        // Password verify
         const match = await bcrypt.compare(password, user.passwordHash);
         if (!match) return res.status(400).json({ success: false, message: "Password bhul!" });
-
         const username = user.username;
-
-        // Delete all user data
         await Post.deleteMany({ username });
         await Story.deleteMany({ username });
-        await Message.deleteMany({ $or: [{ sender: username }, { text: { $regex: username } }] });
+        await Message.deleteMany({ sender: username });
         await Room.deleteMany({ members: username });
         await Complaint.deleteMany({ username });
-
-        // Remove user from others' followers/following lists
         await User.updateMany({ followers: username }, { $pull: { followers: username } });
         await User.updateMany({ following: username }, { $pull: { following: username } });
-
-        // Delete user
         await User.deleteOne({ email });
-
-        // Remove from active users
         delete activeUsers[username];
-
-        console.log(`🗑️ Account deleted: ${username} (${email})`);
+        console.log(`🗑️ Account self-deleted: ${username} (${email})`);
         res.json({ success: true, message: "Account permanently deleted. Sob data muche geche." });
     } catch (e) {
         console.error("Delete account error:", e);
@@ -390,16 +352,16 @@ app.post('/api/user/delete-self', async (req, res) => {
     }
 });
 
-// ============ NEW #2: নিজের Post Delete করার API ============
+// ==================================================================
+// ✅ NEW #2: নিজের Post Delete করার API
+// ==================================================================
 app.post('/api/posts/delete-own', async (req, res) => {
     try {
         const { postId, username } = req.body;
         if (!postId || !username) return res.status(400).json({ success: false, message: "postId + username din" });
-
         const post = await Post.findById(postId);
         if (!post) return res.status(404).json({ success: false, message: "Post nai" });
         if (post.username !== username) return res.status(403).json({ success: false, message: "Ei post apnar na!" });
-
         await Post.deleteOne({ _id: postId });
         console.log(`🗑️ Post deleted: ${postId} by ${username}`);
         res.json({ success: true, message: "Post deleted!" });
@@ -409,11 +371,8 @@ app.post('/api/posts/delete-own', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
-
-        // Check if user is muted
         const u = await User.findOne({ username });
         if (u && u.isMuted) return res.status(403).json({ success: false, message: "Apni mute kora achen, post korte parben na" });
-
         const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
@@ -600,121 +559,6 @@ app.post('/api/complaint/submit', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
-// ==================== 2FA SYSTEM (NEW) ====================
-app.post('/api/2fa/setup', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-
-        const speakeasy = require('speakeasy');
-        const QRCode = require('qrcode');
-
-        const secret = speakeasy.generateSecret({ name: `Searchbook (${u.username})`, length: 20 });
-        u.twoFASecret = secret.base32;
-        await u.save();
-
-        const qrCode = await QRCode.toDataURL(secret.otpauth_url);
-        res.json({ success: true, secret: secret.base32, qrCode });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
-app.post('/api/2fa/verify', async (req, res) => {
-    try {
-        const { email, code } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-        if (!u.twoFASecret) return res.status(400).json({ success: false, message: "Setup korte hobe age" });
-
-        const speakeasy = require('speakeasy');
-        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
-
-        u.twoFAEnabled = true;
-        await u.save();
-        res.json({ success: true, message: "2FA enabled!" });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
-app.post('/api/2fa/disable', async (req, res) => {
-    try {
-        const { email, code } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA already off" });
-
-        const speakeasy = require('speakeasy');
-        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
-
-        u.twoFAEnabled = false;
-        u.twoFASecret = "";
-        await u.save();
-        res.json({ success: true, message: "2FA disabled!" });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
-// ==================== FORGOT PASSWORD WITH 2FA ====================
-app.post('/api/forgot/check-email', async (req, res) => {
-    try {
-        const { email } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "Ei email e kono account nai" });
-
-        if (u.twoFAEnabled) {
-            return res.json({ success: true, needs2FA: true, message: "2FA code din" });
-        }
-
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
-        setTimeout(() => {
-            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
-        }, 61000);
-        console.log(`Forgot OTP for ${email}: ${otp}`);
-        res.json({ success: true, needs2FA: false, otp });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
-app.post('/api/forgot/verify-2fa', async (req, res) => {
-    try {
-        const { email, twoFACode } = req.body;
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA off" });
-
-        const speakeasy = require('speakeasy');
-        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-        if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
-
-        const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
-        setTimeout(() => {
-            if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email];
-        }, 61000);
-        res.json({ success: true, otp });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
-app.post('/api/forgot/reset-password', async (req, res) => {
-    try {
-        const { email, otp, newPassword } = req.body;
-        const stored = otpStore[email];
-        if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
-        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
-        if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
-        if (!newPassword || newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
-
-        const u = await User.findOne({ email });
-        if (!u) return res.status(404).json({ success: false, message: "User nai" });
-
-        const salt = await bcrypt.genSalt(10);
-        u.passwordHash = await bcrypt.hash(newPassword, salt);
-        await u.save();
-        delete otpStore[email];
-        res.json({ success: true, message: "Password reset successful!" });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
 // ==================== ADMIN PANEL APIS ====================
 const ADMIN_USERNAME = process.env.ADMIN_USERNAME || "admin";
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "admin123";
@@ -754,6 +598,75 @@ app.get('/api/admin/users', async (req, res) => {
         }));
         const activeCount = list.filter(u => u.isActive).length;
         res.json({ success: true, users: list, totalCount: list.length, activeCount });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+// ==================================================================
+// ✅ NEW #3: ADMIN USER DATA ANALYSIS
+// ==================================================================
+app.get('/api/admin/user/analysis/:username', async (req, res) => {
+    try {
+        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
+        const username = req.params.username;
+        const user = await User.findOne({ username });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+        const posts = await Post.find({ username });
+        const stories = await Story.find({ username });
+        const messages = await Message.find({ sender: username });
+        let totalLikesReceived = 0;
+        let totalCommentsReceived = 0;
+        let totalViews = 0;
+        let totalReactionsReceived = 0;
+        posts.forEach(p => {
+            totalLikesReceived += (p.likes || []).length;
+            totalCommentsReceived += (p.comments || []).length;
+            totalViews += (p.views || 0);
+            totalReactionsReceived += Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0);
+        });
+        const stats = {
+            totalPosts: posts.length,
+            totalLikesReceived,
+            totalCommentsReceived,
+            totalViews,
+            totalReactionsReceived,
+            totalStories: stories.length,
+            totalMessages: messages.length,
+            totalFollowers: (user.followers || []).length,
+            totalFollowing: (user.following || []).length
+        };
+        const recentPosts = posts
+            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
+            .slice(0, 5)
+            .map(p => ({
+                _id: p._id,
+                content: p.content,
+                likes: p.likes || [],
+                comments: p.comments || [],
+                views: p.views || 0,
+                createdAt: p.createdAt
+            }));
+        res.json({
+            success: true,
+            user: {
+                username: user.username,
+                email: user.email,
+                fullName: user.fullName,
+                bio: user.bio,
+                profilePic: user.profilePic,
+                isBlocked: user.isBlocked,
+                isSuspended: user.isSuspended,
+                isMuted: user.isMuted,
+                suspendedUntil: user.suspendedUntil,
+                warnings: user.warnings || 0,
+                strikes: user.strikes || 0,
+                twoFAEnabled: user.twoFAEnabled || false,
+                theme: user.theme || "light",
+                lastActive: user.lastActive || user.createdAt,
+                createdAt: user.createdAt
+            },
+            stats,
+            recentPosts
+        });
     } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
@@ -844,81 +757,6 @@ app.post('/api/admin/user/delete', async (req, res) => {
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
 });
 
-// ============ NEW #3: ADMIN USER DATA ANALYSIS ============
-app.get('/api/admin/user/analysis/:username', async (req, res) => {
-    try {
-        if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
-
-        const username = req.params.username;
-        const user = await User.findOne({ username });
-        if (!user) return res.status(404).json({ success: false, message: "User nai" });
-
-        // Fetch all stats
-        const posts = await Post.find({ username });
-        const stories = await Story.find({ username });
-        const messages = await Message.find({ sender: username });
-
-        let totalLikesReceived = 0;
-        let totalCommentsReceived = 0;
-        let totalViews = 0;
-        let totalReactionsReceived = 0;
-
-        posts.forEach(p => {
-            totalLikesReceived += (p.likes || []).length;
-            totalCommentsReceived += (p.comments || []).length;
-            totalViews += (p.views || 0);
-            totalReactionsReceived += Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0);
-        });
-
-        const stats = {
-            totalPosts: posts.length,
-            totalLikesReceived,
-            totalCommentsReceived,
-            totalViews,
-            totalReactionsReceived,
-            totalStories: stories.length,
-            totalMessages: messages.length,
-            totalFollowers: (user.followers || []).length,
-            totalFollowing: (user.following || []).length
-        };
-
-        const recentPosts = posts
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5)
-            .map(p => ({
-                _id: p._id,
-                content: p.content,
-                likes: p.likes || [],
-                comments: p.comments || [],
-                views: p.views || 0,
-                createdAt: p.createdAt
-            }));
-
-        res.json({
-            success: true,
-            user: {
-                username: user.username,
-                email: user.email,
-                fullName: user.fullName,
-                bio: user.bio,
-                profilePic: user.profilePic,
-                isBlocked: user.isBlocked,
-                isSuspended: user.isSuspended,
-                isMuted: user.isMuted,
-                suspendedUntil: user.suspendedUntil,
-                warnings: user.warnings || 0,
-                strikes: user.strikes || 0,
-                twoFAEnabled: user.twoFAEnabled || false,
-                theme: user.theme || "light",
-                lastActive: user.lastActive || user.createdAt,
-                createdAt: user.createdAt
-            },
-            stats,
-            recentPosts
-        });
-    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
-});
-
 app.get('/api/admin/complaints', async (req, res) => {
     try {
         if (!isAdmin(req)) return res.status(401).json({ success: false, message: "Unauthorized" });
@@ -960,6 +798,102 @@ app.post('/api/admin/post/delete', async (req, res) => {
         await Post.deleteOne({ _id: postId });
         res.json({ success: true, message: "Post deleted!" });
     } catch (e) { res.status(500).json({ success: false, message: "Failed" }); }
+});
+
+// ==================== 2FA SYSTEM ====================
+app.post('/api/2fa/setup', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const speakeasy = require('speakeasy');
+        const QRCode = require('qrcode');
+        const secret = speakeasy.generateSecret({ name: `Searchbook (${u.username})`, length: 20 });
+        u.twoFASecret = secret.base32;
+        await u.save();
+        const qrCode = await QRCode.toDataURL(secret.otpauth_url);
+        res.json({ success: true, secret: secret.base32, qrCode });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/2fa/verify', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFASecret) return res.status(400).json({ success: false, message: "Setup korte hobe age" });
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+        u.twoFAEnabled = true;
+        await u.save();
+        res.json({ success: true, message: "2FA enabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/2fa/disable', async (req, res) => {
+    try {
+        const { email, code } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA already off" });
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul code!" });
+        u.twoFAEnabled = false;
+        u.twoFASecret = "";
+        await u.save();
+        res.json({ success: true, message: "2FA disabled!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+// ==================== FORGOT PASSWORD ====================
+app.post('/api/forgot/check-email', async (req, res) => {
+    try {
+        const { email } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "Ei email e kono account nai" });
+        if (u.twoFAEnabled) return res.json({ success: true, needs2FA: true, message: "2FA code din" });
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
+        console.log(`Forgot OTP for ${email}: ${otp}`);
+        res.json({ success: true, needs2FA: false, otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/forgot/verify-2fa', async (req, res) => {
+    try {
+        const { email, twoFACode } = req.body;
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        if (!u.twoFAEnabled) return res.status(400).json({ success: false, message: "2FA off" });
+        const speakeasy = require('speakeasy');
+        const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+        if (!verified) return res.status(400).json({ success: false, message: "Bhul 2FA code!" });
+        const otp = Math.floor(100000 + Math.random() * 900000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 60 * 1000 };
+        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
+        res.json({ success: true, otp });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
+});
+
+app.post('/api/forgot/reset-password', async (req, res) => {
+    try {
+        const { email, otp, newPassword } = req.body;
+        const stored = otpStore[email];
+        if (!stored) return res.status(400).json({ success: false, message: "OTP expire" });
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return res.status(400).json({ success: false, message: "OTP expire" }); }
+        if (stored.otp != otp) return res.status(400).json({ success: false, message: "Bhul OTP" });
+        if (!newPassword || newPassword.length < 6) return res.status(400).json({ success: false, message: "Min 6 char" });
+        const u = await User.findOne({ email });
+        if (!u) return res.status(404).json({ success: false, message: "User nai" });
+        const salt = await bcrypt.genSalt(10);
+        u.passwordHash = await bcrypt.hash(newPassword, salt);
+        await u.save();
+        delete otpStore[email];
+        res.json({ success: true, message: "Password reset successful!" });
+    } catch (e) { res.status(500).json({ success: false, message: "Failed: " + e.message }); }
 });
 
 const PORT = process.env.PORT || 5000;
