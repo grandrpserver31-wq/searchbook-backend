@@ -154,7 +154,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .complaint-box-title { font-weight: 700; color: var(--primary); font-size: 14px; }
 .complaint-box-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-/* 3-DOT POST MENU */
 .post-menu-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; z-index: 5; }
 .post-menu-btn:hover { background: var(--bg); color: var(--primary); }
 .post-menu-dropdown { position: absolute; top: 52px; right: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); min-width: 160px; z-index: 50; display: none; overflow: hidden; }
@@ -164,12 +163,10 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .post-menu-item.danger { color: var(--danger); }
 .post-menu-item.danger:hover { background: #fff5f5; }
 
-/* DANGER ZONE */
 .danger-zone { background: #fff5f5; border: 2px solid var(--danger); padding: 16px; border-radius: var(--radius-sm); margin-top: 14px; }
 .danger-zone h4 { color: var(--danger); margin-bottom: 8px; font-size: 15px; }
 .danger-zone p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
 
-/* USER DATA ANALYSIS */
 .admin-user-card { cursor: pointer; transition: 0.2s; }
 .admin-user-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 #user-analysis-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2100; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
@@ -196,7 +193,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .activity-bar .label { font-size: 12px; color: var(--muted); min-width: 90px; }
 .activity-bar .value { font-size: 13px; font-weight: 700; color: var(--text); min-width: 40px; text-align: right; }
 
-/* ===== NEW: RECOMMEND PANEL ===== */
 #recommend-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2050; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #recommend-panel.active { display: flex; }
 .recommend-box { background: var(--white); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -209,9 +205,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .recommend-card .reason { font-size: 12px; color: var(--muted); margin-top: 3px; }
 .recommend-card .score-badge { background: #00b894; color: white; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
 .recommend-follow-btn { padding: 8px 14px; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
-.recommend-follow-btn:hover { opacity: 0.9; }
 
-/* ===== NEW: NOTIFICATION PANEL ===== */
 #notif-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2050; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #notif-panel.active { display: flex; }
 .notif-box { background: var(--white); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -227,13 +221,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .notif-time { font-size: 11px; color: var(--muted); }
 .notif-score { font-size: 11px; font-weight: 700; color: var(--muted); background: var(--white); padding: 2px 6px; border-radius: 6px; }
 
-/* SPAM WARNING */
 .spam-warning { background: #fff5f5; border: 2px solid #e17055; border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #e17055; font-weight: 600; }
-
-/* FAKE ACCOUNT FLAG */
 .fake-flag { background: #f39c12; color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-left: 6px; }
 
-/* ADMIN PANEL */
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 1100px; max-height: 92vh; overflow-y: auto; padding: 30px; }
@@ -632,7 +622,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     <div class="story-viewer-content"><div id="story-viewer-media-container"></div></div>
 </div>
 
-<!-- RECOMMEND PANEL -->
 <div id="recommend-panel">
     <div class="recommend-box">
         <div class="recommend-header">
@@ -644,7 +633,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     </div>
 </div>
 
-<!-- NOTIFICATION PANEL -->
 <div id="notif-panel">
     <div class="notif-box">
         <div class="notif-header">
@@ -656,7 +644,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     </div>
 </div>
 
-<!-- ADMIN PANEL -->
 <div id="admin-panel">
     <div class="admin-box">
         <div id="admin-login-view">
@@ -718,7 +705,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
     </div>
 </div>
 
-<!-- USER ANALYSIS PANEL -->
 <div id="user-analysis-panel">
     <div class="analysis-box">
         <div class="analysis-header">
@@ -751,10 +737,7 @@ let logoClickTimer = null;
 // ===== PASSWORD STRENGTH ALGORITHM =====
 function evaluatePassword(pwd) {
     const result = {
-        score: 0,
-        label: "Very Weak",
-        color: "#e17055",
-        percent: 0,
+        score: 0, label: "Very Weak", color: "#e17055", percent: 0,
         checks: {
             length8: pwd.length >= 8,
             length12: pwd.length >= 12,
@@ -767,8 +750,6 @@ function evaluatePassword(pwd) {
             noSequence: !/(?:0123|1234|2345|3456|4567|5678|6789|abcd|bcde|cdef)/i.test(pwd)
         }
     };
-
-    // Calculate score
     if (result.checks.length8) result.score += 15;
     if (result.checks.length12) result.score += 15;
     if (result.checks.lowercase) result.score += 10;
@@ -778,30 +759,11 @@ function evaluatePassword(pwd) {
     if (result.checks.noCommon) result.score += 5;
     if (result.checks.noRepeat) result.score += 3;
     if (result.checks.noSequence) result.score += 2;
-
-    // Classify strength
-    if (result.score < 30) {
-        result.label = "🔴 Very Weak";
-        result.color = "#e17055";
-        result.level = "weak";
-    } else if (result.score < 50) {
-        result.label = "🟠 Weak";
-        result.color = "#e67e22";
-        result.level = "weak";
-    } else if (result.score < 70) {
-        result.label = "🟡 Medium";
-        result.color = "#f39c12";
-        result.level = "medium";
-    } else if (result.score < 85) {
-        result.label = "🟢 Strong";
-        result.color = "#00b894";
-        result.level = "strong";
-    } else {
-        result.label = "💪 Very Strong";
-        result.color = "#00b894";
-        result.level = "strong";
-    }
-
+    if (result.score < 30) { result.label = "🔴 Very Weak"; result.color = "#e17055"; result.level = "weak"; }
+    else if (result.score < 50) { result.label = "🟠 Weak"; result.color = "#e67e22"; result.level = "weak"; }
+    else if (result.score < 70) { result.label = "🟡 Medium"; result.color = "#f39c12"; result.level = "medium"; }
+    else if (result.score < 85) { result.label = "🟢 Strong"; result.color = "#00b894"; result.level = "strong"; }
+    else { result.label = "💪 Very Strong"; result.color = "#00b894"; result.level = "strong"; }
     result.percent = Math.min(100, result.score);
     return result;
 }
@@ -811,17 +773,11 @@ function renderStrength(prefix, pwd) {
     const fill = document.getElementById(prefix + "pwd-strength-fill");
     const label = document.getElementById(prefix + "pwd-strength-label");
     const reqs = document.getElementById(prefix + "pwd-requirements");
-
-    if (!pwd) {
-        if (box) box.style.display = "none";
-        return;
-    }
+    if (!pwd) { if (box) box.style.display = "none"; return; }
     if (box) box.style.display = "block";
-
     const r = evaluatePassword(pwd);
     if (fill) { fill.style.width = r.percent + "%"; fill.style.background = r.color; }
     if (label) { label.textContent = r.label + " (" + r.percent + "%)"; label.style.color = r.color; }
-
     const checks = r.checks;
     const items = [
         { ok: checks.length8, txt: "Minimum 8 characters" },
@@ -841,57 +797,35 @@ function renderStrength(prefix, pwd) {
     }
 }
 
-function checkPasswordStrength() {
-    renderStrength("", document.getElementById("reg-password").value);
-}
-function checkForgotPasswordStrength() {
-    renderStrength("forgot-", document.getElementById("forgot-new-password").value);
-}
-function checkChangePasswordStrength() {
-    renderStrength("change-", document.getElementById("new-pass").value);
-}
+function checkPasswordStrength() { renderStrength("", document.getElementById("reg-password").value); }
+function checkForgotPasswordStrength() { renderStrength("forgot-", document.getElementById("forgot-new-password").value); }
+function checkChangePasswordStrength() { renderStrength("change-", document.getElementById("new-pass").value); }
 
 // ===== SPAM DETECTION =====
 function detectSpam(content) {
     if (!content) return { score: 0, reasons: [] };
     let score = 0;
     const reasons = [];
-
-    // 1. Too many links
     const linkMatches = content.match(/https?:\/\/|www\./gi) || [];
     if (linkMatches.length >= 3) { score += 20; reasons.push("Too many links (" + linkMatches.length + ")"); }
     else if (linkMatches.length === 2) { score += 10; reasons.push("Multiple links"); }
-
-    // 2. ALL CAPS
     const letters = content.replace(/[^A-Za-z]/g, "");
     const capsLetters = content.replace(/[^A-Z]/g, "");
-    if (letters.length > 15 && capsLetters.length / letters.length > 0.7) {
-        score += 15; reasons.push("Too many CAPS letters");
-    }
-
-    // 3. Repeated characters
+    if (letters.length > 15 && capsLetters.length / letters.length > 0.7) { score += 15; reasons.push("Too many CAPS letters"); }
     if (/(.)\1{5,}/.test(content)) { score += 15; reasons.push("Character spam (aaaaa)"); }
-
-    // 4. Too many emojis
     const emojiCount = (content.match(/[\u{1F600}-\u{1F6FF}\u{1F300}-\u{1F5FF}\u{2600}-\u{26FF}]/gu) || []).length;
     if (emojiCount > 10) { score += 10; reasons.push("Too many emojis (" + emojiCount + ")"); }
-
-    // 5. Repeated words
     const words = content.toLowerCase().split(/\s+/).filter(w => w.length > 2);
     const wordCount = {};
     words.forEach(w => { wordCount[w] = (wordCount[w] || 0) + 1; });
     const repeated = Object.values(wordCount).filter(c => c >= 5).length;
     if (repeated > 0) { score += 15; reasons.push("Repeated words"); }
-
-    // 6. Spam keywords
     const spamKeywords = ["click here","buy now","free money","earn money","work from home","lottery","prize","winner","urgent","100% free"];
     const lower = content.toLowerCase();
     spamKeywords.forEach(kw => { if (lower.includes(kw)) { score += 15; reasons.push("Keyword: " + kw); } });
-
     return { score: Math.min(100, score), reasons };
 }
 
-// ===== AUTH =====
 function authHeaders() {
     const h = { "Content-Type": "application/json" };
     if (currentUser) h["x-username"] = currentUser.username;
@@ -949,7 +883,6 @@ document.addEventListener("DOMContentLoaded", function() {
     });
 });
 
-// ===== NEW: RECOMMEND / NOTIF PANEL =====
 async function openRecommendPanel() {
     document.getElementById("recommend-panel").classList.add("active");
     document.getElementById("recommend-list").innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
@@ -1025,7 +958,6 @@ async function openNotifPanel() {
 
 function closeNotifPanel() { document.getElementById("notif-panel").classList.remove("active"); }
 
-// ===== POST =====
 async function createPost() {
     const content = document.getElementById("post-content").value.trim();
     const pollQ = document.getElementById("poll-q").value.trim();
@@ -1033,8 +965,6 @@ async function createPost() {
     let poll = null;
     if (pollQ && pollOpts.length >= 2) poll = { question: pollQ, options: pollOpts.map(function(t) { return { text: t, votes: [] }; }) };
     if (!content && !selectedMedia && !poll) { alert("Kichu likhun ba media/poll din"); return; }
-
-    // ===== SPAM CHECK =====
     if (content) {
         const spam = detectSpam(content);
         if (spam.score >= 30) {
@@ -1042,7 +972,6 @@ async function createPost() {
             if (!ok) return;
         }
     }
-
     try {
         const res = await fetch(BACKEND_URL + "/api/posts", { method: "POST", headers: authHeaders(), body: JSON.stringify({ username: currentUser.username, content: content, media: selectedMedia || "", mediaType: selectedMediaType || "text", poll: poll }) });
         const data = await res.json();
@@ -1059,7 +988,6 @@ async function createPost() {
     } catch (e) { alert("❌ " + e.message); }
 }
 
-// Live spam warning on typing
 document.addEventListener("DOMContentLoaded", function() {
     const pc = document.getElementById("post-content");
     if (pc) {
@@ -1077,7 +1005,6 @@ document.addEventListener("DOMContentLoaded", function() {
     }
 });
 
-// ===== REST OF FUNCTIONS (unchanged from before) =====
 async function submitComplaint() {
     const username = document.getElementById("complaint-username").value.trim();
     const email = document.getElementById("complaint-email").value.trim();
@@ -1151,13 +1078,10 @@ async function sendOTP() {
     const password = document.getElementById("reg-password").value;
     if (!name || !username || !email || !password) { alert("Sob field din"); return; }
     if (password.length < 6) { alert("Password min 6 char"); return; }
-
-    // Password strength enforcement
     const strength = evaluatePassword(password);
     if (strength.level === "weak") {
         if (!confirm("⚠️ Apnar password WEAK!\n\nStrength: " + strength.label + "\n\nWeak password diye account toiri korle account hack hobar sombhabona beshi.\n\nAro strong password use korben?\n\nStill continue?")) return;
     }
-
     try {
         const res = await fetch(BACKEND_URL + "/api/send-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email }) });
         const data = await res.json();
@@ -1728,9 +1652,10 @@ async function sendMessage() {
     try { const res = await fetch(BACKEND_URL + "/api/chat/message", { method: "POST", headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
 }
 
+// ===== DOWNLOAD APP (UPDATED) =====
 function downloadApp() {
     const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v1.0.0/Searchbook-APK.zip";
-    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.zip");
+    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.zip\n\n⚠️ Download shesh hole ZIP unzip korun, tarpor APK install korun.");
     const link = document.createElement("a");
     link.href = downloadUrl;
     link.download = "Searchbook-APK.zip";
