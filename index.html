@@ -35,7 +35,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .timer { text-align: center; color: var(--danger); font-weight: 700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); margin-bottom: 15px; font-size: 14px; }
 .otp-display { text-align: center; font-size: 32px; color: var(--primary); font-weight: 900; letter-spacing: 12px; background: #f0f0ff; padding: 20px; border-radius: var(--radius-sm); border: 2px dashed var(--primary); margin-bottom: 15px; font-family: 'Courier New', monospace; }
 
-/* ===== PASSWORD STRENGTH METER ===== */
+/* PASSWORD STRENGTH METER */
 .pwd-strength-box { margin-top: -8px; margin-bottom: 16px; padding: 12px; background: var(--bg); border-radius: var(--radius-sm); border: 1px solid var(--border); }
 .pwd-strength-bar { width: 100%; height: 8px; background: #e0e0e0; border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
 .pwd-strength-fill { height: 100%; width: 0%; transition: 0.3s; border-radius: 4px; }
@@ -154,6 +154,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .complaint-box-title { font-weight: 700; color: var(--primary); font-size: 14px; }
 .complaint-box-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
+/* 3-DOT POST MENU */
 .post-menu-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; z-index: 5; }
 .post-menu-btn:hover { background: var(--bg); color: var(--primary); }
 .post-menu-dropdown { position: absolute; top: 52px; right: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); min-width: 160px; z-index: 50; display: none; overflow: hidden; }
@@ -163,10 +164,12 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .post-menu-item.danger { color: var(--danger); }
 .post-menu-item.danger:hover { background: #fff5f5; }
 
+/* DANGER ZONE */
 .danger-zone { background: #fff5f5; border: 2px solid var(--danger); padding: 16px; border-radius: var(--radius-sm); margin-top: 14px; }
 .danger-zone h4 { color: var(--danger); margin-bottom: 8px; font-size: 15px; }
 .danger-zone p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
 
+/* USER DATA ANALYSIS */
 .admin-user-card { cursor: pointer; transition: 0.2s; }
 .admin-user-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
 #user-analysis-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2100; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
@@ -193,6 +196,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .activity-bar .label { font-size: 12px; color: var(--muted); min-width: 90px; }
 .activity-bar .value { font-size: 13px; font-weight: 700; color: var(--text); min-width: 40px; text-align: right; }
 
+/* RECOMMEND PANEL */
 #recommend-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2050; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #recommend-panel.active { display: flex; }
 .recommend-box { background: var(--white); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 600px; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -206,6 +210,7 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .recommend-card .score-badge { background: #00b894; color: white; font-size: 11px; font-weight: 700; padding: 4px 8px; border-radius: 8px; }
 .recommend-follow-btn { padding: 8px 14px; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; border: none; border-radius: 8px; font-weight: 700; font-size: 12px; cursor: pointer; }
 
+/* NOTIFICATION PANEL */
 #notif-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2050; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #notif-panel.active { display: flex; }
 .notif-box { background: var(--white); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 550px; max-height: 90vh; overflow-y: auto; padding: 30px; }
@@ -221,9 +226,13 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 .notif-time { font-size: 11px; color: var(--muted); }
 .notif-score { font-size: 11px; font-weight: 700; color: var(--muted); background: var(--white); padding: 2px 6px; border-radius: 6px; }
 
+/* SPAM WARNING */
 .spam-warning { background: #fff5f5; border: 2px solid #e17055; border-radius: 10px; padding: 12px; margin-bottom: 12px; font-size: 13px; color: #e17055; font-weight: 600; }
+
+/* FAKE FLAG */
 .fake-flag { background: #f39c12; color: white; font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 6px; margin-left: 6px; }
 
+/* ADMIN PANEL */
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 1100px; max-height: 92vh; overflow-y: auto; padding: 30px; }
@@ -734,7 +743,6 @@ let adminComplaintsList = [];
 let logoClickCount = 0;
 let logoClickTimer = null;
 
-// ===== PASSWORD STRENGTH ALGORITHM =====
 function evaluatePassword(pwd) {
     const result = {
         score: 0, label: "Very Weak", color: "#e17055", percent: 0,
@@ -801,7 +809,6 @@ function checkPasswordStrength() { renderStrength("", document.getElementById("r
 function checkForgotPasswordStrength() { renderStrength("forgot-", document.getElementById("forgot-new-password").value); }
 function checkChangePasswordStrength() { renderStrength("change-", document.getElementById("new-pass").value); }
 
-// ===== SPAM DETECTION =====
 function detectSpam(content) {
     if (!content) return { score: 0, reasons: [] };
     let score = 0;
@@ -881,6 +888,16 @@ document.addEventListener("DOMContentLoaded", function() {
     document.addEventListener("click", function() {
         document.querySelectorAll(".post-menu-dropdown").forEach(function(m) { m.classList.remove("show"); });
     });
+    const pc = document.getElementById("post-content");
+    if (pc) {
+        pc.addEventListener("input", function() {
+            const spam = detectSpam(pc.value);
+            const box = document.getElementById("spam-warning-box");
+            if (spam.score >= 30) { box.innerHTML = '<div class="spam-warning">⚠️ Spam detected (score ' + spam.score + '): ' + spam.reasons.join(", ") + '</div>'; }
+            else if (spam.score > 0) { box.innerHTML = '<div class="spam-warning" style="border-color:#f39c12; background:#fffbf0; color:#f39c12;">⚠️ Possible spam (score ' + spam.score + ')</div>'; }
+            else { box.innerHTML = ""; }
+        });
+    }
 });
 
 async function openRecommendPanel() {
@@ -892,17 +909,9 @@ async function openRecommendPanel() {
         const data = await res.json();
         if (data.success && data.recommendations && data.recommendations.length > 0) {
             document.getElementById("recommend-list").innerHTML = data.recommendations.map(function(r) {
-                return '<div class="recommend-card">' +
-                    '<div class="pic">' + escapeHtml(r.username.substring(0,1).toUpperCase()) + '</div>' +
-                    '<div class="info"><div class="name">' + escapeHtml(r.username) + (r.isActive ? ' <span style="color:#00b894;">●</span>' : '') + '</div>' +
-                    '<div class="reason">' + escapeHtml(r.reason) + '</div></div>' +
-                    '<span class="score-badge">Score: ' + r.score + '</span>' +
-                    '<button class="recommend-follow-btn" onclick="followRecommended(\'' + escapeHtml(r.username) + '\')">Follow</button>' +
-                '</div>';
+                return '<div class="recommend-card"><div class="pic">' + escapeHtml(r.username.substring(0,1).toUpperCase()) + '</div><div class="info"><div class="name">' + escapeHtml(r.username) + (r.isActive ? ' <span style="color:#00b894;">●</span>' : '') + '</div><div class="reason">' + escapeHtml(r.reason) + '</div></div><span class="score-badge">Score: ' + r.score + '</span><button class="recommend-follow-btn" onclick="followRecommended(\'' + escapeHtml(r.username) + '\')">Follow</button></div>';
             }).join("");
-        } else {
-            document.getElementById("recommend-list").innerHTML = '<p style="text-align:center; color:var(--muted);">No recommendations yet. Explore more!</p>';
-        }
+        } else { document.getElementById("recommend-list").innerHTML = '<p style="text-align:center; color:var(--muted);">No recommendations yet. Explore more!</p>'; }
     } catch (e) { document.getElementById("recommend-list").innerHTML = '<p style="color:#e74c3c;">Failed to load</p>'; }
 }
 
@@ -926,9 +935,7 @@ async function loadSidebarRecommend() {
             document.getElementById("sidebar-recommend").innerHTML = data.recommendations.slice(0, 4).map(function(r) {
                 return '<div class="right-item" style="cursor:pointer;" onclick="followRecommended(\'' + escapeHtml(r.username) + '\')"><span class="dot"></span><span>' + escapeHtml(r.username) + '</span></div>';
             }).join("");
-        } else {
-            document.getElementById("sidebar-recommend").innerHTML = '<p style="color:var(--muted); font-size:13px;">No suggestions</p>';
-        }
+        } else { document.getElementById("sidebar-recommend").innerHTML = '<p style="color:var(--muted); font-size:13px;">No suggestions</p>'; }
     } catch (e) {}
 }
 
@@ -942,17 +949,9 @@ async function openNotifPanel() {
         if (data.success && data.notifications && data.notifications.length > 0) {
             document.getElementById("notif-list").innerHTML = data.notifications.map(function(n) {
                 const cls = n.priority === "high" ? "priority-high" : n.priority === "medium" ? "priority-medium" : "priority-low";
-                return '<div class="notif-item ' + cls + '">' +
-                    '<div class="notif-icon">' + n.icon + '</div>' +
-                    '<div class="notif-content">' +
-                        '<div class="notif-text">' + escapeHtml(n.text) + '</div>' +
-                        '<div class="notif-time">' + n.timeAgo + ' · <span class="notif-score">Priority: ' + n.priorityScore + '</span></div>' +
-                    '</div>' +
-                '</div>';
+                return '<div class="notif-item ' + cls + '"><div class="notif-icon">' + n.icon + '</div><div class="notif-content"><div class="notif-text">' + escapeHtml(n.text) + '</div><div class="notif-time">' + n.timeAgo + ' · <span class="notif-score">Priority: ' + n.priorityScore + '</span></div></div></div>';
             }).join("");
-        } else {
-            document.getElementById("notif-list").innerHTML = '<p style="text-align:center; color:var(--muted);">No notifications</p>';
-        }
+        } else { document.getElementById("notif-list").innerHTML = '<p style="text-align:center; color:var(--muted);">No notifications</p>'; }
     } catch (e) { document.getElementById("notif-list").innerHTML = '<p style="color:#e74c3c;">Failed to load</p>'; }
 }
 
@@ -988,23 +987,6 @@ async function createPost() {
     } catch (e) { alert("❌ " + e.message); }
 }
 
-document.addEventListener("DOMContentLoaded", function() {
-    const pc = document.getElementById("post-content");
-    if (pc) {
-        pc.addEventListener("input", function() {
-            const spam = detectSpam(pc.value);
-            const box = document.getElementById("spam-warning-box");
-            if (spam.score >= 30) {
-                box.innerHTML = '<div class="spam-warning">⚠️ Spam detected (score ' + spam.score + '): ' + spam.reasons.join(", ") + '</div>';
-            } else if (spam.score > 0) {
-                box.innerHTML = '<div class="spam-warning" style="border-color:#f39c12; background:#fffbf0; color:#f39c12;">⚠️ Possible spam (score ' + spam.score + ')</div>';
-            } else {
-                box.innerHTML = "";
-            }
-        });
-    }
-});
-
 async function submitComplaint() {
     const username = document.getElementById("complaint-username").value.trim();
     const email = document.getElementById("complaint-email").value.trim();
@@ -1014,12 +996,8 @@ async function submitComplaint() {
     try {
         const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, email, subject, message }) });
         const data = await res.json();
-        if (data.success) {
-            alert("✅ " + data.message);
-            document.getElementById("complaint-subject").value = "";
-            document.getElementById("complaint-message").value = "";
-            switchPanel("login-panel");
-        } else alert("❌ " + data.message);
+        if (data.success) { alert("✅ " + data.message); document.getElementById("complaint-subject").value = ""; document.getElementById("complaint-message").value = ""; switchPanel("login-panel"); }
+        else alert("❌ " + data.message);
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1031,11 +1009,8 @@ async function submitInAppComplaint() {
     try {
         const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, email: currentUser.email, subject, message }) });
         const data = await res.json();
-        if (data.success) {
-            alert("✅ " + data.message);
-            document.getElementById("in-app-complaint-subject").value = "";
-            document.getElementById("in-app-complaint-message").value = "";
-        } else alert("❌ " + data.message);
+        if (data.success) { alert("✅ " + data.message); document.getElementById("in-app-complaint-subject").value = ""; document.getElementById("in-app-complaint-message").value = ""; }
+        else alert("❌ " + data.message);
     } catch (e) { alert("❌ " + e.message); }
 }
 
@@ -1211,9 +1186,7 @@ async function resetPasswordFinal() {
     const newPassword = document.getElementById("forgot-new-password").value;
     if (!otp || !newPassword) { alert("Sob din"); return; }
     const strength = evaluatePassword(newPassword);
-    if (strength.level === "weak") {
-        if (!confirm("⚠️ Weak password! Continue?")) return;
-    }
+    if (strength.level === "weak") { if (!confirm("⚠️ Weak password! Continue?")) return; }
     try {
         const res = await fetch(BACKEND_URL + "/api/forgot/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail, otp: otp, newPassword: newPassword }) });
         const data = await res.json();
@@ -1297,9 +1270,7 @@ async function loadActiveUsers() {
         document.getElementById("active-counter").textContent = "🟢 " + data.count + " users active now";
         if (data.users && data.users.length > 0) {
             document.getElementById("active-list").innerHTML = data.users.slice(0, 10).map(function(u) { return '<div class="right-item"><span class="dot"></span><span>' + escapeHtml(u) + '</span></div>'; }).join("");
-        } else {
-            document.getElementById("active-list").innerHTML = '<p style="color:var(--muted); font-size:13px;">No users active</p>';
-        }
+        } else { document.getElementById("active-list").innerHTML = '<p style="color:var(--muted); font-size:13px;">No users active</p>'; }
     } catch (e) {}
 }
 
@@ -1426,15 +1397,8 @@ function renderPost(p) {
     const liked = currentUser && p.likes && p.likes.includes(currentUser.username);
     const isBookmarked = currentUser && bookmarks.includes(p._id);
     const isOwnPost = currentUser && p.username === currentUser.username;
-    const menuHtml = isOwnPost ? (
-        '<button class="post-menu-btn" onclick="togglePostMenu(\'' + p._id + '\', event)">⋮</button>' +
-        '<div class="post-menu-dropdown" id="post-menu-' + p._id + '">' +
-            '<div class="post-menu-item" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">👤 View Profile</div>' +
-            '<div class="post-menu-item danger" onclick="deleteOwnPost(\'' + p._id + '\')">🗑️ Delete Post</div>' +
-        '</div>'
-    ) : "";
-    return '<div class="post-item">' + menuHtml +
-        '<div class="post-header"><div class="avatar">' + escapeHtml(p.username.substring(0,1).toUpperCase()) + '</div><div class="info"><div class="post-user" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">' + escapeHtml(p.username) + '</div><div class="post-time">' + new Date(p.createdAt).toLocaleString() + '</div></div></div><div class="post-content">' + escapeHtml(p.content) + '</div>' + mediaHtml + pollHtml + '<div style="margin-top:10px; font-size:12px; color:var(--muted);">' + (p.views||0) + ' views · ' + (p.likes?p.likes.length:0) + ' likes · ' + (p.comments?p.comments.length:0) + ' comments · ' + (p.shares||0) + ' shares · ' + totalReactions + ' reactions</div>' + reactionsHtml + '<div class="post-actions"><button class="action-btn ' + (liked?"liked":"") + '" onclick="likePost(\'' + p._id + '\')">👍 Like</button><button class="action-btn" onclick="commentPost(\'' + p._id + '\')">💬 Comment</button><button class="action-btn" onclick="sharePost(\'' + p._id + '\')">🔗 Share</button><button class="action-btn ' + (isBookmarked?"bookmarked":"") + '" onclick="toggleBookmark(\'' + p._id + '\')">' + (isBookmarked?"🔖":"📑") + '</button></div></div>';
+    const menuHtml = isOwnPost ? ('<button class="post-menu-btn" onclick="togglePostMenu(\'' + p._id + '\', event)">⋮</button><div class="post-menu-dropdown" id="post-menu-' + p._id + '"><div class="post-menu-item" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">👤 View Profile</div><div class="post-menu-item danger" onclick="deleteOwnPost(\'' + p._id + '\')">🗑️ Delete Post</div></div>') : "";
+    return '<div class="post-item">' + menuHtml + '<div class="post-header"><div class="avatar">' + escapeHtml(p.username.substring(0,1).toUpperCase()) + '</div><div class="info"><div class="post-user" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">' + escapeHtml(p.username) + '</div><div class="post-time">' + new Date(p.createdAt).toLocaleString() + '</div></div></div><div class="post-content">' + escapeHtml(p.content) + '</div>' + mediaHtml + pollHtml + '<div style="margin-top:10px; font-size:12px; color:var(--muted);">' + (p.views||0) + ' views · ' + (p.likes?p.likes.length:0) + ' likes · ' + (p.comments?p.comments.length:0) + ' comments · ' + (p.shares||0) + ' shares · ' + totalReactions + ' reactions</div>' + reactionsHtml + '<div class="post-actions"><button class="action-btn ' + (liked?"liked":"") + '" onclick="likePost(\'' + p._id + '\')">👍 Like</button><button class="action-btn" onclick="commentPost(\'' + p._id + '\')">💬 Comment</button><button class="action-btn" onclick="sharePost(\'' + p._id + '\')">🔗 Share</button><button class="action-btn ' + (isBookmarked?"bookmarked":"") + '" onclick="toggleBookmark(\'' + p._id + '\')">' + (isBookmarked?"🔖":"📑") + '</button></div></div>';
 }
 
 async function likePost(postId) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + "/api/posts/like", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
@@ -1550,9 +1514,7 @@ async function changePassword() {
     const newPassword = document.getElementById("new-pass").value;
     if (!oldPassword || !newPassword) { alert("Dui password din"); return; }
     const strength = evaluatePassword(newPassword);
-    if (strength.level === "weak") {
-        if (!confirm("⚠️ New password weak! Continue?")) return;
-    }
+    if (strength.level === "weak") { if (!confirm("⚠️ New password weak! Continue?")) return; }
     const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
     let twoFACode = null;
     if (twoFAEnabled) { twoFACode = prompt("2FA code:"); if (!twoFACode) return; }
@@ -1652,13 +1614,15 @@ async function sendMessage() {
     try { const res = await fetch(BACKEND_URL + "/api/chat/message", { method: "POST", headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
 }
 
-// ===== DOWNLOAD APP (UPDATED) =====
+/* ============================================================
+   ✅ UPDATED DOWNLOAD LINK — v2.0.0
+   ============================================================ */
 function downloadApp() {
-    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v1.0.0/Searchbook-APK.zip";
-    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.zip\n\n⚠️ Download shesh hole ZIP unzip korun, tarpor APK install korun.");
+    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v2.0.0/Searchbook-APK.2.zip";
+    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.2.zip\n\n⚠️ Download shesh hole ZIP unzip korun, tarpor APK install korun.");
     const link = document.createElement("a");
     link.href = downloadUrl;
-    link.download = "Searchbook-APK.zip";
+    link.download = "Searchbook-APK.2.zip";
     link.target = "_blank";
     document.body.appendChild(link);
     link.click();
@@ -1671,7 +1635,7 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-// ============ ADMIN PANEL ============
+/* ============ ADMIN PANEL ============ */
 function openAdminPanel() {
     document.getElementById("admin-panel").classList.add("active");
     if (adminUser) {
@@ -1741,8 +1705,7 @@ function renderAdminUsers(users) {
         const fakeBadge = u.isFlagged ? '<span class="fake-flag">🚩 FAKE</span>' : '';
         return '<div class="' + cardClass + '">' +
             '<div class="admin-user-avatar">' + escapeHtml(u.username.substring(0,1).toUpperCase()) + (u.isActive ? '<span class="online-dot"></span>' : "") + '</div>' +
-            '<div class="admin-user-info">' +
-                '<div class="name">' + escapeHtml(u.username) + " " + statusLabel + fakeBadge + '</div>' +
+            '<div class="admin-user-info"><div class="name">' + escapeHtml(u.username) + " " + statusLabel + fakeBadge + '</div>' +
                 '<div class="meta">📧 ' + escapeHtml(u.email || "") + " · Joined " + new Date(u.createdAt).toLocaleDateString() + '</div>' +
                 '<div class="meta">Last: ' + lastActive + " · Warnings: " + (u.warnings || 0) + " · Strikes: " + (u.strikes || 0) + (suspUntil ? " · Until: " + suspUntil : "") + '</div>' +
             '</div>' +
