@@ -705,7 +705,9 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 </div>
 
 <script>
-// ✅ FIXED: Backend URL is now hard-coded for APK compatibility
+/* ============================================================
+   ✅ BACKEND_URL — FIXED for APK compatibility
+   ============================================================ */
 const BACKEND_URL = "https://searchbook-backend.onrender.com";
 
 let currentUser = null;
@@ -1587,8 +1589,11 @@ async function sendMessage() {
     try { const res = await fetch(BACKEND_URL + "/api/chat/message", { method: "POST", headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
 }
 
+/* ============================================================
+   ✅ DOWNLOAD APP — v4.0.0
+   ============================================================ */
 function downloadApp() {
-    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v3.0.0/app-debug.apk";
+    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v4.0.0/app-debug.apk";
     alert("⏳ Download shuru hocche...\n\nFile: app-debug.apk\n\n⚠️ Download shesh hole APK install korun.");
     const link = document.createElement("a");
     link.href = downloadUrl;
