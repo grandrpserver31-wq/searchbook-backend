@@ -1,53 +1,1712 @@
-// GET /api/admin/user/analysis/:username
-app.get("/api/admin/user/analysis/:username", async (req, res) => {
-    try {
-        const adminUser = req.headers["x-admin-user"];
-        if (!adminUser || adminUser !== "admin") {
-            return res.json({ success: false, message: "Unauthorized" });
-        }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Searchbook</title>
+<style>
+:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --warning: #fdcb6e; --bg: #f8f9fe; --white: #ffffff; --text: #2d3436; --muted: #95a5a6; --border: #eef0f6; --shadow-sm: 0 2px 8px rgba(108,92,231,0.06); --shadow-md: 0 4px 16px rgba(108,92,231,0.10); --shadow-lg: 0 8px 32px rgba(108,92,231,0.15); --radius: 16px; --radius-sm: 10px; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
+body { background: var(--bg); color: var(--text); min-height: 100vh; transition: 0.3s; }
+body.dark { --bg: #0f0e17; --white: #1a1a2e; --text: #fffffe; --muted: #a7a9be; --border: #2a2a40; }
+body.dark input, body.dark textarea { background: #2a2a40; color: var(--text); border-color: var(--border); }
+body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { background: #1a1a2e; }
+#auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); padding: 20px; }
+.auth-box { background: var(--white); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; }
+.auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
+.auth-subtitle { text-align: center; color: var(--muted); font-size: 14px; margin-bottom: 30px; }
+.card { display: none; }
+.card.active { display: block; }
+.input-group { margin-bottom: 16px; }
+.input-group input, .input-group textarea { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: inherit; background: #fafbff; color: var(--text); }
+.input-group input:focus, .input-group textarea:focus { border-color: var(--primary); background: var(--white); box-shadow: 0 0 0 4px rgba(108,92,231,0.1); }
+.password-wrapper { position: relative; }
+.password-wrapper input { padding-right: 48px; }
+.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
+.password-toggle:hover { background: var(--bg); color: var(--primary); }
+.btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; }
+.btn:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+.btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
+.btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
+.btn-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 500; }
+.divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
+h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text); font-weight: 700; }
+.timer { text-align: center; color: var(--danger); font-weight: 700; padding: 12px; background: #fff5f5; border-radius: var(--radius-sm); margin-bottom: 15px; font-size: 14px; }
+.otp-display { text-align: center; font-size: 32px; color: var(--primary); font-weight: 900; letter-spacing: 12px; background: #f0f0ff; padding: 20px; border-radius: var(--radius-sm); border: 2px dashed var(--primary); margin-bottom: 15px; font-family: 'Courier New', monospace; }
+#main-app { display: none; }
+#main-app.active { display: block; }
+.top-bar { background: var(--white); padding: 12px 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; }
+.top-logo { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.top-icons { display: flex; gap: 8px; }
+.top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: var(--bg); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.top-icon-btn:hover { background: var(--primary); color: white; }
+.layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
+.sidebar { width: 240px; background: var(--white); padding: 20px 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 90px; display: none; }
+@media (min-width: 900px) { .sidebar { display: block; } }
+.sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500; color: var(--text); margin-bottom: 4px; font-size: 15px; }
+.sidebar-item:hover { background: #f0f0ff; color: var(--primary); }
+.sidebar-item .icon { font-size: 20px; width: 26px; text-align: center; }
+.main-content { flex: 1; max-width: 620px; margin: 0 auto; }
+.main-view { display: none; }
+.main-view.active { display: block; }
+.right-sidebar { width: 260px; background: var(--white); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 90px; display: none; }
+@media (min-width: 1100px) { .right-sidebar { display: block; } }
+.right-sidebar h4 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
+.right-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); font-size: 14px; }
+.right-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
+.post-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.post-box textarea { width: 100%; padding: 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; resize: none; min-height: 80px; font-family: inherit; background: #fafbff; }
+.post-box textarea:focus { border-color: var(--primary); background: var(--white); }
+.media-btns { display: flex; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
+.media-btn { flex: 1; padding: 10px; border: none; border-radius: var(--radius-sm); background: var(--bg); cursor: pointer; font-size: 14px; color: var(--text); font-weight: 600; min-width: 80px; }
+.media-btn:hover { background: #f0f0ff; color: var(--primary); }
+.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; }
+.post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.post-header .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.post-header .info { flex: 1; }
+.post-user { color: var(--text); font-weight: 700; font-size: 15px; cursor: pointer; }
+.post-user:hover { color: var(--primary); }
+.post-time { color: var(--muted); font-size: 12px; margin-top: 2px; }
+.post-content { margin-top: 8px; font-size: 15px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
+.post-media { max-width: 100%; border-radius: var(--radius-sm); margin-top: 12px; }
+.reactions-bar { display: flex; gap: 6px; margin-top: 12px; padding: 8px; background: var(--bg); border-radius: var(--radius-sm); }
+.reaction-btn { flex: 1; background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; }
+.reaction-btn:hover { transform: scale(1.3); background: rgba(108,92,231,0.1); }
+.reaction-btn.active { background: rgba(108,92,231,0.2); }
+.post-actions { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
+.action-btn { flex: 1; padding: 10px; background: transparent; border: none; cursor: pointer; color: var(--muted); font-weight: 600; border-radius: var(--radius-sm); font-size: 13px; }
+.action-btn:hover { background: var(--bg); color: var(--primary); }
+.action-btn.liked { color: var(--primary); background: rgba(108,92,231,0.1); }
+.action-btn.bookmarked { color: var(--warning); background: rgba(253,203,110,0.15); }
+.poll-box { margin-top: 12px; padding: 16px; background: #fafbff; border-radius: var(--radius-sm); border: 1px solid var(--border); }
+.poll-question { font-weight: 700; margin-bottom: 14px; font-size: 15px; }
+.poll-option { padding: 14px; border: 2px solid var(--border); border-radius: var(--radius-sm); margin-bottom: 8px; cursor: pointer; position: relative; overflow: hidden; background: var(--white); }
+.poll-option:hover { border-color: var(--primary); }
+.poll-option.voted { border-color: var(--primary); }
+.poll-option-fill { position: absolute; top: 0; left: 0; height: 100%; background: rgba(108,92,231,0.2); z-index: 0; }
+.poll-option-text { position: relative; z-index: 1; display: flex; justify-content: space-between; font-size: 14px; font-weight: 600; }
+.poll-total { text-align: center; font-size: 12px; color: var(--muted); margin-top: 10px; }
+.poll-creator { margin-top: 10px; padding: 14px; background: var(--bg); border-radius: var(--radius-sm); display: none; }
+.poll-creator input { margin-bottom: 8px; padding: 10px; border: 2px solid var(--border); border-radius: 8px; background: var(--white); width: 100%; }
+.poll-creator-btn { padding: 10px; font-size: 13px; margin-top: 6px; }
+.active-counter { background: #e8f8f5; color: #00b894; padding: 12px 16px; border-radius: var(--radius-sm); text-align: center; font-size: 13px; font-weight: 700; margin-bottom: 16px; }
+.stories-bar { display: flex; gap: 12px; overflow-x: auto; padding: 16px; background: var(--white); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.stories-bar::-webkit-scrollbar { height: 0; }
+.story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
+.story-ring { width: 68px; height: 68px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
+.story-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
+.story-name { font-size: 11px; color: var(--text); margin-top: 6px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
+.add-story-btn { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid var(--white); }
+.search-result { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 8px; background: var(--white); border: 1px solid var(--border); }
+.search-pic-wrapper { position: relative; }
+.search-pic { width: 48px; height: 48px; border-radius: 50%; object-fit: cover; }
+.search-status { position: absolute; bottom: 2px; right: 2px; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--white); }
+.search-status.online { background: var(--accent); }
+.search-status.offline { background: var(--muted); }
+.pic-circle-lg { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); }
+.pic-wrapper { position: relative; display: inline-block; }
+.status-dot { position: absolute; bottom: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--white); }
+.status-dot.online { background: var(--accent); }
+.status-dot.offline { background: #333; }
+.stat-row { display: flex; gap: 25px; justify-content: center; margin: 18px 0; padding: 16px; background: var(--bg); border-radius: var(--radius-sm); }
+.stat-row > span { text-align: center; font-size: 13px; color: var(--muted); }
+.stat-row b { display: block; font-size: 20px; color: var(--text); margin-bottom: 4px; }
+.chat-room-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 8px; background: var(--white); border: 1px solid var(--border); }
+.chat-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; }
+.chat-info { flex: 1; }
+.chat-name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
+.chat-last { font-size: 13px; color: var(--muted); }
+#chat-messages { max-height: 400px; overflow-y: auto; padding: 16px; background: var(--bg); border-radius: var(--radius-sm); margin-bottom: 14px; }
+.chat-msg { padding: 12px 16px; margin-bottom: 10px; border-radius: 20px; max-width: 75%; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
+.chat-msg.me { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
+.chat-msg.other { background: var(--white); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
+.chat-msg-time { font-size: 10px; opacity: 0.7; margin-top: 4px; }
+.chat-input-row { display: flex; gap: 10px; }
+.chat-input-row input { flex: 1; padding: 14px 18px; border: 2px solid var(--border); border-radius: 24px; outline: none; font-size: 15px; background: #fafbff; }
+.chat-send-btn { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; border: none; padding: 0 24px; border-radius: 24px; cursor: pointer; font-weight: 700; }
+.center { text-align: center; }
+.feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.small-btn { padding: 10px 16px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 13px; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; }
+.theme-toggle { position: fixed; bottom: 24px; right: 24px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: var(--shadow-lg); z-index: 999; display: none; }
+.theme-toggle.show { display: block; }
+#story-viewer { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.95); z-index: 1000; display: none; flex-direction: column; }
+#story-viewer.active { display: flex; }
+.story-viewer-header { display: flex; justify-content: space-between; align-items: center; padding: 20px; color: white; }
+.story-viewer-content { flex: 1; display: flex; align-items: center; justify-content: center; padding: 20px; }
+.story-viewer-media { max-width: 100%; max-height: 80vh; border-radius: 16px; }
+.app-download-btn { display: inline-flex; align-items: center; justify-content: center; gap: 8px; padding: 12px 24px; background: linear-gradient(135deg, #00b894, #00cec9); color: white; border: none; border-radius: 10px; font-weight: 700; font-size: 14px; box-shadow: 0 4px 16px rgba(0,184,148,0.3); cursor: pointer; transition: 0.2s; font-family: inherit; }
+.app-download-btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(0,184,148,0.4); }
+.complaint-box { background: #f0f0ff; padding: 14px; border-radius: var(--radius-sm); margin-top: 16px; border: 2px dashed var(--primary); cursor: pointer; text-align: center; }
+.complaint-box:hover { background: #e8e8ff; }
+.complaint-box-title { font-weight: 700; color: var(--primary); font-size: 14px; }
+.complaint-box-sub { font-size: 12px; color: var(--muted); margin-top: 4px; }
 
-        const username = req.params.username;
-        const user = await User.findOne({ username });
-        if (!user) return res.json({ success: false, message: "User not found" });
+/* ====== NEW: 3-DOT POST MENU ====== */
+.post-menu-btn { position: absolute; top: 16px; right: 16px; width: 32px; height: 32px; border-radius: 50%; border: none; background: transparent; font-size: 20px; cursor: pointer; color: var(--muted); display: flex; align-items: center; justify-content: center; z-index: 5; }
+.post-menu-btn:hover { background: var(--bg); color: var(--primary); }
+.post-menu-dropdown { position: absolute; top: 52px; right: 16px; background: var(--white); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow-lg); min-width: 160px; z-index: 50; display: none; overflow: hidden; }
+.post-menu-dropdown.show { display: block; }
+.post-menu-item { padding: 12px 16px; font-size: 14px; cursor: pointer; color: var(--text); display: flex; align-items: center; gap: 8px; }
+.post-menu-item:hover { background: var(--bg); color: var(--primary); }
+.post-menu-item.danger { color: var(--danger); }
+.post-menu-item.danger:hover { background: #fff5f5; }
 
-        // Fetch all stats
-        const posts = await Post.find({ username });
-        const stories = await Story.find({ username });
-        const messages = await Message.find({ sender: username });
+/* ====== NEW: DANGER ZONE ====== */
+.danger-zone { background: #fff5f5; border: 2px solid var(--danger); padding: 16px; border-radius: var(--radius-sm); margin-top: 14px; }
+.danger-zone h4 { color: var(--danger); margin-bottom: 8px; font-size: 15px; }
+.danger-zone p { font-size: 13px; color: var(--muted); margin-bottom: 12px; line-height: 1.5; }
 
-        let totalLikesReceived = 0;
-        let totalCommentsReceived = 0;
-        let totalViews = 0;
+/* ====== NEW: USER DATA ANALYSIS ====== */
+.admin-user-card { cursor: pointer; transition: 0.2s; }
+.admin-user-card:hover { transform: translateY(-2px); box-shadow: var(--shadow-md); }
+#user-analysis-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 2100; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+#user-analysis-panel.active { display: flex; }
+.analysis-box { background: var(--white); border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,0.4); width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; padding: 30px; }
+.analysis-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+.analysis-title { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.analysis-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; margin-bottom: 20px; }
+.analysis-card { padding: 16px; background: var(--bg); border-radius: 12px; text-align: center; border: 2px solid var(--border); }
+.analysis-card b { display: block; font-size: 24px; color: var(--primary); font-weight: 900; }
+.analysis-card span { font-size: 12px; color: var(--muted); margin-top: 4px; display: block; }
+.analysis-card.green b { color: #00b894; }
+.analysis-card.red b { color: #e17055; }
+.analysis-card.yellow b { color: #f39c12; }
+.analysis-section { margin-bottom: 20px; padding: 16px; background: var(--bg); border-radius: 12px; }
+.analysis-section h4 { margin-bottom: 12px; font-size: 15px; color: var(--text); border-left: 4px solid var(--primary); padding-left: 10px; }
+.analysis-row { display: flex; justify-content: space-between; padding: 8px 0; font-size: 14px; border-bottom: 1px dashed var(--border); }
+.analysis-row:last-child { border-bottom: none; }
+.analysis-row span:first-child { color: var(--muted); }
+.analysis-row span:last-child { font-weight: 700; color: var(--text); }
+.activity-bar { display: flex; align-items: center; gap: 10px; padding: 10px; background: var(--white); border-radius: 8px; margin-bottom: 8px; border: 1px solid var(--border); }
+.activity-bar .bar { flex: 1; height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; }
+.activity-bar .bar-fill { height: 100%; background: linear-gradient(90deg, #6c5ce7, #a29bfe); border-radius: 4px; }
+.activity-bar .label { font-size: 12px; color: var(--muted); min-width: 90px; }
+.activity-bar .value { font-size: 13px; font-weight: 700; color: var(--text); min-width: 40px; text-align: right; }
 
-        // Get likes/comments from ALL posts where this user's posts received them
-        for (const p of posts) {
-            totalLikesReceived += (p.likes || []).length;
-            totalCommentsReceived += (p.comments || []).length;
-            totalViews += (p.views || 0);
-        }
+/* ADMIN PANEL */
+#admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+#admin-panel.active { display: flex; }
+.admin-box { background: var(--white); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 1100px; max-height: 92vh; overflow-y: auto; padding: 30px; }
+.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
+.admin-title { font-size: 24px; font-weight: 900; background: linear-gradient(135deg, #e17055, #d63031); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; }
+.admin-close { width: 40px; height: 40px; border-radius: 50%; border: none; background: #e17055; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.admin-close:hover { background: #d63031; }
+.admin-stats { display: flex; gap: 15px; margin-bottom: 20px; flex-wrap: wrap; }
+.admin-stat { flex: 1; min-width: 110px; padding: 16px; background: var(--bg); border-radius: 12px; text-align: center; }
+.admin-stat b { display: block; font-size: 26px; color: var(--primary); }
+.admin-stat span { font-size: 12px; color: var(--muted); }
+.admin-user-list { display: flex; flex-direction: column; gap: 10px; }
+.admin-user-card { display: flex; align-items: center; gap: 15px; padding: 15px; background: var(--bg); border-radius: 12px; border: 2px solid var(--border); flex-wrap: wrap; }
+.admin-user-card.blocked { border-color: #e17055; background: #fff5f5; }
+.admin-user-card.suspended { border-color: #fdcb6e; background: #fffbf0; }
+.admin-user-card.muted { border-color: #a29bfe; background: #f5f3ff; }
+.admin-user-card.online { border-color: #00b894; }
+.admin-user-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; flex-shrink: 0; position: relative; }
+.admin-user-avatar .online-dot { position: absolute; bottom: 0; right: 0; width: 14px; height: 14px; border-radius: 50%; border: 2px solid var(--white); background: #00b894; }
+.admin-user-info { flex: 1; min-width: 180px; }
+.admin-user-info .name { font-weight: 700; color: var(--text); font-size: 15px; }
+.admin-user-info .meta { font-size: 12px; color: var(--muted); margin-top: 3px; }
+.admin-user-actions { display: flex; gap: 6px; flex-wrap: wrap; }
+.admin-btn { padding: 7px 12px; border: none; border-radius: 8px; cursor: pointer; font-size: 11px; font-weight: 700; color: white; }
+.admin-btn.block { background: #e17055; }
+.admin-btn.unblock { background: #00b894; }
+.admin-btn.suspend { background: #fdcb6e; color: #2d3436; }
+.admin-btn.unsuspend { background: #00cec9; }
+.admin-btn.mute { background: #a29bfe; }
+.admin-btn.warn { background: #f39c12; }
+.admin-btn.strike { background: #d63031; }
+.admin-btn.delete { background: #c0392b; }
+.admin-btn.reset2fa { background: #3498db; }
+.admin-btn.analyze { background: #6c5ce7; }
+.admin-btn:hover { opacity: 0.85; }
+.admin-login-form { max-width: 350px; margin: 40px auto; text-align: center; }
+.admin-login-form h2 { color: #e17055; margin-bottom: 20px; }
+.admin-tabs { display: flex; gap: 8px; margin-bottom: 20px; flex-wrap: wrap; }
+.admin-tab { padding: 10px 20px; border: none; border-radius: 8px; background: var(--bg); color: var(--text); font-weight: 700; cursor: pointer; font-size: 14px; }
+.admin-tab.active { background: linear-gradient(135deg,#e17055,#d63031); color: white; }
+.complaint-card { display: flex; flex-direction: column; gap: 8px; padding: 15px; background: var(--bg); border-radius: 12px; border: 2px solid var(--border); margin-bottom: 10px; }
+.complaint-card.resolved { border-color: #00b894; background: #f0fdf4; }
+.complaint-card.pending { border-color: #f39c12; background: #fffbf0; }
+.complaint-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; }
+.complaint-user { font-weight: 700; color: var(--primary); }
+.complaint-status { padding: 4px 10px; border-radius: 6px; font-size: 11px; font-weight: 700; }
+.complaint-status.pending { background: #f39c12; color: white; }
+.complaint-status.resolved { background: #00b894; color: white; }
+.complaint-subject { font-weight: 700; color: var(--text); font-size: 15px; }
+.complaint-message { color: var(--text); font-size: 14px; line-height: 1.5; }
+.complaint-time { font-size: 11px; color: var(--muted); }
+</style>
+</head>
+<body>
 
-        const stats = {
-            totalPosts: posts.length,
-            totalLikesReceived,
-            totalCommentsReceived,
-            totalViews,
-            totalStories: stories.length,
-            totalMessages: messages.length,
-            totalFollowers: (user.followers || []).length,
-            totalFollowing: (user.following || []).length
-        };
+<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
 
-        const recentPosts = posts
-            .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
-            .slice(0, 5);
+<div id="auth-app">
+    <div class="auth-box">
+        <h1 class="auth-logo" id="auth-logo">Searchbook</h1>
+        <p class="auth-subtitle">Connect with friends, share your moments</p>
 
-        res.json({
-            success: true,
-            user: user.toObject(),
-            stats,
-            recentPosts
+        <div id="login-panel" class="card active">
+            <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
+                </div>
+            </div>
+            <button class="btn" onclick="handleLogin()">Log In</button>
+            <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
+            <div class="divider"></div>
+            <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
+            <div style="margin-top:16px;text-align:center;">
+                <button onclick="downloadApp()" class="app-download-btn">📱 Download Android App</button>
+                <p style="font-size:11px;color:var(--muted);margin-top:8px;">Get Searchbook on your phone</p>
+            </div>
+            <div class="complaint-box" onclick="switchPanel('complaint-panel')">
+                <div class="complaint-box-title">📢 Complaint Box</div>
+                <div class="complaint-box-sub">Kono somossa? Admin ke janan</div>
+            </div>
+        </div>
+
+        <div id="register-panel" class="card">
+            <h2>Create Account</h2>
+            <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
+            <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
+            <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="reg-password" placeholder="Password (min 6 char)">
+                    <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
+                </div>
+            </div>
+            <button class="btn btn-green" onclick="sendOTP()">Sign Up & Send OTP</button>
+            <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
+        </div>
+
+        <div id="otp-panel" class="card">
+            <h2>Enter OTP</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">OTP valid for 1 minute only</p>
+            <div id="otp-display" class="otp-display">------</div>
+            <div id="timer" class="timer">⏱️ 60 seconds left</div>
+            <div class="input-group"><input type="text" id="reg-otp" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:700;"></div>
+            <button class="btn" onclick="verifyAndSignup()">Verify & Create Account</button>
+        </div>
+
+        <div id="twofa-login-panel" class="card">
+            <h2>🔐 2FA Required</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Google Authenticator app theke 6-digit code din</p>
+            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
+            <button class="btn" onclick="submit2FALogin()">Submit Code</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="forgot-panel" class="card">
+            <h2>🔑 Forgot Password</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Account er email din — OTP pathabo</p>
+            <div class="input-group"><input type="email" id="reset-email" placeholder="Your account email"></div>
+            <button class="btn" onclick="checkResetEmail()">Send OTP</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="forgot-2fa-panel" class="card">
+            <h2>🔐 2FA Verify</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Apnar account e 2FA active ache.<br>Google Authenticator theke 6-digit code din.</p>
+            <div class="input-group"><input type="text" id="forgot-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
+            <button class="btn" onclick="verifyForgot2FA()">Verify 2FA</button>
+            <span class="link" onclick="switchPanel('forgot-panel')">← Back</span>
+        </div>
+
+        <div id="forgot-reset-panel" class="card">
+            <h2>🔑 Reset Password</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">OTP + notun password din</p>
+            <div id="forgot-otp-display" class="otp-display">------</div>
+            <div id="forgot-timer" class="timer">⏱️ 60 seconds left</div>
+            <div class="input-group"><input type="text" id="forgot-otp-input" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:700;"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="forgot-new-password" placeholder="New Password (min 6 char)">
+                    <button type="button" class="password-toggle" onclick="togglePassword('forgot-new-password', this)">👁️</button>
+                </div>
+            </div>
+            <button class="btn btn-green" onclick="resetPasswordFinal()">Reset Password</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="complaint-panel" class="card">
+            <h2>📢 Complaint Box</h2>
+            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Apnar somossa admin ke janan. Shiggiri action neya hobe.</p>
+            <div class="input-group"><input type="text" id="complaint-username" placeholder="Apnar username"></div>
+            <div class="input-group"><input type="email" id="complaint-email" placeholder="Apnar email (optional)"></div>
+            <div class="input-group"><input type="text" id="complaint-subject" placeholder="Subject (short)"></div>
+            <div class="input-group"><textarea id="complaint-message" placeholder="Apnar somossa details likhun..." style="min-height:100px;"></textarea></div>
+            <button class="btn btn-orange" onclick="submitComplaint()">📤 Submit Complaint</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+    </div>
+</div>
+
+<div id="main-app">
+    <div class="top-bar">
+        <div class="top-logo">Searchbook</div>
+        <div class="top-icons">
+            <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
+            <button class="top-icon-btn" onclick="switchMainView('chat-list-view')" title="Chat">💬</button>
+            <button class="top-icon-btn" onclick="switchMainView('search-view')" title="Search">🔍</button>
+            <button class="top-icon-btn" onclick="switchMainView('bookmark-view')" title="Saved">🔖</button>
+            <button class="top-icon-btn" onclick="switchMainView('profile-view')" title="Profile">👤</button>
+            <button class="top-icon-btn" onclick="handleLogout()" title="Logout" style="background:linear-gradient(135deg,#e17055,#d63031); color:white;">⎋</button>
+        </div>
+    </div>
+
+    <div class="layout">
+        <div class="sidebar">
+            <div class="sidebar-item" onclick="switchMainView('feed-view')"><span class="icon">🏠</span> Home</div>
+            <div class="sidebar-item" onclick="switchMainView('profile-view')"><span class="icon">👤</span> My Profile</div>
+            <div class="sidebar-item" onclick="switchMainView('chat-list-view')"><span class="icon">💬</span> Messages</div>
+            <div class="sidebar-item" onclick="switchMainView('bookmark-view')"><span class="icon">🔖</span> Saved</div>
+            <div class="sidebar-item" onclick="switchMainView('search-view')"><span class="icon">🔍</span> Search</div>
+        </div>
+
+        <div class="main-content">
+            <div id="feed-view" class="main-view active">
+                <div class="active-counter" id="active-counter">🟢 Loading active users...</div>
+                <div class="stories-bar" id="stories-bar">
+                    <div class="story-item" onclick="document.getElementById('story-input').click()">
+                        <div class="add-story-btn">+</div>
+                        <div class="story-name">Your Story</div>
+                    </div>
+                </div>
+                <input type="file" id="story-input" accept="image/*,video/*" style="display:none;" onchange="uploadStory(this)">
+                <div id="feed-user-info" style="padding:12px; background:linear-gradient(135deg,#f0f0ff,#e8e8ff); border-radius:12px; margin-bottom:16px; color:#6c5ce7; font-weight:700; text-align:center;"></div>
+                <div class="post-box">
+                    <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                    <div class="media-btns">
+                        <button class="media-btn" onclick="document.getElementById('image-input').click()">📷 Photo</button>
+                        <button class="media-btn" onclick="document.getElementById('video-input').click()">🎥 Video</button>
+                        <button class="media-btn" onclick="togglePollCreator()">📊 Poll</button>
+                    </div>
+                    <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this, 'image')">
+                    <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
+                    <div id="media-preview" style="margin-top:10px;"></div>
+                    <div class="poll-creator" id="poll-creator">
+                        <input type="text" id="poll-q" placeholder="Poll question..." style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 1" style="width:100%;">
+                        <input type="text" class="poll-opt" placeholder="Option 2" style="width:100%;">
+                        <button class="btn btn-green poll-creator-btn" onclick="addPollOption()">+ Add Option</button>
+                    </div>
+                    <button class="btn" onclick="createPost()">Share Post</button>
+                </div>
+                <h3 style="margin-bottom:16px; color:var(--text); font-size:18px;">🔥 Trending Posts</h3>
+                <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+            </div>
+
+            <div id="search-view" class="main-view">
+                <div class="post-box">
+                    <h2>🔍 Search Users</h2>
+                    <div class="input-group"><input type="text" id="search-input" placeholder="Username ba full name likhun..." oninput="doSearch()"></div>
+                    <div id="search-results"></div>
+                </div>
+            </div>
+
+            <div id="bookmark-view" class="main-view">
+                <div class="post-box">
+                    <h2>🔖 Saved Posts</h2>
+                    <div id="bookmarks-list"></div>
+                </div>
+            </div>
+
+            <div id="profile-view" class="main-view">
+                <div class="post-box">
+                    <h2>👤 My Profile</h2>
+                    <div class="center">
+                        <div class="pic-wrapper">
+                            <img id="profile-pic-display" class="pic-circle-lg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
+                            <span class="status-dot online"></span>
+                        </div>
+                        <h3 id="profile-name" style="margin-top:12px;"></h3>
+                        <p id="profile-bio" style="color:var(--muted); margin-top:6px;"></p>
+                    </div>
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">Edit Profile</h3>
+                    <div class="input-group"><label style="font-size:13px; color:var(--muted); font-weight:600;">Profile Picture</label><input type="file" id="profile-pic-input" accept="image/*" onchange="uploadProfilePic(this)"></div>
+                    <div class="input-group"><input type="text" id="edit-fullname" placeholder="Full Name"></div>
+                    <div class="input-group"><textarea id="edit-bio" placeholder="Bio" style="min-height:70px;"></textarea></div>
+                    <button class="btn" onclick="updateProfile()">Save Profile</button>
+
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">⚙️ Change Password</h3>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="old-pass" placeholder="Old Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-pass" placeholder="New Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-red" onclick="changePassword()">Change Password</button>
+
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">🔐 Two-Factor Authentication</h3>
+                    <div id="twofa-status" style="padding:12px; background:var(--bg); border-radius:8px; margin-bottom:12px; text-align:center; font-weight:600;">Loading...</div>
+                    <button class="btn" id="twofa-btn" onclick="start2FASetup()">Enable 2FA</button>
+
+                    <div id="twofa-setup-panel" style="display:none; margin-top:16px; padding:16px; background:var(--bg); border-radius:8px;">
+                        <h4 style="margin-bottom:12px; text-align:center;">Scan QR Code</h4>
+                        <div style="text-align:center;">
+                            <img id="twofa-qr" style="max-width:200px; border-radius:8px;">
+                        </div>
+                        <p style="text-align:center; font-size:13px; color:var(--muted); margin:12px 0;">Google Authenticator / Authy app diye scan korun</p>
+                        <details style="margin-bottom:12px;">
+                            <summary style="cursor:pointer; font-size:13px; color:var(--primary);">Manual entry key dekhun</summary>
+                            <code id="twofa-secret" style="display:block; margin-top:8px; padding:10px; background:var(--white); border-radius:6px; word-break:break-all; font-size:12px;"></code>
+                        </details>
+                        <div class="input-group">
+                            <input type="text" id="twofa-code-input" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:6px;">
+                        </div>
+                        <button class="btn btn-green" onclick="verify2FASetup()">Verify & Enable</button>
+                        <button class="btn btn-red" style="margin-top:8px;" onclick="cancel2FASetup()">Cancel</button>
+                    </div>
+
+                    <!-- ===== NEW: DANGER ZONE - Delete Account ===== -->
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">🗑️ Danger Zone</h3>
+                    <div class="danger-zone">
+                        <h4>⚠️ Delete Account</h4>
+                        <p>Apnar account permanently delete hobe. Sob posts, stories, messages, followers — sob kichu muche jabe. Ei action ferano jabe na!</p>
+                        <div class="input-group">
+                            <div class="password-wrapper">
+                                <input type="password" id="delete-account-password" placeholder="Apnar password din">
+                                <button type="button" class="password-toggle" onclick="togglePassword('delete-account-password', this)">👁️</button>
+                            </div>
+                        </div>
+                        <button class="btn btn-red" onclick="deleteMyAccount()">🗑️ Delete My Account Permanently</button>
+                    </div>
+
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">📢 Submit Complaint</h3>
+                    <p style="font-size:12px; color:var(--muted); margin-bottom:10px;">Kono somossa? Admin ke janan</p>
+                    <div class="input-group"><input type="text" id="in-app-complaint-subject" placeholder="Subject"></div>
+                    <div class="input-group"><textarea id="in-app-complaint-message" placeholder="Apnar somossa likhun..." style="min-height:80px;"></textarea></div>
+                    <button class="btn btn-orange" onclick="submitInAppComplaint()">📤 Send to Admin</button>
+                </div>
+            </div>
+
+            <div id="chat-list-view" class="main-view">
+                <div class="post-box">
+                    <h2>💬 Messages</h2>
+                    <div class="input-group"><input type="text" id="chat-user-search" placeholder="Username diye search korun" oninput="searchForChat()"></div>
+                    <div id="chat-search-results"></div>
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">Your Chats</h3>
+                    <div id="chat-rooms-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+                </div>
+            </div>
+
+            <div id="chat-window-view" class="main-view">
+                <div class="post-box">
+                    <div class="feed-header">
+                        <h2 id="chat-with-name">Chat</h2>
+                        <button class="small-btn" onclick="switchMainView('chat-list-view')">← Back</button>
+                    </div>
+                    <div id="chat-messages"></div>
+                    <div class="chat-input-row">
+                        <input type="text" id="chat-input" placeholder="Message likhun..." onkeypress="if(event.key==='Enter') sendMessage()">
+                        <button class="chat-send-btn" onclick="sendMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="visit-view" class="main-view">
+                <div class="post-box">
+                    <div class="feed-header">
+                        <h2>Profile</h2>
+                        <button class="small-btn" onclick="switchMainView('feed-view')">← Back</button>
+                    </div>
+                    <div class="center">
+                        <div class="pic-wrapper">
+                            <img id="visit-pic" class="pic-circle-lg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
+                            <span class="status-dot offline" id="visit-status"></span>
+                        </div>
+                        <h3 id="visit-name" style="margin-top:12px;"></h3>
+                        <p id="visit-bio" style="color:var(--muted); margin-top:6px;"></p>
+                        <div class="stat-row">
+                            <span><b id="visit-posts">0</b> Posts</span>
+                            <span><b id="visit-followers">0</b> Followers</span>
+                            <span><b id="visit-following">0</b> Following</span>
+                        </div>
+                        <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
+                        <button class="btn" style="background:#9b59b6; margin-top:10px;" id="msg-btn" onclick="startChatWith('')">💬 Message</button>
+                    </div>
+                    <div class="divider"></div>
+                    <h3 style="margin-bottom:14px;">Posts</h3>
+                    <div id="visit-posts-list"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="right-sidebar">
+            <h4>🟢 Active Now</h4>
+            <div id="active-list"><p style="color:var(--muted); font-size:13px;">Loading...</p></div>
+        </div>
+    </div>
+</div>
+
+<div id="story-viewer" onclick="closeStory()">
+    <div class="story-viewer-header">
+        <span id="story-viewer-name" style="font-weight:bold;"></span>
+        <span style="cursor:pointer; font-size:28px;" onclick="closeStory()">✕</span>
+    </div>
+    <div class="story-viewer-content"><div id="story-viewer-media-container"></div></div>
+</div>
+
+<div id="admin-panel">
+    <div class="admin-box">
+        <div id="admin-login-view">
+            <div class="admin-header">
+                <div class="admin-title">🔐 Admin Panel</div>
+                <button class="admin-close" onclick="closeAdminPanel()">✕</button>
+            </div>
+            <div class="admin-login-form">
+                <h2>Admin Login</h2>
+                <div class="input-group"><input type="text" id="admin-username" placeholder="Admin Username"></div>
+                <div class="input-group">
+                    <div class="password-wrapper">
+                        <input type="password" id="admin-password" placeholder="Admin Password">
+                        <button type="button" class="password-toggle" onclick="togglePassword('admin-password', this)">👁️</button>
+                    </div>
+                </div>
+                <button class="btn btn-red" onclick="adminLogin()">Login as Admin</button>
+            </div>
+        </div>
+
+        <div id="admin-dashboard-view" style="display:none;">
+            <div class="admin-header">
+                <div class="admin-title">👑 Admin Dashboard</div>
+                <button class="admin-close" onclick="closeAdminPanel()">✕</button>
+            </div>
+
+            <div class="admin-stats">
+                <div class="admin-stat"><b id="admin-total-users">0</b><span>Total Users</span></div>
+                <div class="admin-stat"><b id="admin-active-users">0</b><span>Active Now</span></div>
+                <div class="admin-stat"><b id="admin-blocked-users">0</b><span>Blocked</span></div>
+                <div class="admin-stat"><b id="admin-pending-complaints">0</b><span>Pending Complaints</span></div>
+            </div>
+
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="switchAdminTab('users')">👥 Users</button>
+                <button class="admin-tab" onclick="switchAdminTab('complaints')">📢 Complaints</button>
+                <button class="admin-tab" onclick="switchAdminTab('posts')">📝 Posts</button>
+            </div>
+
+            <div id="admin-users-tab">
+                <div class="input-group"><input type="text" id="admin-user-search" placeholder="Search users..." oninput="filterAdminUsers()"></div>
+                <div class="admin-user-list" id="admin-user-list">
+                    <p style="text-align:center; color:var(--muted);">Loading...</p>
+                </div>
+            </div>
+
+            <div id="admin-complaints-tab" style="display:none;">
+                <div id="admin-complaints-list">
+                    <p style="text-align:center; color:var(--muted);">Loading...</p>
+                </div>
+            </div>
+
+            <div id="admin-posts-tab" style="display:none;">
+                <div id="admin-post-list">
+                    <p style="text-align:center; color:var(--muted);">Loading...</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ===== NEW: USER ANALYSIS PANEL ===== -->
+<div id="user-analysis-panel">
+    <div class="analysis-box">
+        <div class="analysis-header">
+            <div class="analysis-title">📊 User Data Analysis</div>
+            <button class="admin-close" onclick="closeUserAnalysis()">✕</button>
+        </div>
+        <div id="analysis-content">
+            <p style="text-align:center; color:var(--muted);">Loading...</p>
+        </div>
+    </div>
+</div>
+
+<script>
+const BACKEND_URL = window.location.origin;
+let currentUser = null;
+let otpTimer = null, otpExpireTime = null;
+let forgotOtpTimer = null, forgotOtpExpireTime = null;
+let selectedMedia = null, selectedMediaType = null;
+let visitUser = null;
+let currentRoomId = null, currentChatWith = null;
+let chatRefreshTimer = null, heartbeatTimer = null;
+let bookmarks = [];
+let currentTheme = "light";
+let pendingLoginEmail = null, pendingLoginPassword = null;
+let forgotEmail = null;
+let adminUser = null;
+let adminUsersList = [];
+let adminComplaintsList = [];
+let logoClickCount = 0;
+let logoClickTimer = null;
+
+function authHeaders() {
+    const h = { "Content-Type": "application/json" };
+    if (currentUser) h["x-username"] = currentUser.username;
+    return h;
+}
+
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
+    if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
+    else { input.type = "password"; btn.textContent = "👁️"; }
+}
+
+function switchPanel(id) {
+    document.querySelectorAll("#auth-app .card").forEach(function(p) { p.classList.remove("active"); });
+    const el = document.getElementById(id);
+    if (el) el.classList.add("active");
+    window.scrollTo(0, 0);
+}
+
+function switchMainView(viewId) {
+    document.querySelectorAll(".main-view").forEach(function(v) { v.classList.remove("active"); });
+    const el = document.getElementById(viewId);
+    if (el) el.classList.add("active");
+    window.scrollTo(0, 0);
+    if (viewId === "feed-view") { loadPosts(); loadStories(); loadActiveUsers(); }
+    if (viewId === "profile-view") openProfile();
+    if (viewId === "bookmark-view") openBookmarks();
+    if (viewId === "chat-list-view") openChatList();
+}
+
+function applyTheme(theme) {
+    currentTheme = theme;
+    if (theme === "dark") { document.body.classList.add("dark"); document.getElementById("theme-toggle").textContent = "☀️"; }
+    else { document.body.classList.remove("dark"); document.getElementById("theme-toggle").textContent = "🌙"; }
+}
+
+async function toggleTheme() {
+    const t = currentTheme === "dark" ? "light" : "dark";
+    applyTheme(t);
+    if (currentUser) fetch(BACKEND_URL + "/api/user/theme", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, theme: t }) }).catch(function() {});
+}
+
+document.addEventListener("DOMContentLoaded", function() {
+    const logo = document.getElementById("auth-logo");
+    if (logo) {
+        logo.addEventListener("click", function() {
+            logoClickCount++;
+            if (logoClickTimer) clearTimeout(logoClickTimer);
+            logoClickTimer = setTimeout(function() { logoClickCount = 0; }, 3000);
+            if (logoClickCount >= 10) { logoClickCount = 0; openAdminPanel(); }
         });
-    } catch (e) {
-        res.json({ success: false, message: e.message });
     }
+    document.addEventListener("click", function() {
+        document.querySelectorAll(".post-menu-dropdown").forEach(function(m) { m.classList.remove("show"); });
+    });
 });
+
+async function submitComplaint() {
+    const username = document.getElementById("complaint-username").value.trim();
+    const email = document.getElementById("complaint-email").value.trim();
+    const subject = document.getElementById("complaint-subject").value.trim();
+    const message = document.getElementById("complaint-message").value.trim();
+    if (!username || !subject || !message) { alert("Username, subject, message din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, email, subject, message }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ " + data.message);
+            document.getElementById("complaint-subject").value = "";
+            document.getElementById("complaint-message").value = "";
+            switchPanel("login-panel");
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function submitInAppComplaint() {
+    if (!currentUser) { alert("Login korun"); return; }
+    const subject = document.getElementById("in-app-complaint-subject").value.trim();
+    const message = document.getElementById("in-app-complaint-message").value.trim();
+    if (!subject || !message) { alert("Subject and message din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, email: currentUser.email, subject, message }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ " + data.message);
+            document.getElementById("in-app-complaint-subject").value = "";
+            document.getElementById("in-app-complaint-message").value = "";
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ===== NEW: DELETE MY ACCOUNT =====
+async function deleteMyAccount() {
+    if (!currentUser) { alert("Login korun"); return; }
+    const password = document.getElementById("delete-account-password").value;
+    if (!password) { alert("Password din"); return; }
+    if (!confirm("⚠️ Apnar account permanently delete hobe!\n\nSob posts, stories, messages, followers muche jabe.\n\nAre you sure?")) return;
+    if (!confirm("Last warning! Ei action ferano jabe na. Confirm?")) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/delete-self", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, password: password }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ " + data.message);
+            document.getElementById("delete-account-password").value = "";
+            handleLogout();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+// ===== NEW: 3-DOT POST MENU =====
+function togglePostMenu(postId, event) {
+    event.stopPropagation();
+    const menu = document.getElementById("post-menu-" + postId);
+    if (!menu) return;
+    document.querySelectorAll(".post-menu-dropdown").forEach(function(m) { if (m.id !== "post-menu-" + postId) m.classList.remove("show"); });
+    menu.classList.toggle("show");
+}
+
+async function deleteOwnPost(postId) {
+    if (!confirm("Ei post delete korben?")) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/posts/delete-own", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ Post deleted!"); loadPosts(); }
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function sendOTP() {
+    const name = document.getElementById("reg-name").value.trim();
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    if (!name || !username || !email || !password) { alert("Sob field din"); return; }
+    if (password.length < 6) { alert("Password min 6 char"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/send-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("otp-display").textContent = data.otp;
+            alert("OTP: " + data.otp + "\n\n1 minute por expire hobe!");
+            switchPanel("otp-panel");
+            otpExpireTime = Date.now() + 60000;
+            startTimer();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function startTimer() {
+    if (otpTimer) clearInterval(otpTimer);
+    otpTimer = setInterval(function() {
+        const rem = Math.max(0, Math.floor((otpExpireTime - Date.now()) / 1000));
+        document.getElementById("timer").textContent = "⏱️ " + rem + " seconds left";
+        if (rem <= 0) { clearInterval(otpTimer); document.getElementById("timer").textContent = "❌ OTP expired!"; document.getElementById("otp-display").textContent = "------"; }
+    }, 1000);
+}
+
+async function verifyAndSignup() {
+    const otp = document.getElementById("reg-otp").value.trim();
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    const fullName = document.getElementById("reg-name").value.trim();
+    if (!otp) { alert("OTP din"); return; }
+    if (Date.now() > otpExpireTime) { alert("OTP expire!"); return; }
+    try {
+        const vRes = await fetch(BACKEND_URL + "/api/verify-otp", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, otp: otp }) });
+        const vData = await vRes.json();
+        if (!vData.success) { alert("❌ " + vData.message); return; }
+        const sRes = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: username, email: email, password: password, fullName: fullName }) });
+        const sData = await sRes.json();
+        if (sData.success) { alert("✅ Account created!"); if (otpTimer) clearInterval(otpTimer); switchPanel("login-panel"); }
+        else alert("❌ " + sData.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function handleLogin() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    if (!email || !password) { alert("Email + password din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email, password: password }) });
+        const data = await res.json();
+        if (data.requires2FA) { pendingLoginEmail = email; pendingLoginPassword = password; switchPanel("twofa-login-panel"); document.getElementById("login-2fa-code").value = ""; return; }
+        if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            document.getElementById("feed-user-info").textContent = "👋 Welcome back, " + data.username + "!";
+            document.getElementById("theme-toggle").classList.add("show");
+            applyTheme(data.theme || "light");
+            document.getElementById("auth-app").style.display = "none";
+            document.getElementById("main-app").classList.add("active");
+            switchMainView("feed-view");
+            startHeartbeat();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function submit2FALogin() {
+    const code = document.getElementById("login-2fa-code").value.trim();
+    if (!code) { alert("Code din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: pendingLoginEmail, password: pendingLoginPassword, twoFACode: code }) });
+        const data = await res.json();
+        if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            document.getElementById("feed-user-info").textContent = "👋 Welcome back, " + data.username + "!";
+            document.getElementById("theme-toggle").classList.add("show");
+            applyTheme(data.theme || "light");
+            document.getElementById("auth-app").style.display = "none";
+            document.getElementById("main-app").classList.add("active");
+            switchMainView("feed-view");
+            startHeartbeat();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function checkResetEmail() {
+    const email = document.getElementById("reset-email").value.trim();
+    if (!email) { alert("Email din"); return; }
+    forgotEmail = email;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/check-email", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: email }) });
+        const data = await res.json();
+        if (!data.success) { alert("❌ " + data.message); return; }
+        if (data.needs2FA) {
+            switchPanel("forgot-2fa-panel");
+            document.getElementById("forgot-2fa-code").value = "";
+            alert("🔐 Apnar account e 2FA active ache.\n\nGoogle Authenticator app theke 6-digit code din.");
+        } else {
+            document.getElementById("forgot-otp-display").textContent = data.otp;
+            alert("OTP: " + data.otp + "\n\n1 minute por expire hobe!");
+            switchPanel("forgot-reset-panel");
+            forgotOtpExpireTime = Date.now() + 60000;
+            startForgotTimer();
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function verifyForgot2FA() {
+    const code = document.getElementById("forgot-2fa-code").value.trim();
+    if (!code || code.length !== 6) { alert("6-digit code din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/verify-2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail, twoFACode: code }) });
+        const data = await res.json();
+        if (!data.success) { alert("❌ " + data.message); return; }
+        document.getElementById("forgot-otp-display").textContent = data.otp;
+        alert("✅ 2FA verified!\n\nOTP: " + data.otp);
+        switchPanel("forgot-reset-panel");
+        forgotOtpExpireTime = Date.now() + 60000;
+        startForgotTimer();
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function startForgotTimer() {
+    if (forgotOtpTimer) clearInterval(forgotOtpTimer);
+    forgotOtpTimer = setInterval(function() {
+        const rem = Math.max(0, Math.floor((forgotOtpExpireTime - Date.now()) / 1000));
+        document.getElementById("forgot-timer").textContent = "⏱️ " + rem + " seconds left";
+        if (rem <= 0) { clearInterval(forgotOtpTimer); document.getElementById("forgot-timer").textContent = "❌ OTP expired!"; document.getElementById("forgot-otp-display").textContent = "------"; }
+    }, 1000);
+}
+
+async function resetPasswordFinal() {
+    const otp = document.getElementById("forgot-otp-input").value.trim();
+    const newPassword = document.getElementById("forgot-new-password").value;
+    if (!otp) { alert("OTP din"); return; }
+    if (!newPassword || newPassword.length < 6) { alert("New password min 6 char"); return; }
+    if (Date.now() > forgotOtpExpireTime) { alert("OTP expire!"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/forgot/reset-password", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: forgotEmail, otp: otp, newPassword: newPassword }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ " + data.message);
+            if (forgotOtpTimer) clearInterval(forgotOtpTimer);
+            document.getElementById("forgot-otp-input").value = "";
+            document.getElementById("forgot-new-password").value = "";
+            document.getElementById("reset-email").value = "";
+            forgotEmail = null;
+            switchPanel("login-panel");
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function start2FASetup() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("twofa-qr").src = data.qrCode;
+            document.getElementById("twofa-secret").textContent = data.secret;
+            document.getElementById("twofa-setup-panel").style.display = "block";
+            document.getElementById("twofa-code-input").value = "";
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function verify2FASetup() {
+    const code = document.getElementById("twofa-code-input").value.trim();
+    if (!code || code.length !== 6) { alert("6-digit code din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code: code }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ 2FA enabled!"); document.getElementById("twofa-setup-panel").style.display = "none"; update2FAStatus(true); }
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function cancel2FASetup() { document.getElementById("twofa-setup-panel").style.display = "none"; }
+
+function update2FAStatus(enabled) {
+    const status = document.getElementById("twofa-status");
+    const btn = document.getElementById("twofa-btn");
+    if (enabled) {
+        status.innerHTML = "🟢 2FA Enabled";
+        status.style.color = "#00b894";
+        btn.textContent = "Disable 2FA";
+        btn.className = "btn btn-red";
+        btn.onclick = disable2FA;
+    } else {
+        status.innerHTML = "⚫ 2FA Disabled";
+        status.style.color = "var(--muted)";
+        btn.textContent = "Enable 2FA";
+        btn.className = "btn";
+        btn.onclick = start2FASetup;
+    }
+}
+
+async function disable2FA() {
+    const code = prompt("2FA code din (6 digit):");
+    if (!code) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/disable", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code: code }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ 2FA disabled!"); update2FAStatus(false); }
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function handleLogout() {
+    if (currentUser) fetch(BACKEND_URL + "/api/logout", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) }).catch(function() {});
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+    currentUser = null;
+    document.getElementById("theme-toggle").classList.remove("show");
+    document.body.classList.remove("dark");
+    document.getElementById("main-app").classList.remove("active");
+    document.getElementById("auth-app").style.display = "flex";
+    switchPanel("login-panel");
+}
+
+function startHeartbeat() {
+    if (heartbeatTimer) clearInterval(heartbeatTimer);
+    heartbeatTimer = setInterval(function() {
+        if (currentUser) fetch(BACKEND_URL + "/api/heartbeat", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) }).catch(function() {});
+    }, 30000);
+}
+
+async function loadActiveUsers() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/active-users");
+        const data = await res.json();
+        document.getElementById("active-counter").textContent = "🟢 " + data.count + " users active now";
+        if (data.users && data.users.length > 0) {
+            document.getElementById("active-list").innerHTML = data.users.slice(0, 10).map(function(u) { return '<div class="right-item"><span class="dot"></span><span>' + escapeHtml(u) + '</span></div>'; }).join("");
+        } else {
+            document.getElementById("active-list").innerHTML = '<p style="color:var(--muted); font-size:13px;">No users active</p>';
+        }
+    } catch (e) {}
+}
+
+function uploadStory(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 8 * 1024 * 1024) { alert("Max 8MB"); return; }
+    const isVideo = file.type.startsWith("video");
+    const reader = new FileReader();
+    reader.onload = async function(e) {
+        try {
+            const res = await fetch(BACKEND_URL + "/api/stories", { method: "POST", headers: authHeaders(), body: JSON.stringify({ username: currentUser.username, media: e.target.result, mediaType: isVideo ? "video" : "image", text: "" }) });
+            const data = await res.json();
+            if (data.success) { alert("✅ Story uploaded!"); loadStories(); }
+            else alert("❌ " + data.message);
+        } catch (err) { alert("❌ " + err.message); }
+    };
+    reader.readAsDataURL(file);
+}
+
+async function loadStories() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/stories");
+        const data = await res.json();
+        const bar = document.getElementById("stories-bar");
+        bar.innerHTML = '<div class="story-item" onclick="document.getElementById(\'story-input\').click()"><div class="add-story-btn">+</div><div class="story-name">Your Story</div></div>';
+        if (!data.stories) return;
+        Object.keys(data.stories).forEach(function(username) {
+            const stories = data.stories[username];
+            const first = stories[0];
+            const item = document.createElement("div");
+            item.className = "story-item";
+            item.onclick = function() { viewStory(username, stories); };
+            let thumb;
+            if (first.mediaType === "image") { thumb = first.media; }
+            else { thumb = "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Crect width='100' height='100' fill='%23333'/%3E%3Ctext x='50' y='55' font-size='40' text-anchor='middle' fill='white'%3E🎥%3C/text%3E%3C/svg%3E"; }
+            item.innerHTML = '<div class="story-ring"><img class="story-pic" src="' + thumb + '"></div><div class="story-name">' + escapeHtml(username) + '</div>';
+            bar.appendChild(item);
+        });
+    } catch (e) {}
+}
+
+function viewStory(username, stories) {
+    document.getElementById("story-viewer-name").textContent = username;
+    const container = document.getElementById("story-viewer-media-container");
+    let html = "";
+    stories.forEach(function(s) {
+        if (s.mediaType === "video") html += '<video src="' + s.media + '" controls autoplay class="story-viewer-media"></video>';
+        else html += '<img src="' + s.media + '" class="story-viewer-media">';
+    });
+    container.innerHTML = html;
+    document.getElementById("story-viewer").classList.add("active");
+}
+
+function closeStory() {
+    document.getElementById("story-viewer").classList.remove("active");
+    document.getElementById("story-viewer-media-container").innerHTML = "";
+}
+
+function handleMedia(input, type) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        selectedMedia = e.target.result;
+        selectedMediaType = type;
+        const preview = document.getElementById("media-preview");
+        if (type === "image") preview.innerHTML = '<img src="' + selectedMedia + '" style="max-width:100%; border-radius:10px;">';
+        else preview.innerHTML = '<video src="' + selectedMedia + '" controls style="max-width:100%; border-radius:10px;"></video>';
+    };
+    reader.readAsDataURL(file);
+}
+
+function togglePollCreator() {
+    const p = document.getElementById("poll-creator");
+    p.style.display = p.style.display === "block" ? "none" : "block";
+}
+
+function addPollOption() {
+    const c = document.getElementById("poll-creator");
+    const count = c.querySelectorAll(".poll-opt").length;
+    if (count >= 5) { alert("Max 5 option"); return; }
+    const inp = document.createElement("input");
+    inp.type = "text";
+    inp.className = "poll-opt";
+    inp.placeholder = "Option " + (count + 1);
+    c.insertBefore(inp, c.querySelector(".poll-creator-btn"));
+}
+
+async function createPost() {
+    const content = document.getElementById("post-content").value.trim();
+    const pollQ = document.getElementById("poll-q").value.trim();
+    const pollOpts = Array.from(document.querySelectorAll(".poll-opt")).map(function(i) { return i.value.trim(); }).filter(function(v) { return v; });
+    let poll = null;
+    if (pollQ && pollOpts.length >= 2) poll = { question: pollQ, options: pollOpts.map(function(t) { return { text: t, votes: [] }; }) };
+    if (!content && !selectedMedia && !poll) { alert("Kichu likhun ba media/poll din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/posts", { method: "POST", headers: authHeaders(), body: JSON.stringify({ username: currentUser.username, content: content, media: selectedMedia || "", mediaType: selectedMediaType || "text", poll: poll }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("post-content").value = "";
+            document.getElementById("media-preview").innerHTML = "";
+            document.getElementById("poll-creator").style.display = "none";
+            document.getElementById("poll-q").value = "";
+            document.querySelectorAll(".poll-opt").forEach(function(opt, i) { if (i < 2) opt.value = ""; });
+            selectedMedia = null; selectedMediaType = null;
+            loadPosts();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function loadPosts() {
+    const list = document.getElementById("posts-list");
+    list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + "/api/posts");
+        const posts = await res.json();
+        if (posts.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts yet</p>'; return; }
+        list.innerHTML = posts.map(function(p) { return renderPost(p); }).join("");
+        posts.forEach(function(p) { fetch(BACKEND_URL + "/api/posts/view", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: p._id }) }).catch(function() {}); });
+    } catch (e) { list.innerHTML = '<p style="color:#e74c3c; text-align:center;">Load failed</p>'; }
+}
+
+function renderPost(p) {
+    let mediaHtml = "";
+    if (p.media) {
+        if (p.mediaType === "video") mediaHtml = '<video src="' + p.media + '" controls class="post-media"></video>';
+        else mediaHtml = '<img src="' + p.media + '" class="post-media">';
+    }
+    const reactions = p.reactions || {};
+    const userReaction = currentUser ? Object.keys(reactions).find(function(k) { return reactions[k] && reactions[k].includes(currentUser.username); }) : null;
+    const totalReactions = Object.values(reactions).reduce(function(s, arr) { return s + (arr ? arr.length : 0); }, 0);
+    const reactionEmojis = { love: "❤️", haha: "😂", sad: "😢", angry: "😡", wow: "😮" };
+    let reactionsHtml = '<div class="reactions-bar">' + Object.keys(reactionEmojis).map(function(k) { return '<button class="reaction-btn ' + (userReaction === k ? "active" : "") + '" onclick="reactPost(\'' + p._id + '\',\'' + k + '\')">' + reactionEmojis[k] + '</button>'; }).join("") + '</div>';
+    let pollHtml = "";
+    if (p.poll) {
+        const totalVotes = p.poll.options.reduce(function(s, o) { return s + o.votes.length; }, 0);
+        pollHtml = '<div class="poll-box"><div class="poll-question">📊 ' + escapeHtml(p.poll.question) + '</div>' + p.poll.options.map(function(opt, i) {
+            const pct = totalVotes > 0 ? Math.round((opt.votes.length / totalVotes) * 100) : 0;
+            const voted = currentUser && opt.votes.includes(currentUser.username);
+            return '<div class="poll-option ' + (voted ? "voted" : "") + '" onclick="votePoll(\'' + p._id + '\',' + i + ')"><div class="poll-option-fill" style="width:' + pct + '%"></div><div class="poll-option-text"><span>' + escapeHtml(opt.text) + '</span><span><b>' + pct + '%</b> (' + opt.votes.length + ')</span></div></div>';
+        }).join("") + '<div class="poll-total">' + totalVotes + ' votes</div></div>';
+    }
+    const liked = currentUser && p.likes && p.likes.includes(currentUser.username);
+    const isBookmarked = currentUser && bookmarks.includes(p._id);
+    const isOwnPost = currentUser && p.username === currentUser.username;
+    const menuHtml = isOwnPost ? (
+        '<button class="post-menu-btn" onclick="togglePostMenu(\'' + p._id + '\', event)">⋮</button>' +
+        '<div class="post-menu-dropdown" id="post-menu-' + p._id + '">' +
+            '<div class="post-menu-item" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">👤 View Profile</div>' +
+            '<div class="post-menu-item danger" onclick="deleteOwnPost(\'' + p._id + '\')">🗑️ Delete Post</div>' +
+        '</div>'
+    ) : "";
+    return '<div class="post-item">' + menuHtml +
+        '<div class="post-header"><div class="avatar">' + escapeHtml(p.username.substring(0,1).toUpperCase()) + '</div><div class="info"><div class="post-user" onclick="visitProfile(\'' + escapeHtml(p.username) + '\')">' + escapeHtml(p.username) + '</div><div class="post-time">' + new Date(p.createdAt).toLocaleString() + '</div></div></div><div class="post-content">' + escapeHtml(p.content) + '</div>' + mediaHtml + pollHtml + '<div style="margin-top:10px; font-size:12px; color:var(--muted);">' + (p.views||0) + ' views · ' + (p.likes?p.likes.length:0) + ' likes · ' + (p.comments?p.comments.length:0) + ' comments · ' + (p.shares||0) + ' shares · ' + totalReactions + ' reactions</div>' + reactionsHtml + '<div class="post-actions"><button class="action-btn ' + (liked?"liked":"") + '" onclick="likePost(\'' + p._id + '\')">👍 Like</button><button class="action-btn" onclick="commentPost(\'' + p._id + '\')">💬 Comment</button><button class="action-btn" onclick="sharePost(\'' + p._id + '\')">🔗 Share</button><button class="action-btn ' + (isBookmarked?"bookmarked":"") + '" onclick="toggleBookmark(\'' + p._id + '\')">' + (isBookmarked?"🔖":"📑") + '</button></div></div>';
+}
+
+async function likePost(postId) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + "/api/posts/like", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function reactPost(postId, reaction) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + "/api/posts/reaction", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username, reaction: reaction }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function votePoll(postId, optionIndex) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + "/api/posts/vote", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username, optionIndex: optionIndex }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function commentPost(postId) { if (!currentUser) { alert("Login korun"); return; } const text = prompt("Comment likhun:"); if (!text) return; try { const res = await fetch(BACKEND_URL + "/api/posts/comment", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId, username: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) loadPosts(); } catch (e) {} }
+async function sharePost(postId) { try { const res = await fetch(BACKEND_URL + "/api/posts/share", { method: "POST", headers: authHeaders(), body: JSON.stringify({ postId: postId }) }); const data = await res.json(); if (data.success) { alert("🔗 Shared!"); loadPosts(); } } catch (e) {} }
+
+async function toggleBookmark(postId) { if (!currentUser) { alert("Login korun"); return; } try { const res = await fetch(BACKEND_URL + "/api/user/bookmark", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, postId: postId }) }); const data = await res.json(); if (data.success) { bookmarks = data.bookmarks || []; loadPosts(); } } catch (e) {} }
+async function openBookmarks() { if (!currentUser) return; const list = document.getElementById("bookmarks-list"); list.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>'; try { const res = await fetch(BACKEND_URL + "/api/user/bookmarks/" + currentUser.email, { headers: authHeaders() }); const data = await res.json(); if (!data.posts || data.posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No bookmarks yet</p>'; else list.innerHTML = data.posts.map(function(p) { return renderPost(p); }).join(""); } catch (e) { list.innerHTML = '<p style="color:#e74c3c;">Failed</p>'; } }
+
+let searchTimer = null;
+async function doSearch() {
+    if (searchTimer) clearTimeout(searchTimer);
+    searchTimer = setTimeout(async function() {
+        const q = document.getElementById("search-input").value.trim();
+        const results = document.getElementById("search-results");
+        if (!q) { results.innerHTML = ""; return; }
+        try {
+            const res = await fetch(BACKEND_URL + "/api/search/users/" + encodeURIComponent(q), { headers: authHeaders() });
+            const data = await res.json();
+            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
+            results.innerHTML = data.users.map(function(u) {
+                const pic = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
+                return '<div class="search-result" onclick="visitProfile(\'' + escapeHtml(u.username) + '\')"><div class="search-pic-wrapper"><img class="search-pic" src="' + pic + '"><span class="search-status ' + (u.isActive?"online":"offline") + '"></span></div><div><div style="font-weight:700; color:#6c5ce7;">' + escapeHtml(u.username) + '</div><div style="font-size:13px; color:var(--muted);">' + escapeHtml(u.fullName || "") + '</div></div></div>';
+            }).join("");
+        } catch (e) {}
+    }, 300);
+}
+
+async function visitProfile(username) {
+    if (!username) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/username/" + encodeURIComponent(username), { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const u = data.user;
+            visitUser = u;
+            document.getElementById("visit-name").textContent = u.fullName || u.username;
+            document.getElementById("visit-bio").textContent = u.bio || "No bio yet";
+            document.getElementById("visit-pic").src = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
+            const sd = document.getElementById("visit-status");
+            if (u.isActive) { sd.classList.remove("offline"); sd.classList.add("online"); }
+            else { sd.classList.remove("online"); sd.classList.add("offline"); }
+            document.getElementById("visit-followers").textContent = (u.followers || []).length;
+            document.getElementById("visit-following").textContent = (u.following || []).length;
+            const isFollowing = (u.followers || []).includes(currentUser.username);
+            const btn = document.getElementById("follow-btn");
+            btn.textContent = isFollowing ? "Unfollow" : "Follow";
+            document.getElementById("msg-btn").setAttribute("onclick", "startChatWith('" + escapeHtml(username) + "')");
+            const pRes = await fetch(BACKEND_URL + "/api/posts/user/" + encodeURIComponent(username));
+            const posts = await pRes.json();
+            document.getElementById("visit-posts").textContent = posts.length;
+            const list = document.getElementById("visit-posts-list");
+            if (posts.length === 0) list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts</p>';
+            else list.innerHTML = posts.map(function(p) { return renderPost(p); }).join("");
+            switchMainView("visit-view");
+        }
+    } catch (e) {}
+}
+
+async function toggleFollow() {
+    if (!visitUser || !currentUser) return;
+    const isFollowing = (visitUser.followers || []).includes(currentUser.username);
+    const endpoint = isFollowing ? "/api/user/unfollow" : "/api/user/follow";
+    try { const res = await fetch(BACKEND_URL + endpoint, { method: "POST", headers: authHeaders(), body: JSON.stringify({ follower: currentUser.username, following: visitUser.username }) }); const data = await res.json(); if (data.success) visitProfile(visitUser.username); } catch (e) {}
+}
+
+async function openProfile() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/" + currentUser.email, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const u = data.user;
+            document.getElementById("profile-name").textContent = u.fullName || u.username;
+            document.getElementById("profile-bio").textContent = u.bio || "No bio yet";
+            if (u.profilePic) document.getElementById("profile-pic-display").src = u.profilePic;
+            document.getElementById("edit-fullname").value = u.fullName || "";
+            document.getElementById("edit-bio").value = u.bio || "";
+            update2FAStatus(u.twoFAEnabled || false);
+        }
+    } catch (e) {}
+}
+
+function uploadProfilePic(input) {
+    const file = input.files[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) { alert("Max 5MB"); return; }
+    const reader = new FileReader();
+    reader.onload = function(e) {
+        document.getElementById("profile-pic-display").src = e.target.result;
+        document.getElementById("profile-pic-display").dataset.newPic = e.target.result;
+    };
+    reader.readAsDataURL(file);
+}
+
+async function updateProfile() {
+    const fullName = document.getElementById("edit-fullname").value.trim();
+    const bio = document.getElementById("edit-bio").value.trim();
+    const picEl = document.getElementById("profile-pic-display");
+    const profilePic = picEl.dataset.newPic || "";
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/profile", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, profilePic: profilePic, fullName: fullName, bio: bio }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ Profile updated!"); delete picEl.dataset.newPic; openProfile(); }
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById("old-pass").value;
+    const newPassword = document.getElementById("new-pass").value;
+    if (!oldPassword || !newPassword) { alert("Dui password din"); return; }
+    if (newPassword.length < 6) { alert("New pass min 6 char"); return; }
+    const twoFAEnabled = document.getElementById("twofa-status").textContent.includes("Enabled");
+    let twoFACode = null;
+    if (twoFAEnabled) { twoFACode = prompt("2FA code din (6 digit):"); if (!twoFACode) return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword: oldPassword, newPassword: newPassword, twoFACode: twoFACode }) });
+        const data = await res.json();
+        if (data.requires2FA) {
+            const code = prompt("2FA code din (6 digit):");
+            if (!code) return;
+            const res2 = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword: oldPassword, newPassword: newPassword, twoFACode: code }) });
+            const data2 = await res2.json();
+            if (data2.success) { alert("✅ Password changed!"); document.getElementById("old-pass").value = ""; document.getElementById("new-pass").value = ""; }
+            else alert("❌ " + data2.message);
+        } else if (data.success) {
+            alert("✅ Password changed!");
+            document.getElementById("old-pass").value = "";
+            document.getElementById("new-pass").value = "";
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function openChatList() {
+    if (!currentUser) { alert("Login korun"); return; }
+    const roomsList = document.getElementById("chat-rooms-list");
+    roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">Loading...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + "/api/chat/rooms/" + currentUser.username, { headers: authHeaders() });
+        const data = await res.json();
+        if (!data.rooms || data.rooms.length === 0) roomsList.innerHTML = '<p style="text-align:center; color:var(--muted);">No chats yet</p>';
+        else roomsList.innerHTML = data.rooms.map(function(r) {
+            const other = r.members.find(function(m) { return m !== currentUser.username; });
+            return '<div class="chat-room-item" onclick="openChat(\'' + escapeHtml(other) + '\',\'' + r._id + '\')"><div class="chat-avatar">' + escapeHtml(other.substring(0,1).toUpperCase()) + '</div><div class="chat-info"><div class="chat-name">' + escapeHtml(other) + '</div><div class="chat-last">' + escapeHtml(r.lastMessage || "No messages") + '</div></div></div>';
+        }).join("");
+    } catch (e) {}
+}
+
+let chatSearchTimer = null;
+async function searchForChat() {
+    if (chatSearchTimer) clearTimeout(chatSearchTimer);
+    chatSearchTimer = setTimeout(async function() {
+        const q = document.getElementById("chat-user-search").value.trim();
+        const results = document.getElementById("chat-search-results");
+        if (!q) { results.innerHTML = ""; return; }
+        try {
+            const res = await fetch(BACKEND_URL + "/api/search/users/" + encodeURIComponent(q), { headers: authHeaders() });
+            const data = await res.json();
+            if (!data.users || data.users.length === 0) { results.innerHTML = '<p style="text-align:center; color:var(--muted);">No user found</p>'; return; }
+            results.innerHTML = data.users.filter(function(u) { return u.username !== currentUser.username; }).map(function(u) {
+                const pic = u.profilePic || "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E";
+                return '<div class="search-result" onclick="startChatWith(\'' + escapeHtml(u.username) + '\')"><div class="search-pic-wrapper"><img class="search-pic" src="' + pic + '"><span class="search-status ' + (u.isActive?"online":"offline") + '"></span></div><div><div style="font-weight:700; color:#6c5ce7;">' + escapeHtml(u.username) + '</div><div style="font-size:13px; color:var(--muted);">' + escapeHtml(u.fullName || "") + '</div></div></div>';
+            }).join("");
+        } catch (e) {}
+    }, 300);
+}
+
+async function startChatWith(username) {
+    if (!currentUser) { alert("Login korun"); return; }
+    if (!username) { alert("Username din"); return; }
+    if (username === currentUser.username) { alert("Nijer sathe chat korte parben na"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/chat/room", { method: "POST", headers: authHeaders(), body: JSON.stringify({ user1: currentUser.username, user2: username }) });
+        const data = await res.json();
+        if (data.success) openChat(username, data.room._id);
+        else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function openChat(username, roomId) {
+    currentRoomId = roomId;
+    currentChatWith = username;
+    document.getElementById("chat-with-name").textContent = "💬 " + username;
+    switchMainView("chat-window-view");
+    await loadMessages();
+    if (chatRefreshTimer) clearInterval(chatRefreshTimer);
+    chatRefreshTimer = setInterval(loadMessages, 3000);
+}
+
+async function loadMessages() {
+    if (!currentRoomId) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/chat/messages/" + currentRoomId, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const box = document.getElementById("chat-messages");
+            const wasAtBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+            box.innerHTML = data.messages.map(function(m) { return '<div class="chat-msg ' + (m.sender === currentUser.username?"me":"other") + '">' + escapeHtml(m.text) + '<div class="chat-msg-time">' + new Date(m.createdAt).toLocaleTimeString() + '</div></div>'; }).join("");
+            if (wasAtBottom) box.scrollTop = box.scrollHeight;
+        }
+    } catch (e) {}
+}
+
+async function sendMessage() {
+    const input = document.getElementById("chat-input");
+    const text = input.value.trim();
+    if (!text || !currentRoomId) return;
+    input.value = "";
+    try { const res = await fetch(BACKEND_URL + "/api/chat/message", { method: "POST", headers: authHeaders(), body: JSON.stringify({ roomId: currentRoomId, sender: currentUser.username, text: text }) }); const data = await res.json(); if (data.success) await loadMessages(); } catch (e) {}
+}
+
+function downloadApp() {
+    const downloadUrl = "https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v1.0.0/Searchbook-APK.zip";
+    alert("⏳ Download shuru hocche...\n\nFile: Searchbook-APK.zip\n\nDownload shesh hole zip file ta unzip korun, tarpor APK install korun.");
+    const link = document.createElement("a");
+    link.href = downloadUrl;
+    link.download = "Searchbook-APK.zip";
+    link.target = "_blank";
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+}
+
+function escapeHtml(text) {
+    const div = document.createElement("div");
+    div.textContent = text;
+    return div.innerHTML;
+}
+
+// ============ ADMIN PANEL ============
+function openAdminPanel() {
+    document.getElementById("admin-panel").classList.add("active");
+    if (adminUser) {
+        document.getElementById("admin-login-view").style.display = "none";
+        document.getElementById("admin-dashboard-view").style.display = "block";
+        loadAdminUsers();
+        loadAdminComplaints();
+    } else {
+        document.getElementById("admin-login-view").style.display = "block";
+        document.getElementById("admin-dashboard-view").style.display = "none";
+    }
+}
+
+function closeAdminPanel() { document.getElementById("admin-panel").classList.remove("active"); }
+
+async function adminLogin() {
+    const username = document.getElementById("admin-username").value.trim();
+    const password = document.getElementById("admin-password").value;
+    if (!username || !password) { alert("Username + password din"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
+        const data = await res.json();
+        if (data.success) {
+            adminUser = data.adminUser;
+            document.getElementById("admin-username").value = "";
+            document.getElementById("admin-password").value = "";
+            document.getElementById("admin-login-view").style.display = "none";
+            document.getElementById("admin-dashboard-view").style.display = "block";
+            loadAdminUsers();
+            loadAdminComplaints();
+        } else alert("❌ " + data.message);
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+function adminHeaders() { return { "Content-Type": "application/json", "x-admin-user": adminUser || "" }; }
+
+async function loadAdminUsers() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/users", { headers: adminHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            adminUsersList = data.users;
+            document.getElementById("admin-total-users").textContent = data.totalCount;
+            document.getElementById("admin-active-users").textContent = data.activeCount;
+            document.getElementById("admin-blocked-users").textContent = data.users.filter(u => u.isBlocked).length;
+            renderAdminUsers(data.users);
+        }
+    } catch (e) { document.getElementById("admin-user-list").innerHTML = '<p style="color:#e74c3c;">Load failed</p>'; }
+}
+
+function renderAdminUsers(users) {
+    const list = document.getElementById("admin-user-list");
+    if (!users || users.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No users</p>'; return; }
+    list.innerHTML = users.map(function(u) {
+        let cardClass = "admin-user-card";
+        if (u.isBlocked) cardClass += " blocked";
+        else if (u.isSuspended) cardClass += " suspended";
+        else if (u.isMuted) cardClass += " muted";
+        else if (u.isActive) cardClass += " online";
+        const statusLabel = u.isBlocked ? "🚫 Blocked" : u.isSuspended ? "⏸️ Suspended" : u.isMuted ? "🔇 Muted" : u.isActive ? "🟢 Active" : "⚫ Offline";
+        const lastActive = u.lastActive ? new Date(u.lastActive).toLocaleTimeString() : "N/A";
+        const suspUntil = u.suspendedUntil ? new Date(u.suspendedUntil).toLocaleDateString() : "";
+        return '<div class="' + cardClass + '">' +
+            '<div class="admin-user-avatar">' + escapeHtml(u.username.substring(0,1).toUpperCase()) + (u.isActive ? '<span class="online-dot"></span>' : "") + '</div>' +
+            '<div class="admin-user-info">' +
+                '<div class="name">' + escapeHtml(u.username) + " " + statusLabel + '</div>' +
+                '<div class="meta">📧 ' + escapeHtml(u.email || "") + " · Joined " + new Date(u.createdAt).toLocaleDateString() + '</div>' +
+                '<div class="meta">Last: ' + lastActive + " · Warnings: " + (u.warnings || 0) + " · Strikes: " + (u.strikes || 0) + (suspUntil ? " · Until: " + suspUntil : "") + '</div>' +
+            '</div>' +
+            '<div class="admin-user-actions">' +
+                '<button class="admin-btn analyze" onclick="openUserAnalysis(\'' + escapeHtml(u.username) + '\')">📊 Analyze</button>' +
+                '<button class="admin-btn ' + (u.isBlocked ? "unblock" : "block") + '" onclick="adminBlockUser(\'' + escapeHtml(u.username) + '\')">' + (u.isBlocked ? "Unblock" : "Block") + '</button>' +
+                '<button class="admin-btn ' + (u.isMuted ? "unblock" : "mute") + '" onclick="adminMuteUser(\'' + escapeHtml(u.username) + '\')">' + (u.isMuted ? "Unmute" : "Mute") + '</button>' +
+                '<button class="admin-btn warn" onclick="adminWarnUser(\'' + escapeHtml(u.username) + '\')">⚠️ Warn</button>' +
+                '<button class="admin-btn strike" onclick="adminStrikeUser(\'' + escapeHtml(u.username) + '\')">⚡ Strike</button>' +
+                '<button class="admin-btn ' + (u.isSuspended ? "unsuspend" : "suspend") + '" onclick="adminSuspendUser(\'' + escapeHtml(u.username) + '\')">' + (u.isSuspended ? "Unsuspend" : "Suspend") + '</button>' +
+                '<button class="admin-btn reset2fa" onclick="adminReset2FA(\'' + escapeHtml(u.username) + '\')">🔑 2FA</button>' +
+                '<button class="admin-btn delete" onclick="adminDeleteUser(\'' + escapeHtml(u.username) + '\')">🗑️ Delete</button>' +
+            '</div>' +
+        '</div>';
+    }).join("");
+}
+
+function filterAdminUsers() {
+    const q = document.getElementById("admin-user-search").value.trim().toLowerCase();
+    if (!q) { renderAdminUsers(adminUsersList); return; }
+    const filtered = adminUsersList.filter(function(u) { return u.username.toLowerCase().includes(q) || (u.email || "").toLowerCase().includes(q) || (u.fullName || "").toLowerCase().includes(q); });
+    renderAdminUsers(filtered);
+}
+
+// ===== NEW: USER DATA ANALYSIS =====
+async function openUserAnalysis(username) {
+    document.getElementById("user-analysis-panel").classList.add("active");
+    document.getElementById("analysis-content").innerHTML = '<p style="text-align:center; color:var(--muted);">Loading analysis...</p>';
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/user/analysis/" + encodeURIComponent(username), { headers: adminHeaders() });
+        const data = await res.json();
+        if (!data.success) { document.getElementById("analysis-content").innerHTML = '<p style="color:#e74c3c; text-align:center;">❌ ' + escapeHtml(data.message || "Failed") + '</p>'; return; }
+        renderUserAnalysis(data);
+    } catch (e) { document.getElementById("analysis-content").innerHTML = '<p style="color:#e74c3c; text-align:center;">❌ ' + escapeHtml(e.message) + '</p>'; }
+}
+
+function closeUserAnalysis() { document.getElementById("user-analysis-panel").classList.remove("active"); }
+
+function renderUserAnalysis(d) {
+    const u = d.user || {};
+    const s = d.stats || {};
+    const activityScore = Math.min(100, ((s.totalPosts || 0) * 5) + ((s.totalLikesReceived || 0) * 2) + ((s.totalCommentsReceived || 0) * 3) + ((s.totalMessages || 0) * 1));
+    const maxPosts = Math.max(s.totalPosts || 1, 1);
+    const maxLikes = Math.max(s.totalLikesReceived || 1, 1);
+    const maxComments = Math.max(s.totalCommentsReceived || 1, 1);
+    const maxMessages = Math.max(s.totalMessages || 1, 1);
+    const maxStories = Math.max(s.totalStories || 1, 1);
+    let html = '';
+    html += '<div style="display:flex; align-items:center; gap:16px; margin-bottom:20px; padding:16px; background:linear-gradient(135deg,#f0f0ff,#e8e8ff); border-radius:12px;">';
+    html += '<div style="width:70px; height:70px; border-radius:50%; background:linear-gradient(135deg,#6c5ce7,#a29bfe); color:white; display:flex; align-items:center; justify-content:center; font-weight:900; font-size:28px;">' + escapeHtml((u.username || "?").substring(0,1).toUpperCase()) + '</div>';
+    html += '<div style="flex:1;">';
+    html += '<div style="font-size:20px; font-weight:900; color:#6c5ce7;">' + escapeHtml(u.username || "Unknown") + '</div>';
+    html += '<div style="font-size:13px; color:#95a5a6;">' + escapeHtml(u.fullName || "No name") + ' · 📧 ' + escapeHtml(u.email || "") + '</div>';
+    html += '<div style="font-size:12px; color:#95a5a6; margin-top:4px;">Joined: ' + new Date(u.createdAt || Date.now()).toLocaleString() + '</div>';
+    html += '</div>';
+    html += '<div style="text-align:center; padding:12px 16px; background:white; border-radius:12px;">';
+    html += '<div style="font-size:26px; font-weight:900; color:' + (activityScore > 70 ? "#00b894" : activityScore > 40 ? "#f39c12" : "#e17055") + ';">' + activityScore + '</div>';
+    html += '<div style="font-size:11px; color:#95a5a6;">Activity Score</div>';
+    html += '</div></div>';
+    html += '<div class="analysis-grid">';
+    html += '<div class="analysis-card"><b>' + (s.totalPosts || 0) + '</b><span>📝 Posts</span></div>';
+    html += '<div class="analysis-card green"><b>' + (s.totalLikesReceived || 0) + '</b><span>❤️ Likes Received</span></div>';
+    html += '<div class="analysis-card green"><b>' + (s.totalCommentsReceived || 0) + '</b><span>💬 Comments</span></div>';
+    html += '<div class="analysis-card yellow"><b>' + (s.totalStories || 0) + '</b><span>📸 Stories</span></div>';
+    html += '<div class="analysis-card"><b>' + (s.totalMessages || 0) + '</b><span>✉️ Messages</span></div>';
+    html += '<div class="analysis-card"><b>' + (s.totalFollowers || 0) + '</b><span>👥 Followers</span></div>';
+    html += '<div class="analysis-card"><b>' + (s.totalFollowing || 0) + '</b><span>➡️ Following</span></div>';
+    html += '<div class="analysis-card"><b>' + (s.totalViews || 0) + '</b><span>👁️ Post Views</span></div>';
+    html += '</div>';
+    html += '<div class="analysis-section"><h4>📊 Activity Breakdown</h4>';
+    html += '<div class="activity-bar"><span class="label">Posts</span><div class="bar"><div class="bar-fill" style="width:' + Math.round(((s.totalPosts||0)/maxPosts)*100) + '%"></div></div><span class="value">' + (s.totalPosts||0) + '</span></div>';
+    html += '<div class="activity-bar"><span class="label">Likes Received</span><div class="bar"><div class="bar-fill" style="width:' + Math.round(((s.totalLikesReceived||0)/maxLikes)*100) + '%"></div></div><span class="value">' + (s.totalLikesReceived||0) + '</span></div>';
+    html += '<div class="activity-bar"><span class="label">Comments</span><div class="bar"><div class="bar-fill" style="width:' + Math.round(((s.totalCommentsReceived||0)/maxComments)*100) + '%"></div></div><span class="value">' + (s.totalCommentsReceived||0) + '</span></div>';
+    html += '<div class="activity-bar"><span class="label">Messages Sent</span><div class="bar"><div class="bar-fill" style="width:' + Math.round(((s.totalMessages||0)/maxMessages)*100) + '%"></div></div><span class="value">' + (s.totalMessages||0) + '</span></div>';
+    html += '<div class="activity-bar"><span class="label">Stories</span><div class="bar"><div class="bar-fill" style="width:' + Math.round(((s.totalStories||0)/maxStories)*100) + '%"></div></div><span class="value">' + (s.totalStories||0) + '</span></div>';
+    html += '</div>';
+    html += '<div class="analysis-section"><h4>🛡️ Account Status</h4>';
+    html += '<div class="analysis-row"><span>Status</span><span>' + (u.isBlocked ? "🚫 Blocked" : u.isSuspended ? "⏸️ Suspended" : u.isMuted ? "🔇 Muted" : "🟢 Active") + '</span></div>';
+    html += '<div class="analysis-row"><span>Warnings</span><span>' + (u.warnings || 0) + '</span></div>';
+    html += '<div class="analysis-row"><span>Strikes</span><span>' + (u.strikes || 0) + ' / 3</span></div>';
+    html += '<div class="analysis-row"><span>2FA Enabled</span><span>' + (u.twoFAEnabled ? "✅ Yes" : "❌ No") + '</span></div>';
+    html += '<div class="analysis-row"><span>Theme</span><span>' + (u.theme === "dark" ? "🌙 Dark" : "☀️ Light") + '</span></div>';
+    html += '<div class="analysis-row"><span>Last Active</span><span>' + (u.lastActive ? new Date(u.lastActive).toLocaleString() : "N/A") + '</span></div>';
+    html += '<div class="analysis-row"><span>Account Created</span><span>' + new Date(u.createdAt || Date.now()).toLocaleString() + '</span></div>';
+    html += '</div>';
+    if (d.recentPosts && d.recentPosts.length > 0) {
+        html += '<div class="analysis-section"><h4>📝 Recent Posts (' + d.recentPosts.length + ')</h4>';
+        d.recentPosts.forEach(function(p) {
+            html += '<div style="padding:10px; background:white; border-radius:8px; margin-bottom:8px; border:1px solid #eef0f6; font-size:13px;">';
+            html += '<div style="color:#6c5ce7; font-weight:700; margin-bottom:4px;">' + escapeHtml((p.content || "").substring(0, 100)) + '</div>';
+            html += '<div style="color:#95a5a6; font-size:11px;">' + new Date(p.createdAt).toLocaleString() + ' · ❤️ ' + ((p.likes||[]).length) + ' · 💬 ' + ((p.comments||[]).length) + ' · 👁️ ' + (p.views||0) + '</div>';
+            html += '</div>';
+        });
+        html += '</div>';
+    }
+    document.getElementById("analysis-content").innerHTML = html;
+}
+
+async function adminBlockUser(username) {
+    const u = adminUsersList.find(x => x.username === username);
+    if (!u) return;
+    const action = u.isBlocked ? "unblock" : "block";
+    if (!confirm(action + ' user "' + username + '"?')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/block", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username, block: !u.isBlocked }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminMuteUser(username) {
+    const u = adminUsersList.find(x => x.username === username);
+    if (!u) return;
+    const action = u.isMuted ? "unmute" : "mute";
+    if (!confirm(action + ' user "' + username + '"?')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/mute", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username, mute: !u.isMuted }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminWarnUser(username) {
+    if (!confirm('Warn user "' + username + '"?')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/warn", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminStrikeUser(username) {
+    if (!confirm('Add strike to "' + username + '"? (3 strikes = auto suspend 7 days)')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/strike", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminSuspendUser(username) {
+    const u = adminUsersList.find(x => x.username === username);
+    if (!u) return;
+    if (u.isSuspended) {
+        if (!confirm('Unsuspend "' + username + '"?')) return;
+        try { const res = await fetch(BACKEND_URL + "/api/admin/user/suspend", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username, suspend: false }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+    } else {
+        const days = prompt("Suspend koto din?", "7");
+        if (!days) return;
+        const d = parseInt(days) || 7;
+        try { const res = await fetch(BACKEND_URL + "/api/admin/user/suspend", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username, suspend: true, days: d }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+    }
+}
+
+async function adminReset2FA(username) {
+    if (!confirm('Reset 2FA for "' + username + '"?')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/reset-2fa", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminDeleteUser(username) {
+    if (!confirm('⚠️ DELETE "' + username + '" + all posts, stories, messages?')) return;
+    if (!confirm('Are you ABSOLUTELY sure?')) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/user/delete", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ username }) }); const data = await res.json(); alert(data.message); loadAdminUsers(); } catch (e) { alert("❌ " + e.message); }
+}
+
+function switchAdminTab(tab) {
+    document.querySelectorAll(".admin-tab").forEach(t => t.classList.remove("active"));
+    document.getElementById("admin-users-tab").style.display = "none";
+    document.getElementById("admin-complaints-tab").style.display = "none";
+    document.getElementById("admin-posts-tab").style.display = "none";
+    if (tab === "users") { document.querySelectorAll(".admin-tab")[0].classList.add("active"); document.getElementById("admin-users-tab").style.display = "block"; }
+    else if (tab === "complaints") { document.querySelectorAll(".admin-tab")[1].classList.add("active"); document.getElementById("admin-complaints-tab").style.display = "block"; loadAdminComplaints(); }
+    else if (tab === "posts") { document.querySelectorAll(".admin-tab")[2].classList.add("active"); document.getElementById("admin-posts-tab").style.display = "block"; loadAdminPosts(); }
+}
+
+async function loadAdminComplaints() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/complaints", { headers: adminHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            adminComplaintsList = data.complaints;
+            const pending = data.complaints.filter(c => c.status === "pending").length;
+            document.getElementById("admin-pending-complaints").textContent = pending;
+            const list = document.getElementById("admin-complaints-list");
+            if (data.complaints.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No complaints</p>'; return; }
+            list.innerHTML = data.complaints.map(function(c) {
+                return '<div class="complaint-card ' + c.status + '">' +
+                    '<div class="complaint-header"><span class="complaint-user">👤 ' + escapeHtml(c.username) + '</span><span class="complaint-status ' + c.status + '">' + c.status.toUpperCase() + '</span></div>' +
+                    '<div class="complaint-subject">📌 ' + escapeHtml(c.subject) + '</div>' +
+                    '<div class="complaint-message">' + escapeHtml(c.message) + '</div>' +
+                    '<div class="complaint-time">🕐 ' + new Date(c.createdAt).toLocaleString() + (c.email ? ' · 📧 ' + escapeHtml(c.email) : '') + '</div>' +
+                    (c.adminNote ? '<div style="font-size:12px; color:#00b894; font-weight:700;">Note: ' + escapeHtml(c.adminNote) + '</div>' : '') +
+                    '<div class="admin-user-actions" style="margin-top:8px;">' +
+                        (c.status === "pending" ? '<button class="admin-btn unblock" onclick="resolveComplaint(\'' + c._id + '\')">✅ Resolve</button>' : '') +
+                        '<button class="admin-btn mute" onclick="viewComplaintUser(\'' + escapeHtml(c.username) + '\')">👤 View User</button>' +
+                        '<button class="admin-btn delete" onclick="deleteComplaint(\'' + c._id + '\')">🗑️ Delete</button>' +
+                    '</div></div>';
+            }).join("");
+        }
+    } catch (e) { document.getElementById("admin-complaints-list").innerHTML = '<p style="color:#e74c3c;">Load failed</p>'; }
+}
+
+async function resolveComplaint(complaintId) {
+    const note = prompt("Note din (optional):", "Resolved by admin");
+    if (note === null) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/complaint/resolve", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ complaintId, adminNote: note }) }); const data = await res.json(); alert(data.message); loadAdminComplaints(); } catch (e) { alert("❌ " + e.message); }
+}
+
+async function deleteComplaint(complaintId) {
+    if (!confirm("Delete this complaint?")) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/complaint/delete", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ complaintId }) }); const data = await res.json(); alert(data.message); loadAdminComplaints(); } catch (e) { alert("❌ " + e.message); }
+}
+
+function viewComplaintUser(username) {
+    closeAdminPanel();
+    if (currentUser) { switchMainView("search-view"); document.getElementById("search-input").value = username; doSearch(); }
+    else { alert("Please login first to view user profiles"); }
+}
+
+async function loadAdminPosts() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/posts", { headers: adminHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            const list = document.getElementById("admin-post-list");
+            if (!data.posts || data.posts.length === 0) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts</p>'; return; }
+            list.innerHTML = data.posts.map(function(p) {
+                return '<div class="complaint-card">' +
+                    '<div class="complaint-user">👤 ' + escapeHtml(p.username) + '</div>' +
+                    '<div class="complaint-message">' + escapeHtml((p.content || "").substring(0, 150)) + '</div>' +
+                    '<div class="complaint-time">' + new Date(p.createdAt).toLocaleString() + '</div>' +
+                    '<button class="admin-btn delete" onclick="adminDeletePost(\'' + p._id + '\')">🗑️ Delete</button></div>';
+            }).join("");
+        }
+    } catch (e) { alert("❌ " + e.message); }
+}
+
+async function adminDeletePost(postId) {
+    if (!confirm("Delete this post?")) return;
+    try { const res = await fetch(BACKEND_URL + "/api/admin/post/delete", { method: "POST", headers: adminHeaders(), body: JSON.stringify({ postId }) }); const data = await res.json(); alert(data.message); loadAdminPosts(); } catch (e) { alert("❌ " + e.message); }
+}
+
+setInterval(function() { if (currentUser) loadActiveUsers(); }, 60000);
+</script>
+</body>
+</html>
