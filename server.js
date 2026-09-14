@@ -18,8 +18,6 @@ app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
 // ============ ENV VARIABLES ============
-// ⚠️ শুধু MONGO_URI .env এ থাকবে
-// Admin credentials MongoDB তে hashed থাকে
 const MONGO_URI = process.env.MONGO_URI;
 const PORT = process.env.PORT || 5000;
 
@@ -147,10 +145,7 @@ const ComplaintSchema = new mongoose.Schema({
 });
 const Complaint = mongoose.model('Complaint', ComplaintSchema);
 
-// ==================================================================
-// ✅ ADMIN SCHEMA — MongoDB তে bcrypt hashed password
-// ⚠️ Code এ কোনো admin credentials নেই
-// ==================================================================
+// ============ ADMIN SCHEMA ============
 const AdminSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
@@ -707,10 +702,7 @@ app.post('/api/complaint/submit', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ==================================================================
-// ✅ ADMIN AUTH — MongoDB bcrypt hashed password
-// ⚠️ Code এ কোনো admin credentials hardcoded নেই
-// ==================================================================
+// ============ ADMIN AUTH ============
 async function verifyAdmin(req) {
     const header = req.headers['x-admin-user'];
     if (!header) return null;
@@ -726,7 +718,6 @@ app.post('/api/admin/login', async (req, res) => {
         const admin = await Admin.findOne({ username });
         if (!admin) return errRes(res, "Bhul credentials", 401);
 
-        // Check if locked
         if (admin.lockUntil && admin.lockUntil > new Date()) {
             return errRes(res, "Account locked. Try again later.", 429);
         }
@@ -735,7 +726,7 @@ app.post('/api/admin/login', async (req, res) => {
         if (!isMatch) {
             admin.loginAttempts = (admin.loginAttempts || 0) + 1;
             if (admin.loginAttempts >= 5) {
-                admin.lockUntil = new Date(Date.now() + 15 * 60 * 1000); // 15 min lock
+                admin.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
                 admin.loginAttempts = 0;
                 await admin.save();
                 return errRes(res, "Too many attempts. Locked for 15 minutes.", 429);
@@ -744,7 +735,6 @@ app.post('/api/admin/login', async (req, res) => {
             return errRes(res, "Bhul credentials", 401);
         }
 
-        // Success
         admin.loginAttempts = 0;
         admin.lockUntil = null;
         admin.lastLogin = new Date();
