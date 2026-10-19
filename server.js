@@ -34,6 +34,7 @@ const UserSchema = new mongoose.Schema({
     email: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
     fullName: { type: String, default: "" },
+    following: { type: [String], default: [] },
     twoFAEnabled: { type: Boolean, default: false },
     twoFASecret: { type: String, default: "" },
     createdAt: { type: Date, default: Date.now }
@@ -43,10 +44,23 @@ const User = mongoose.model('User', UserSchema);
 const PostSchema = new mongoose.Schema({
     username: { type: String, required: true },
     content: { type: String, default: "" },
+    likes: { type: [String], default: [] },
+    comments: { type: Array, default: [] },
+    shares: { type: Number, default: 0 },
+    views: { type: Number, default: 0 },
     createdAt: { type: Date, default: Date.now }
 });
 const Post = mongoose.model('Post', PostSchema);
 
+const ComplaintSchema = new mongoose.Schema({
+    username: { type: String, required: true },
+    subject: { type: String, required: true },
+    message: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const Complaint = mongoose.model('Complaint', ComplaintSchema);
+
+// SIGNUP
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
@@ -59,17 +73,27 @@ app.post('/api/signup', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
+// LOGIN WITH 2FA SUPPORT
 app.post('/api/login', async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const { email, password, twoFACode } = req.body;
         const user = await User.findOne({ email });
         if (!user) return errRes(res, "User not found!", 400);
-        const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) return errRes(res, "Invalid password!", 400);
+        
+        if (user.twoFAEnabled) {
+            if (!twoFACode) return res.json({ success: false, requires2FA: true });
+            const verified = speakeasy.totp.verify({ secret: user.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
+            if (!verified) return errRes(res, "Invalid 2FA code!", 400);
+        } else {
+            const isMatch = await bcrypt.compare(password, user.passwordHash);
+            if (!isMatch) return errRes(res, "Invalid password!", 400);
+        }
+        
         res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName });
     } catch (e) { errRes(res, e.message); }
 });
 
+// USER PROFILE
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
@@ -78,6 +102,7 @@ app.get('/api/user/:email', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
+// CHANGE PASSWORD
 app.put('/api/user/change-password', async (req, res) => {
     try {
         const { email, oldPassword, newPassword } = req.body;
@@ -92,6 +117,7 @@ app.put('/api/user/change-password', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
+// 2FA SETUP & VERIFY
 app.post('/api/2fa/setup', async (req, res) => {
     try {
         if (!speakeasy || !QRCode) return errRes(res, "2FA module unavailable", 500);
@@ -135,20 +161,29 @@ app.post('/api/2fa/disable', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-app.get('/api/admin/users', async (req, res) => {
+// AI SMART FEED ALGORITHM
+app.get('/api/feed/:username', async (req, res) => {
     try {
-        const users = await User.find().select('username email twoFAEnabled createdAt');
-        res.json({ success: true, users });
-    } catch (e) { errRes(res, e.message); }
-});
+        const username = req.params.username;
+        const user = await User.findOne({ username });
+        const following = user ? user.following : [];
+        const posts = await Post.find().limit(100).lean();
+        const now = Date.now();
+        
+        posts.forEach(p => {
+            const ageHours = (now - new Date(p.createdAt).getTime()) / (1000 * 60 * 60);
+            const isFriend = following.includes(p.username) ? 20 : 0;
+            const engagementScore = ((p.likes?.length || 0) * 3) + ((p.comments?.length || 0) * 4) + ((p.shares || 0) * 5);
+            const timeDecay = Math.max(0, 72 - ageHours) * 1.5;
+            p.feedScore = isFriend + engagementScore + timeDecay;
+        });
 
-app.get('/api/posts', async (req, res) => {
-    try {
-        const posts = await Post.find().sort({ createdAt: -1 }).limit(50);
+        posts.sort((a, b) => b.feedScore - a.feedScore);
         res.json(posts);
     } catch (e) { errRes(res, e.message); }
 });
 
+// CREATE POST
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content } = req.body;
@@ -158,8 +193,26 @@ app.post('/api/posts', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
+// COMPLAINT SUBMIT
+app.post('/api/complaint/submit', async (req, res) => {
+    try {
+        const { username, subject, message } = req.body;
+        const c = new Complaint({ username, subject, message });
+        await c.save();
+        okRes(res, { message: "Complaint sent!" });
+    } catch (e) { errRes(res, e.message); }
+});
+
+// ADMIN API
+app.get('/api/admin/users', async (req, res) => {
+    try {
+        const users = await User.find().select('username email twoFAEnabled createdAt');
+        res.json({ success: true, users });
+    } catch (e) { errRes(res, e.message); }
+});
+
 app.use((req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 
 app.listen(PORT, () => {
-    console.log(`✅ SearchBook running on port ${PORT}`);
+    console.log(`✅ SearchBook Server running on port ${PORT}`);
 });
