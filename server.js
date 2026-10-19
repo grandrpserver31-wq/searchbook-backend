@@ -1,4 +1,4 @@
-require('dotenv').config();
+Require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -134,6 +134,14 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
+// Community Chat Schema
+const CommunityMessageSchema = new mongoose.Schema({
+    sender: { type: String, required: true },
+    text: { type: String, required: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const CommunityMessage = mongoose.model('CommunityMessage', CommunityMessageSchema);
+
 const ComplaintSchema = new mongoose.Schema({
     username: { type: String, required: true },
     email: { type: String, default: "" },
@@ -145,7 +153,6 @@ const ComplaintSchema = new mongoose.Schema({
 });
 const Complaint = mongoose.model('Complaint', ComplaintSchema);
 
-// ============ ADMIN SCHEMA ============
 const AdminSchema = new mongoose.Schema({
     username: { type: String, required: true, unique: true },
     passwordHash: { type: String, required: true },
@@ -157,15 +164,14 @@ const AdminSchema = new mongoose.Schema({
 });
 const Admin = mongoose.model('Admin', AdminSchema);
 
-// ============ OTP ============
+// ============ 30-SECOND OTP ============
 app.post('/api/send-otp', async (req, res) => {
     try {
         const { email } = req.body;
-        if (!email) return errRes(res, "Email dorkar!", 400);
+        if (!email) return errRes(res, "Email required!", 400);
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
-        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
-        console.log(`OTP for ${email}: ${otp}`);
+        otpStore[email] = { otp, expiresAt: Date.now() + 30000 }; // 30 seconds expiration
+        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 31000);
         res.json({ success: true, message: "OTP generated", otp });
     } catch (e) { errRes(res, e.message); }
 });
@@ -174,9 +180,9 @@ app.post('/api/verify-otp', async (req, res) => {
     try {
         const { email, otp } = req.body;
         const stored = otpStore[email];
-        if (!stored) return errRes(res, "OTP expire", 400);
-        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return errRes(res, "OTP expire", 400); }
-        if (stored.otp != otp) return errRes(res, "Bhul OTP", 400);
+        if (!stored) return errRes(res, "OTP expired", 400);
+        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return errRes(res, "OTP expired", 400); }
+        if (stored.otp != otp) return errRes(res, "Invalid OTP", 400);
         delete otpStore[email];
         okRes(res, { message: "OTP verified" });
     } catch (e) { errRes(res, e.message); }
@@ -186,10 +192,10 @@ app.post('/api/verify-otp', async (req, res) => {
 app.post('/api/signup', async (req, res) => {
     try {
         const { username, email, password, fullName } = req.body;
-        if (!username || !email || !password) return errRes(res, "Sob field din", 400);
-        if (password.length < 6) return errRes(res, "Password min 6 char", 400);
+        if (!username || !email || !password) return errRes(res, "All fields required", 400);
+        if (password.length < 6) return errRes(res, "Password must be min 6 chars", 400);
         const existing = await User.findOne({ $or: [{ email }, { username }] });
-        if (existing) return errRes(res, "Email/username ache", 400);
+        if (existing) return errRes(res, "Email or username already exists", 400);
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
         const newUser = new User({ username, email, fullName: fullName || username, passwordHash });
@@ -202,20 +208,20 @@ app.post('/api/signup', async (req, res) => {
 app.post('/api/login', async (req, res) => {
     try {
         const { email, password, twoFACode } = req.body;
-        if (!email || !password) return errRes(res, "Email + password din", 400);
+        if (!email || !password) return errRes(res, "Email + password required", 400);
         const user = await User.findOne({ email });
-        if (!user) return errRes(res, "User nai!", 400);
-        if (user.isBlocked) return errRes(res, "Account block!", 403);
+        if (!user) return errRes(res, "User not found!", 400);
+        if (user.isBlocked) return errRes(res, "Account blocked!", 403);
         if (user.isSuspended && user.suspendedUntil && user.suspendedUntil > new Date()) {
             return errRes(res, "Account suspended!", 403);
         }
         const isMatch = await bcrypt.compare(password, user.passwordHash);
-        if (!isMatch) return errRes(res, "Bhul password!", 400);
+        if (!isMatch) return errRes(res, "Invalid password!", 400);
         if (user.twoFAEnabled) {
             if (!speakeasy) return errRes(res, "2FA unavailable", 500);
             if (!twoFACode) return res.json({ success: false, requires2FA: true });
             const verified = speakeasy.totp.verify({ secret: user.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-            if (!verified) return errRes(res, "Bhul 2FA code!", 400);
+            if (!verified) return errRes(res, "Invalid 2FA code!", 400);
         }
         activeUsers[user.username] = Date.now();
         user.lastActive = new Date();
@@ -251,11 +257,11 @@ app.get('/api/active-users', (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ USER ============
+// ============ USER ROUTES ============
 app.get('/api/user/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const now = Date.now();
         const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
         res.json({ success: true, user: {
@@ -271,7 +277,7 @@ app.get('/api/user/:email', async (req, res) => {
 app.get('/api/user/username/:username', async (req, res) => {
     try {
         const u = await User.findOne({ username: req.params.username });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const now = Date.now();
         const isActive = activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000);
         res.json({ success: true, user: {
@@ -303,7 +309,7 @@ app.put('/api/user/profile', async (req, res) => {
     try {
         const { email, profilePic, bio, fullName } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         if (profilePic !== undefined) u.profilePic = profilePic;
         if (bio !== undefined) u.bio = bio;
         if (fullName !== undefined) u.fullName = fullName;
@@ -316,10 +322,10 @@ app.put('/api/user/change-password', async (req, res) => {
     try {
         const { email, oldPassword, newPassword } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const m = await bcrypt.compare(oldPassword, u.passwordHash);
-        if (!m) return errRes(res, "Purono password bhul", 400);
-        if (newPassword.length < 6) return errRes(res, "Min 6 char", 400);
+        if (!m) return errRes(res, "Incorrect old password", 400);
+        if (newPassword.length < 6) return errRes(res, "Min 6 chars required", 400);
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
@@ -339,7 +345,7 @@ app.post('/api/user/bookmark', async (req, res) => {
     try {
         const { email, postId } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const idx = u.bookmarks.indexOf(postId);
         if (idx === -1) u.bookmarks.push(postId);
         else u.bookmarks.splice(idx, 1);
@@ -351,7 +357,7 @@ app.post('/api/user/bookmark', async (req, res) => {
 app.get('/api/user/bookmarks/:email', async (req, res) => {
     try {
         const u = await User.findOne({ email: req.params.email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const posts = await Post.find({ _id: { $in: u.bookmarks } });
         res.json({ success: true, posts });
     } catch (e) { errRes(res, e.message); }
@@ -360,7 +366,7 @@ app.get('/api/user/bookmarks/:email', async (req, res) => {
 app.post('/api/user/follow', async (req, res) => {
     try {
         const { follower, following } = req.body;
-        if (follower === following) return errRes(res, "Nijer ke follow kora jabe na", 400);
+        if (follower === following) return errRes(res, "Cannot follow yourself", 400);
         await User.updateOne({ username: follower }, { $addToSet: { following } });
         await User.updateOne({ username: following }, { $addToSet: { followers: follower } });
         okRes(res, { message: "Followed!" });
@@ -379,11 +385,10 @@ app.post('/api/user/unfollow', async (req, res) => {
 app.post('/api/user/delete-self', async (req, res) => {
     try {
         const { email, password } = req.body;
-        if (!email || !password) return errRes(res, "Email + password din", 400);
         const user = await User.findOne({ email });
-        if (!user) return errRes(res, "User nai", 404);
+        if (!user) return errRes(res, "User not found", 404);
         const match = await bcrypt.compare(password, user.passwordHash);
-        if (!match) return errRes(res, "Password bhul!", 400);
+        if (!match) return errRes(res, "Incorrect password!", 400);
         const username = user.username;
         await Post.deleteMany({ username });
         await Story.deleteMany({ username });
@@ -398,49 +403,65 @@ app.post('/api/user/delete-self', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ POSTS ============
+// ============ SMART AI ALGORITHM & POSTS ============
 app.post('/api/posts/delete-own', async (req, res) => {
     try {
         const { postId, username } = req.body;
         const post = await Post.findById(postId);
-        if (!post) return errRes(res, "Post nai", 404);
-        if (post.username !== username) return errRes(res, "Ei post apnar na!", 403);
+        if (!post) return errRes(res, "Post not found", 404);
+        if (post.username !== username) return errRes(res, "Unauthorized", 403);
         await Post.deleteOne({ _id: postId });
         okRes(res, { message: "Post deleted!" });
     } catch (e) { errRes(res, e.message); }
 });
 
+// In-code AI content moderation (Anti-toxic / Ad-blocker / Safety shield)
+function isToxicOrInappropriate(content) {
+    if (!content) return false;
+    const lower = content.toLowerCase();
+    const badWords = ["badword1", "badword2", "hate", "kill", "suicide", "nsfw", "porn", "xxx"]; // configurable toxic keywords
+    for (let word of badWords) {
+        if (lower.includes(word)) return true;
+    }
+    return false;
+}
+
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, media, mediaType, poll } = req.body;
         const u = await User.findOne({ username });
-        if (u && u.isMuted) return errRes(res, "Apni mute achen", 403);
+        if (u && u.isMuted) return errRes(res, "You are muted by admin", 403);
+        
+        // AI moderation check
+        if (isToxicOrInappropriate(content)) {
+            return errRes(res, "Post flagged by AI moderation: Inappropriate or toxic content detected.", 400);
+        }
+
         const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
     } catch (e) { errRes(res, e.message); }
 });
 
+// AI Smart Feed Ranking Algorithm Engine
 app.get('/api/feed/:username', async (req, res) => {
     try {
         const currentUsername = req.params.username;
         const currentUser = await User.findOne({ username: currentUsername });
-        if (!currentUser) return errRes(res, "User nai", 404);
+        if (!currentUser) return errRes(res, "User not found", 404);
         const following = currentUser.following || [];
         const posts = await Post.find().limit(200).lean();
         const now = Date.now();
-        const myLikes = [], myComments = [];
+        
         posts.forEach(p => {
-            if (p.likes && p.likes.includes(currentUsername)) myLikes.push(p.username);
-            if (p.comments) p.comments.forEach(c => { if (c.username === currentUsername) myComments.push(p.username); });
-        });
-        posts.forEach(p => {
-            const age = (now - new Date(p.createdAt).getTime()) / 3600000;
-            const interestMatch = (myLikes.filter(u => u === p.username).length * 2) + (myComments.filter(u => u === p.username).length * 3);
-            const isFriend = following.includes(p.username) ? 1 : 0;
-            const trendingScore = ((p.likes?.length || 0) * 2) + ((p.comments?.length || 0) * 3) + ((p.shares || 0) * 4) + ((p.views || 0) * 0.3) + (Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 2);
-            const recencyScore = Math.max(0, 48 - age) * 3;
-            p.feedScore = (interestMatch * 4) + (isFriend * 3 * 100) + (trendingScore * 2) + recencyScore;
+            const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
+            const isFriend = following.includes(p.username) ? 20 : 0;
+            const mediaBoost = p.media ? 15 : 0; // Video & Image boost
+            const pollBoost = p.poll ? 10 : 0;
+            const trendingScore = ((p.likes?.length || 0) * 3) + ((p.comments?.length || 0) * 4) + ((p.shares || 0) * 5) + ((p.views || 0) * 0.2) + (Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 3);
+            const recencyDecay = Math.max(0, 72 - ageHours) * 1.5;
+            
+            p.feedScore = isFriend + mediaBoost + pollBoost + trendingScore + recencyDecay;
         });
         posts.sort((a, b) => b.feedScore - a.feedScore);
         res.json(posts.slice(0, 50));
@@ -449,20 +470,8 @@ app.get('/api/feed/:username', async (req, res) => {
 
 app.get('/api/posts', async (req, res) => {
     try {
-        const posts = await Post.find().limit(100).lean();
-        const now = Date.now();
-        posts.forEach(p => {
-            const age = (now - new Date(p.createdAt).getTime()) / 3600000;
-            const likeScore = (p.likes?.length || 0) * 3;
-            const commentScore = (p.comments?.length || 0) * 4;
-            const shareScore = (p.shares || 0) * 5;
-            const viewScore = (p.views || 0) * 0.5;
-            const reactionScore = Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 3;
-            const timeScore = Math.max(0, 24 - age) * 2;
-            p.score = likeScore + commentScore + shareScore + viewScore + reactionScore + timeScore;
-        });
-        posts.sort((a, b) => b.score - a.score);
-        res.json(posts.slice(0, 50));
+        const posts = await Post.find().limit(100).sort({ createdAt: -1 }).lean();
+        res.json(posts);
     } catch (e) { errRes(res, e.message); }
 });
 
@@ -477,7 +486,7 @@ app.post('/api/posts/like', async (req, res) => {
     try {
         const { postId, username } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return errRes(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post not found", 404);
         const idx = p.likes.indexOf(username);
         if (idx === -1) p.likes.push(username); else p.likes.splice(idx, 1);
         await p.save();
@@ -489,7 +498,7 @@ app.post('/api/posts/reaction', async (req, res) => {
     try {
         const { postId, username, reaction } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return errRes(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post not found", 404);
         if (!p.reactions) p.reactions = {};
         if (!p.reactions[reaction]) p.reactions[reaction] = [];
         Object.keys(p.reactions).forEach(k => {
@@ -508,8 +517,9 @@ app.post('/api/posts/reaction', async (req, res) => {
 app.post('/api/posts/comment', async (req, res) => {
     try {
         const { postId, username, text } = req.body;
+        if (isToxicOrInappropriate(text)) return errRes(res, "Comment blocked by AI filter.", 400);
         const p = await Post.findById(postId);
-        if (!p) return errRes(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post not found", 404);
         p.comments.push({ username, text, createdAt: new Date() });
         await p.save();
         res.json({ success: true, comments: p.comments });
@@ -520,7 +530,7 @@ app.post('/api/posts/share', async (req, res) => {
     try {
         const { postId } = req.body;
         const p = await Post.findById(postId);
-        if (!p) return errRes(res, "Post nai", 404);
+        if (!p) return errRes(res, "Post not found", 404);
         p.shares = (p.shares || 0) + 1;
         await p.save();
         res.json({ success: true, shares: p.shares });
@@ -539,7 +549,7 @@ app.post('/api/posts/vote', async (req, res) => {
     try {
         const { postId, username, optionIndex } = req.body;
         const p = await Post.findById(postId);
-        if (!p || !p.poll) return errRes(res, "Poll nai", 404);
+        if (!p || !p.poll) return errRes(res, "Poll not found", 404);
         let alreadyVoted = false;
         p.poll.options.forEach((opt, i) => {
             const idx = opt.votes.indexOf(username);
@@ -556,7 +566,7 @@ app.post('/api/posts/vote', async (req, res) => {
 app.post('/api/stories', async (req, res) => {
     try {
         const { username, media, mediaType, text } = req.body;
-        if (!media) return errRes(res, "Media dorkar", 400);
+        if (!media) return errRes(res, "Media required", 400);
         const ns = new Story({ username, media, mediaType: mediaType || "image", text: text || "", expiresAt: new Date(Date.now() + 24*60*60*1000) });
         await ns.save();
         res.status(201).json({ success: true, message: "Story created!" });
@@ -576,7 +586,7 @@ app.get('/api/stories', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ CHAT ============
+// ============ PRIVATE & COMMUNITY CHAT ============
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
@@ -597,6 +607,7 @@ app.get('/api/chat/rooms/:username', async (req, res) => {
 app.post('/api/chat/message', async (req, res) => {
     try {
         const { roomId, sender, text } = req.body;
+        if (isToxicOrInappropriate(text)) return errRes(res, "Message blocked by AI filter.", 400);
         const m = new Message({ roomId, sender, text });
         await m.save();
         await Room.findByIdAndUpdate(roomId, { lastMessage: text.substring(0, 50), lastTime: new Date() });
@@ -611,363 +622,65 @@ app.get('/api/chat/messages/:roomId', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ ALGORITHMS ============
+// Community Chatroom endpoints
+app.get('/api/community/messages', async (req, res) => {
+    try {
+        const messages = await CommunityMessage.find().sort({ createdAt: 1 }).limit(100);
+        res.json({ success: true, messages });
+    } catch (e) { errRes(res, e.message); }
+});
+
+app.post('/api/community/message', async (req, res) => {
+    try {
+        const { sender, text } = req.body;
+        if (!sender || !text) return errRes(res, "Sender and text required", 400);
+        if (isToxicOrInappropriate(text)) return errRes(res, "Message blocked by AI filter.", 400);
+        const msg = new CommunityMessage({ sender, text });
+        await msg.save();
+        res.json({ success: true, message: msg });
+    } catch (e) { errRes(res, e.message); }
+});
+
+// ============ RECOMMENDATIONS & NOTIFICATIONS ============
 app.get('/api/recommend/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
         const me = await User.findOne({ username: myUsername });
-        if (!me) return errRes(res, "User nai", 404);
+        if (!me) return errRes(res, "User not found", 404);
         const myFollowing = me.following || [];
         const allUsers = await User.find({ username: { $ne: myUsername } }).limit(200);
-        const now = Date.now();
         const recommendations = [];
         for (const other of allUsers) {
             if (myFollowing.includes(other.username)) continue;
-            const otherFollowers = other.followers || [];
-            const mutualFollowers = otherFollowers.filter(f => myFollowing.includes(f));
-            const mutualScore = mutualFollowers.length * 3;
-            const otherIsActive = !!(activeUsers[other.username] && (now - activeUsers[other.username] < 2 * 60 * 1000));
-            const iAmActive = !!(activeUsers[myUsername] && (now - activeUsers[myUsername] < 2 * 60 * 1000));
-            const activityMatch = (otherIsActive === iAmActive) ? 2 : 0;
-            const activityLevel = Math.min(5, otherFollowers.length / 10);
-            const ratioPenalty = ((other.following || []).length > otherFollowers.length * 3) ? -2 : 0;
-            const totalScore = mutualScore + activityMatch + activityLevel + ratioPenalty;
-            if (totalScore > 0) {
-                let reason = [];
-                if (mutualFollowers.length > 0) reason.push(mutualFollowers.length + " mutual");
-                if (otherIsActive && iAmActive) reason.push("Both active");
-                if (otherFollowers.length > 20) reason.push("Popular");
-                if (reason.length === 0) reason.push("Suggested");
-                recommendations.push({
-                    username: other.username, fullName: other.fullName, profilePic: other.profilePic,
-                    isActive: otherIsActive, score: Math.round(totalScore * 10) / 10, reason: reason.join(" · ")
-                });
-            }
+            const mutualFollowers = (other.followers || []).filter(f => myFollowing.includes(f));
+            recommendations.push({
+                username: other.username, fullName: other.fullName, profilePic: other.profilePic,
+                score: mutualFollowers.length + 1, reason: mutualFollowers.length > 0 ? mutualFollowers.length + " mutual" : "Suggested"
+            });
         }
         recommendations.sort((a, b) => b.score - a.score);
-        res.json({ success: true, recommendations: recommendations.slice(0, 15) });
+        res.json({ success: true, recommendations: recommendations.slice(0, 10) });
     } catch (e) { errRes(res, e.message); }
 });
 
-app.get('/api/notifications/:username', async (req, res) => {
-    try {
-        const myUsername = req.params.username;
-        const me = await User.findOne({ username: myUsername });
-        if (!me) return errRes(res, "User nai", 404);
-        const myFollowing = me.following || [];
-        const now = Date.now();
-        const notifications = [];
-        const recentPosts = await Post.find({ username: { $in: myFollowing } }).sort({ createdAt: -1 }).limit(20);
-        recentPosts.forEach(p => {
-            const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
-            const priority = 9 + ((p.likes?.length || 0) * 0.2);
-            if (priority >= 8) {
-                notifications.push({
-                    icon: "📝", text: p.username + " posted: " + (p.content || "").substring(0, 60),
-                    timeAgo: Math.round(ageHours) + "h ago",
-                    priorityScore: Math.round(priority * 10) / 10,
-                    priority: priority >= 12 ? "high" : priority >= 9 ? "medium" : "low"
-                });
-            }
-        });
-        (me.followers || []).slice(-5).forEach(f => {
-            notifications.push({ icon: "👤", text: f + " started following you", timeAgo: "Recently", priorityScore: 10.5, priority: "high" });
-        });
-        notifications.sort((a, b) => b.priorityScore - a.priorityScore);
-        res.json({ success: true, notifications: notifications.slice(0, 20) });
-    } catch (e) { errRes(res, e.message); }
-});
-
-async function detectFakeScore(user) {
-    let score = 0;
-    const reasons = [];
-    if (!user.profilePic || user.profilePic.length < 50) { score += 1; reasons.push("No pic"); }
-    const postCount = await Post.countDocuments({ username: user.username });
-    if (postCount === 0) { score += 2; reasons.push("No posts"); }
-    const followingCount = (user.following || []).length;
-    const followerCount = (user.followers || []).length;
-    if (followingCount > 50 && followerCount < 5) { score += 3; reasons.push("Follows many"); }
-    if (!user.bio || user.bio.length < 3) { score += 1; reasons.push("Empty bio"); }
-    return { score, reasons, isFake: score >= 5 };
-}
-
-// ============ COMPLAINT ============
+// ============ COMPLAINTS ============
 app.post('/api/complaint/submit', async (req, res) => {
     try {
         const { username, email, subject, message } = req.body;
-        if (!username || !subject || !message) return errRes(res, "Sob field din", 400);
+        if (!username || !subject || !message) return errRes(res, "All fields required", 400);
         const c = new Complaint({ username, email: email || "", subject, message });
         await c.save();
-        okRes(res, { message: "Complaint submitted." });
+        okRes(res, { message: "Complaint submitted successfully." });
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ ADMIN AUTH ============
-async function verifyAdmin(req) {
-    const header = req.headers['x-admin-user'];
-    if (!header) return null;
-    const admin = await Admin.findOne({ username: header });
-    return admin || null;
-}
-
-app.post('/api/admin/login', async (req, res) => {
-    try {
-        const { username, password } = req.body;
-        if (!username || !password) return errRes(res, "Username + password din", 400);
-
-        const admin = await Admin.findOne({ username });
-        if (!admin) return errRes(res, "Bhul credentials", 401);
-
-        if (admin.lockUntil && admin.lockUntil > new Date()) {
-            return errRes(res, "Account locked. Try again later.", 429);
-        }
-
-        const isMatch = await bcrypt.compare(password, admin.passwordHash);
-        if (!isMatch) {
-            admin.loginAttempts = (admin.loginAttempts || 0) + 1;
-            if (admin.loginAttempts >= 5) {
-                admin.lockUntil = new Date(Date.now() + 15 * 60 * 1000);
-                admin.loginAttempts = 0;
-                await admin.save();
-                return errRes(res, "Too many attempts. Locked for 15 minutes.", 429);
-            }
-            await admin.save();
-            return errRes(res, "Bhul credentials", 401);
-        }
-
-        admin.loginAttempts = 0;
-        admin.lockUntil = null;
-        admin.lastLogin = new Date();
-        await admin.save();
-
-        res.json({ success: true, adminUser: admin.username });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.get('/api/admin/users', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const users = await User.find().sort({ createdAt: -1 });
-        const now = Date.now();
-        const list = [];
-        let flaggedCount = 0;
-        for (const u of users) {
-            const fake = await detectFakeScore(u);
-            if (fake.isFake) flaggedCount++;
-            list.push({
-                username: u.username, email: u.email, fullName: u.fullName || "",
-                isActive: !!(activeUsers[u.username] && (now - activeUsers[u.username] < 2 * 60 * 1000)),
-                isBlocked: !!u.isBlocked,
-                isSuspended: !!(u.isSuspended && u.suspendedUntil && u.suspendedUntil > new Date()),
-                isMuted: !!u.isMuted, isFlagged: fake.isFake,
-                suspendedUntil: u.suspendedUntil, warnings: u.warnings || 0,
-                strikes: u.strikes || 0, twoFAEnabled: u.twoFAEnabled || false,
-                lastActive: u.lastActive || u.createdAt, createdAt: u.createdAt
-            });
-        }
-        res.json({ success: true, users: list, totalCount: list.length, activeCount: list.filter(u => u.isActive).length, flaggedCount });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.get('/api/admin/flagged-users', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const users = await User.find();
-        const flagged = [];
-        for (const u of users) {
-            const fake = await detectFakeScore(u);
-            if (fake.isFake) flagged.push({ username: u.username, fakeScore: fake.score, reasons: fake.reasons });
-        }
-        flagged.sort((a, b) => b.fakeScore - a.fakeScore);
-        res.json({ success: true, users: flagged });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.get('/api/admin/user/analysis/:username', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const username = req.params.username;
-        const user = await User.findOne({ username });
-        if (!user) return errRes(res, "User not found", 404);
-        const posts = await Post.find({ username });
-        const stories = await Story.find({ username });
-        const messages = await Message.find({ sender: username });
-        let totalLikesReceived = 0, totalCommentsReceived = 0, totalViews = 0;
-        posts.forEach(p => {
-            totalLikesReceived += (p.likes || []).length;
-            totalCommentsReceived += (p.comments || []).length;
-            totalViews += (p.views || 0);
-        });
-        const stats = {
-            totalPosts: posts.length, totalLikesReceived, totalCommentsReceived, totalViews,
-            totalStories: stories.length, totalMessages: messages.length,
-            totalFollowers: (user.followers || []).length, totalFollowing: (user.following || []).length
-        };
-        const fake = await detectFakeScore(user);
-        res.json({
-            success: true,
-            user: { username: user.username, email: user.email, fullName: user.fullName, bio: user.bio,
-                profilePic: user.profilePic, isBlocked: user.isBlocked, isSuspended: user.isSuspended,
-                isMuted: user.isMuted, isFlagged: fake.isFake, fakeScore: fake.score,
-                suspendedUntil: user.suspendedUntil, warnings: user.warnings || 0,
-                strikes: user.strikes || 0, twoFAEnabled: user.twoFAEnabled || false,
-                theme: user.theme || "light", lastActive: user.lastActive || user.createdAt, createdAt: user.createdAt },
-            stats, recentPosts: posts.slice(0, 5).map(p => ({ _id: p._id, content: p.content, likes: p.likes || [], comments: p.comments || [], views: p.views || 0, createdAt: p.createdAt }))
-        });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/block', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username, block } = req.body;
-        await User.updateOne({ username }, { isBlocked: block });
-        if (block) delete activeUsers[username];
-        okRes(res, { message: block ? "User blocked!" : "User unblocked!" });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/mute', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username, mute } = req.body;
-        await User.updateOne({ username }, { isMuted: mute });
-        okRes(res, { message: mute ? "User muted!" : "User unmuted!" });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/warn', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username } = req.body;
-        const u = await User.findOneAndUpdate({ username }, { $inc: { warnings: 1 } }, { new: true });
-        okRes(res, { message: `Warning #${u.warnings} added` });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/strike', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username } = req.body;
-        const u = await User.findOneAndUpdate({ username }, { $inc: { strikes: 1 } }, { new: true });
-        if (u.strikes >= 3) {
-            u.isSuspended = true;
-            u.suspendedUntil = new Date(Date.now() + 7*24*60*60*1000);
-            await u.save();
-            okRes(res, { message: `${username} auto-suspended 7 days!` });
-        } else {
-            okRes(res, { message: `Strike #${u.strikes} added` });
-        }
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/suspend', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username, suspend, days } = req.body;
-        if (suspend) {
-            const until = new Date(Date.now() + (days || 7) * 24*60*60*1000);
-            await User.updateOne({ username }, { isSuspended: true, suspendedUntil: until });
-            delete activeUsers[username];
-            okRes(res, { message: `${username} suspended` });
-        } else {
-            await User.updateOne({ username }, { isSuspended: false, suspendedUntil: null });
-            okRes(res, { message: `${username} unsuspended` });
-        }
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/reset-2fa', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username } = req.body;
-        await User.updateOne({ username }, { twoFAEnabled: false, twoFASecret: "" });
-        okRes(res, { message: `2FA reset` });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/user/delete', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { username } = req.body;
-        await Post.deleteMany({ username });
-        await Story.deleteMany({ username });
-        await Message.deleteMany({ sender: username });
-        await Room.deleteMany({ members: username });
-        await Complaint.deleteMany({ username });
-        await User.updateMany({ followers: username }, { $pull: { followers: username } });
-        await User.updateMany({ following: username }, { $pull: { following: username } });
-        await User.deleteOne({ username });
-        delete activeUsers[username];
-        okRes(res, { message: `${username} deleted` });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.get('/api/admin/complaints', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const complaints = await Complaint.find().sort({ createdAt: -1 });
-        res.json({ success: true, complaints });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/complaint/resolve', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { complaintId, adminNote } = req.body;
-        await Complaint.updateOne({ _id: complaintId }, { status: "resolved", adminNote: adminNote || "" });
-        okRes(res, { message: "Complaint resolved!" });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/complaint/delete', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { complaintId } = req.body;
-        await Complaint.deleteOne({ _id: complaintId });
-        okRes(res, { message: "Complaint deleted!" });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.get('/api/admin/posts', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const posts = await Post.find().sort({ createdAt: -1 }).limit(100);
-        res.json({ success: true, posts });
-    } catch (e) { errRes(res, e.message); }
-});
-
-app.post('/api/admin/post/delete', async (req, res) => {
-    try {
-        const admin = await verifyAdmin(req);
-        if (!admin) return errRes(res, "Unauthorized", 401);
-        const { postId } = req.body;
-        await Post.deleteOne({ _id: postId });
-        okRes(res, { message: "Post deleted!" });
-    } catch (e) { errRes(res, e.message); }
-});
-
-// ============ 2FA ============
+// ============ 2FA & FORGOT PASSWORD ============
 app.post('/api/2fa/setup', async (req, res) => {
     try {
         if (!speakeasy || !QRCode) return errRes(res, "2FA not available", 500);
         const { email } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const secret = speakeasy.generateSecret({ name: `Searchbook (${u.username})`, length: 20 });
         u.twoFASecret = secret.base32;
         await u.save();
@@ -981,9 +694,9 @@ app.post('/api/2fa/verify', async (req, res) => {
         if (!speakeasy) return errRes(res, "2FA not available", 500);
         const { email, code } = req.body;
         const u = await User.findOne({ email });
-        if (!u || !u.twoFASecret) return errRes(res, "Setup age korun", 400);
+        if (!u || !u.twoFASecret) return errRes(res, "Setup 2FA first", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return errRes(res, "Bhul code!", 400);
+        if (!verified) return errRes(res, "Invalid code!", 400);
         u.twoFAEnabled = true;
         await u.save();
         okRes(res, { message: "2FA enabled!" });
@@ -995,9 +708,9 @@ app.post('/api/2fa/disable', async (req, res) => {
         if (!speakeasy) return errRes(res, "2FA not available", 500);
         const { email, code } = req.body;
         const u = await User.findOne({ email });
-        if (!u || !u.twoFAEnabled) return errRes(res, "2FA off", 400);
+        if (!u || !u.twoFAEnabled) return errRes(res, "2FA already off", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: code, window: 1 });
-        if (!verified) return errRes(res, "Bhul code!", 400);
+        if (!verified) return errRes(res, "Invalid code!", 400);
         u.twoFAEnabled = false;
         u.twoFASecret = "";
         await u.save();
@@ -1005,16 +718,15 @@ app.post('/api/2fa/disable', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ FORGOT ============
+// 2FA-Locked Password Reset Flow
 app.post('/api/forgot/check-email', async (req, res) => {
     try {
         const { email } = req.body;
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "Account nai", 404);
+        if (!u) return errRes(res, "Account not found", 404);
         if (u.twoFAEnabled) return res.json({ success: true, needs2FA: true });
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
-        setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 61000);
+        otpStore[email] = { otp, expiresAt: Date.now() + 30000 };
         res.json({ success: true, needs2FA: false, otp });
     } catch (e) { errRes(res, e.message); }
 });
@@ -1026,9 +738,9 @@ app.post('/api/forgot/verify-2fa', async (req, res) => {
         const u = await User.findOne({ email });
         if (!u || !u.twoFAEnabled) return errRes(res, "2FA off", 400);
         const verified = speakeasy.totp.verify({ secret: u.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
-        if (!verified) return errRes(res, "Bhul 2FA code!", 400);
+        if (!verified) return errRes(res, "Invalid 2FA code!", 400);
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 60000 };
+        otpStore[email] = { otp, expiresAt: Date.now() + 30000 };
         res.json({ success: true, otp });
     } catch (e) { errRes(res, e.message); }
 });
@@ -1037,12 +749,12 @@ app.post('/api/forgot/reset-password', async (req, res) => {
     try {
         const { email, otp, newPassword } = req.body;
         const stored = otpStore[email];
-        if (!stored) return errRes(res, "OTP expire", 400);
-        if (Date.now() > stored.expiresAt) { delete otpStore[email]; return errRes(res, "OTP expire", 400); }
-        if (stored.otp != otp) return errRes(res, "Bhul OTP", 400);
-        if (!newPassword || newPassword.length < 6) return errRes(res, "Min 6 char", 400);
+        if (!stored || Date.now() > stored.expiresAt || stored.otp != otp) {
+            return errRes(res, "OTP expired or invalid", 400);
+        }
+        if (!newPassword || newPassword.length < 6) return errRes(res, "Min 6 chars required", 400);
         const u = await User.findOne({ email });
-        if (!u) return errRes(res, "User nai", 404);
+        if (!u) return errRes(res, "User not found", 404);
         const salt = await bcrypt.genSalt(10);
         u.passwordHash = await bcrypt.hash(newPassword, salt);
         await u.save();
