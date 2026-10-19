@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Searchbook - Global Social Network</title>
 <style>
-:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --warning: #fdcb6e; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.92); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
+:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.95); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
 
@@ -23,9 +23,12 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); }
 .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
 .btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
-.btn-orange { background: linear-gradient(135deg, #f39c12, #e67e22); }
+.btn-sm { padding: 8px 14px; font-size: 13px; width: auto; margin-top: 0; }
 .link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 600; }
 .divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
+
+.pass-hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; background: rgba(108, 92, 231, 0.08); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary); }
+.alert-warning-box { background: rgba(253, 203, 110, 0.25); border-left: 4px solid #f39c12; color: #d35400; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; line-height: 1.4; font-weight: 600; }
 
 #main-app { display: none; }
 #main-app.active { display: block; }
@@ -47,9 +50,18 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .post-box, .card-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
 .post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; }
 
-/* Secure Admin Modal */
+.post-creator-container { display: flex; gap: 12px; align-items: flex-start; }
+.post-creator-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+.post-creator-inputs { flex: 1; }
+
+.post-actions { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
+.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
+.comment-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
+.comment-item { font-size: 13px; background: rgba(245,247,250,0.9); padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; }
+
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
@@ -60,7 +72,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 <div id="auth-app">
     <div class="auth-box">
         <h1 class="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
-        <p style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;" id="t-subtitle">Connect with friends, share your moments</p>
+        <p style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;">Connect with friends, share your moments</p>
 
         <div id="login-panel" class="card active">
             <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
@@ -70,11 +82,10 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                     <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
                 </div>
             </div>
-            <button class="btn" id="t-login-btn" onclick="handleLogin()">Log In</button>
-            <span class="link" id="t-forgot-link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
+            <button class="btn" onclick="handleLogin()">Log In</button>
+            <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
             <div class="divider"></div>
-            <button class="btn btn-green" id="t-create-btn" onclick="switchPanel('register-panel')">Create New Account</button>
-            <div onclick="switchPanel('complaint-panel')" style="margin-top:14px; padding:10px; text-align:center; background:rgba(240,240,255,0.8); border-radius:10px; cursor:pointer; font-weight:700; color:var(--primary); font-size:13px;">📢 Complaint Box</div>
+            <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
         </div>
 
         <div id="register-panel" class="card">
@@ -87,32 +98,28 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                     <input type="password" id="reg-password" placeholder="Password">
                     <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
                 </div>
+                <div class="pass-hint">
+                    🔒 <b>পাসওয়ার্ড নির্দেশাবলী:</b> অন্তত ৮টি অক্ষর, বড় হাতের অক্ষর (A-Z), ছোট হাতের অক্ষর (a-z), সংখ্যা (0-9) এবং স্পেশাল চিহ্ন (!@#$%^&*) থাকতে হবে।
+                </div>
             </div>
             <button class="btn btn-green" onclick="handleSignup()">Sign Up</button>
             <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
 
-        <div id="twofa-login-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Required</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter code from Google Authenticator</p>
-            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
-            <button class="btn" onclick="submit2FALogin()">Submit Code</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
-        </div>
-
         <div id="forgot-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">🔑 Forgot Password</h2>
-            <div class="input-group"><input type="email" id="reset-email" placeholder="Account email"></div>
-            <button class="btn" onclick="resetPassword()">Reset Password</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
+            <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset</h2>
+            <div class="alert-warning-box">
+                ⚠️ <b>গুরুত্বপূর্ণ সতর্কবার্তা:</b> পাসওয়ার্ড পুনরুদ্ধারের জন্য এবং আপনার অ্যাকাউন্ট সুরক্ষিত রাখতে অবশ্যই <b>2FA (Google Authenticator)</b> চালু রাখতে হবে।
+            </div>
+            <div class="input-group"><input type="email" id="reset-email" placeholder="Enter registered email"></div>
+            <button class="btn" onclick="resetPassword()">Send Reset Link</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
         </div>
 
-        <div id="complaint-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">📢 Complaint Box</h2>
-            <div class="input-group"><input type="text" id="complaint-username" placeholder="Your username"></div>
-            <div class="input-group"><input type="text" id="complaint-subject" placeholder="Subject"></div>
-            <div class="input-group"><textarea id="complaint-message" placeholder="Describe issue..."></textarea></div>
-            <button class="btn btn-orange" onclick="submitComplaint()">Submit Complaint</button>
+        <div id="twofa-login-panel" class="card">
+            <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Code Required</h2>
+            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; font-weight:700;"></div>
+            <button class="btn" onclick="submit2FALogin()">Submit</button>
             <span class="link" onclick="switchPanel('login-panel')">← Back</span>
         </div>
     </div>
@@ -123,10 +130,14 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
         <div class="top-logo" onclick="handleLogoClick()">Searchbook</div>
         <div class="top-icons">
             <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
+            <button class="top-icon-btn" onclick="switchMainView('community-view')" title="Community Chat">🌐</button>
+            <button class="top-icon-btn" onclick="switchMainView('messages-view')" title="Messages">💬</button>
             <button class="top-icon-btn" onclick="toggleMenuDropdown()" title="Menu">⋮</button>
             
             <div class="menu-dropdown" id="menu-dropdown">
-                <div class="menu-item" onclick="switchMainView('profile-view'); toggleMenuDropdown();">👤 Profile</div>
+                <div class="menu-item" onclick="openMyProfile(); toggleMenuDropdown();">👤 My Profile</div>
+                <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();">🌐 Community Chat</div>
+                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();">💬 Private Messages</div>
                 <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();">⚙️ Settings & Security</div>
                 <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();">🌍 Language</div>
                 <div class="menu-item logout" onclick="handleLogout()">⎋ Log Out</div>
@@ -136,26 +147,79 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
     <div class="layout">
         <div class="main-content">
+            <!-- NEWSFEED -->
             <div id="feed-view" class="main-view active">
                 <div class="post-box">
-                    <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                    <button class="btn" onclick="createPost()" style="margin-top:10px;">Share Post</button>
+                    <div class="post-creator-container">
+                        <div class="post-creator-avatar" id="creator-avatar" onclick="openMyProfile()">U</div>
+                        <div class="post-creator-inputs">
+                            <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <label style="cursor: pointer; font-size: 14px; color: var(--primary); font-weight: 600;">
+                                    📷 Upload Photo <input type="file" id="post-image-file" accept="image/*" style="display: none;">
+                                </label>
+                                <button class="btn btn-sm" onclick="createPost()">Share Post</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <h3 style="margin-bottom:15px; color:var(--text);">🔥 Smart AI Algorithm Newsfeed</h3>
+                <h3 style="margin-bottom:15px;">🔥 Smart AI Algorithm Newsfeed</h3>
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
             </div>
 
-            <div id="profile-view" class="main-view">
+            <!-- COMMUNITY CHAT VIEW -->
+            <div id="community-view" class="main-view">
                 <div class="card-box">
-                    <h2>👤 User Profile</h2>
-                    <div style="text-align:center; margin-top:15px;">
-                        <div class="avatar" style="width:80px; height:80px; font-size:32px; margin:0 auto;" id="profile-avatar">U</div>
-                        <h3 id="profile-name" style="margin-top:10px;">User Name</h3>
-                        <p id="profile-email" style="color:var(--muted); font-size:14px;"></p>
+                    <h2>🌐 Global Community Chat</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Open chat room for everyone to chat and share pictures.</p>
+                    <div style="height:320px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="community-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Loading community messages...</p>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-direction:column;">
+                        <input type="text" id="community-msg-text" placeholder="Type a public message..." style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <input type="file" id="community-img-file" accept="image/*" style="font-size:12px;">
+                            <button class="btn btn-sm" onclick="sendCommunityMessage()">Send to Community</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- USER / MY PROFILE VIEW -->
+            <div id="profile-view" class="main-view">
+                <div class="card-box">
+                    <div style="text-align:center;">
+                        <div class="avatar" style="width:80px; height:80px; font-size:32px; margin:0 auto;" id="view-profile-avatar">U</div>
+                        <h3 id="view-profile-name" style="margin-top:10px;">User Name</h3>
+                        <p id="view-profile-email" style="color:var(--muted); font-size:14px;"></p>
+                        <div id="profile-action-area" style="margin-top:15px;"></div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom:12px;">User Posts</h3>
+                <div id="user-posts-list"></div>
+            </div>
+
+            <!-- PRIVATE MESSAGES VIEW (1-TO-1 SECURE CHAT) -->
+            <div id="messages-view" class="main-view">
+                <div class="card-box">
+                    <h2>💬 Secure 1-to-1 Private Chat</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">You can only chat with accepted friends securely.</p>
+                    <div class="input-group">
+                        <select id="friend-select-dropdown" onchange="loadPrivateChat(this.value)" style="padding:10px; border-radius:8px; width:100%;">
+                            <option value="">-- Select an accepted friend --</option>
+                        </select>
+                    </div>
+                    <div style="height:250px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="private-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Select a friend to view secure private conversation</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="private-msg-input" placeholder="Type secure message..." style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);">
+                        <button class="btn btn-sm" onclick="sendPrivateMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
             <div id="settings-view" class="main-view">
                 <div class="card-box">
                     <h2>⚙️ Settings & Security</h2>
@@ -172,6 +236,9 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                             <input type="password" id="new-pass" placeholder="New Password">
                             <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
                         </div>
+                        <div class="pass-hint">
+                            🔒 <b>পাসওয়ার্ড নির্দেশাবলী:</b> অন্তত ৮টি অক্ষর, বড় হাতের অক্ষর (A-Z), ছোট হাতের অক্ষর (a-z), সংখ্যা (0-9) এবং বিশেষ চিহ্ন থাকতে হবে।
+                        </div>
                     </div>
                     <button class="btn btn-green" onclick="changePassword()">Update Password</button>
 
@@ -187,11 +254,11 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 </div>
             </div>
 
+            <!-- LANGUAGE SWITCHER VIEW -->
             <div id="language-view" class="main-view">
                 <div class="card-box">
                     <h2>🌍 Multi-Language Switcher</h2>
-                    <p style="color:var(--muted); font-size:14px; margin-bottom:15px;">Choose interface language:</p>
-                    <div class="input-group">
+                    <div class="input-group" style="margin-top:15px;">
                         <select id="language-select" onchange="changeLanguage(this.value)">
                             <option value="en">English (US)</option>
                             <option value="bn">বাংলা (Bangla)</option>
@@ -215,20 +282,16 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 <div id="admin-panel">
     <div class="admin-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="color:#e17055; margin:0;" id="admin-modal-title">🔐 Admin Authentication Required</h2>
+            <h2 style="color:#e17055; margin:0;">🔐 Admin Control</h2>
             <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
         </div>
-        
         <div id="admin-login-form">
-            <p style="color:var(--muted); margin-bottom:15px;">Enter admin credentials to access system control:</p>
             <div class="input-group"><input type="text" id="admin-user-input" placeholder="Admin Username"></div>
             <div class="input-group"><input type="password" id="admin-pass-input" placeholder="Admin Password"></div>
             <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
         </div>
-
         <div id="admin-content-area" style="display:none;">
-            <p style="color:var(--muted); margin-bottom:15px;">System records & User Control:</p>
-            <div id="admin-user-list"><p>Loading system users...</p></div>
+            <div id="admin-user-list"></div>
         </div>
     </div>
 </div>
@@ -237,27 +300,23 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 const BACKEND_URL = "";
 let currentUser = JSON.parse(localStorage.getItem("searchbook_user")) || null;
 let logoClicks = 0;
+let activeChatFriend = "";
 
-const translations = {
-    en: { subtitle: "Connect with friends, share your moments", login: "Log In", forgot: "Forgot password?", create: "Create New Account" },
-    bn: { subtitle: "বন্ধুদের সাথে যুক্ত হোন, মুহূর্তগুলো শেয়ার করুন", login: "লগইন করুন", forgot: "পাসওয়ার্ড ভুলে গেছেন?", create: "নতুন অ্যাকাউন্ট খুলুন" }
-};
+function toggleMenuDropdown() { document.getElementById("menu-dropdown").classList.toggle("show"); }
 
 function changeLanguage(lang) {
     localStorage.setItem("searchbook_lang", lang);
+    alert("✅ Language preference saved!");
 }
 
-function toggleMenuDropdown() {
-    document.getElementById("menu-dropdown").classList.toggle("show");
+function isStrongPassword(pass) {
+    const minLength = pass.length >= 8;
+    const hasUpper = /[A-Z]/.test(pass);
+    const hasLower = /[a-z]/.test(pass);
+    const hasNumber = /[0-9]/.test(pass);
+    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
+    return minLength && hasUpper && hasLower && hasNumber && hasSpecial;
 }
-
-document.addEventListener("click", function(e) {
-    const dropdown = document.getElementById("menu-dropdown");
-    const btn = e.target.closest(".top-icon-btn");
-    if (!btn && dropdown && dropdown.classList.contains("show")) {
-        dropdown.classList.remove("show");
-    }
-});
 
 function handleLogoClick() {
     logoClicks++;
@@ -265,8 +324,6 @@ function handleLogoClick() {
         logoClicks = 0;
         document.getElementById("admin-login-form").style.display = "block";
         document.getElementById("admin-content-area").style.display = "none";
-        document.getElementById("admin-user-input").value = "";
-        document.getElementById("admin-pass-input").value = "";
         document.getElementById("admin-panel").classList.add("active");
     }
     setTimeout(() => { logoClicks = 0; }, 3000);
@@ -275,7 +332,6 @@ function handleLogoClick() {
 async function verifyAdminLogin() {
     const username = document.getElementById("admin-user-input").value.trim();
     const password = document.getElementById("admin-pass-input").value;
-    if (!username || !password) { alert("Enter admin username and password"); return; }
     try {
         const res = await fetch(BACKEND_URL + "/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
         const data = await res.json();
@@ -283,23 +339,15 @@ async function verifyAdminLogin() {
             document.getElementById("admin-login-form").style.display = "none";
             document.getElementById("admin-content-area").style.display = "block";
             loadAdminUsers();
-        } else {
-            alert("❌ " + data.message);
-        }
-    } catch(e) { alert("❌ Admin authentication failed"); }
+        } else alert("❌ Invalid credentials");
+    } catch(e) { alert("❌ Error"); }
 }
 
 async function loadAdminUsers() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/admin/users");
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("admin-user-list").innerHTML = data.users.map(u => 
-                '<div style="padding:10px; background:#f8f9fe; margin-bottom:8px; border-radius:8px;"><b>' + u.username + '</b> (' + u.email + ') - 2FA: ' + (u.twoFAEnabled ? 'Enabled' : 'Disabled') + '</div>'
-            ).join("");
-        }
-    } catch(e) {
-        document.getElementById("admin-user-list").innerHTML = "<p>Failed to load records.</p>";
+    const res = await fetch(BACKEND_URL + "/api/admin/users");
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("admin-user-list").innerHTML = data.users.map(u => '<div style="padding:10px; background:#f8f9fe; margin-bottom:8px;"><b>' + u.username + '</b> (' + u.email + ')</div>').join("");
     }
 }
 
@@ -313,14 +361,12 @@ document.addEventListener("DOMContentLoaded", function() {
     if (currentUser) {
         document.getElementById("auth-app").style.display = "none";
         document.getElementById("main-app").classList.add("active");
+        document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
         switchMainView("feed-view");
         loadProfileData();
+        loadFriendsList();
     }
 });
-
-function authHeaders() {
-    return { "Content-Type": "application/json", "x-username": currentUser ? currentUser.username : "" };
-}
 
 function switchPanel(id) {
     document.querySelectorAll("#auth-app .card").forEach(p => p.classList.remove("active"));
@@ -331,13 +377,14 @@ function switchMainView(viewId) {
     document.querySelectorAll(".main-view").forEach(v => v.classList.remove("active"));
     document.getElementById(viewId).classList.add("active");
     if (viewId === "feed-view") loadPosts();
-    if (viewId === "settings-view" || viewId === "profile-view") loadProfileData();
+    if (viewId === "community-view") loadCommunityChat();
+    if (viewId === "messages-view") loadFriendsList();
+    if (viewId === "settings-view") loadProfileData();
 }
 
 async function handleLogin() {
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
-    if (!email || !password) { alert("Please enter email and password"); return; }
     try {
         const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
@@ -349,15 +396,15 @@ async function handleLogin() {
             localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
             document.getElementById("auth-app").style.display = "none";
             document.getElementById("main-app").classList.add("active");
+            document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
             switchMainView("feed-view");
-            loadProfileData();
+            loadFriendsList();
         } else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Server connection failed"); }
+    } catch(e) { alert("❌ Login Failed"); }
 }
 
 async function submit2FALogin() {
     const code = document.getElementById("login-2fa-code").value.trim();
-    if (!code) { alert("Enter 2FA Code"); return; }
     try {
         const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: window.temp2FAEmail, password: "", twoFACode: code }) });
         const data = await res.json();
@@ -366,10 +413,11 @@ async function submit2FALogin() {
             localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
             document.getElementById("auth-app").style.display = "none";
             document.getElementById("main-app").classList.add("active");
+            document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
             switchMainView("feed-view");
-            loadProfileData();
+            loadFriendsList();
         } else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Server error"); }
+    } catch(e) { alert("❌ Error"); }
 }
 
 async function handleSignup() {
@@ -377,105 +425,31 @@ async function handleSignup() {
     const username = document.getElementById("reg-username").value.trim();
     const email = document.getElementById("reg-email").value.trim();
     const password = document.getElementById("reg-password").value;
-    if (!fullName || !username || !email || !password) { alert("Please fill all fields"); return; }
+
+    if (!isStrongPassword(password)) {
+        alert("⚠️ পাসওয়ার্ড শক্তিশালী হতে হবে! অন্তত ৮টি অক্ষর, ১টি বড় হাতের অক্ষর, ১টি ছোট হাতের অক্ষর, ১টি সংখ্যা এবং ১টি বিশেষ চিহ্ন থাকতে হবে।");
+        return;
+    }
+
     try {
         const res = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fullName, username, email, password }) });
         const data = await res.json();
-        if (data.success) { alert("✅ Account created! Please log in."); switchPanel("login-panel"); }
+        if (data.success) { alert("✅ Account Created! Please log in."); switchPanel("login-panel"); }
         else alert("❌ " + data.message);
-    } catch(e) { alert("❌ " + e.message); }
+    } catch(e) { alert("❌ Error"); }
+}
+
+function resetPassword() {
+    const email = document.getElementById("reset-email").value.trim();
+    if (!email) { alert("Please enter your email"); return; }
+    alert("✅ Password reset link has been sent to your email. (Ensure 2FA is enabled for safety)");
+    switchPanel("login-panel");
 }
 
 function handleLogout() {
     localStorage.removeItem("searchbook_user");
     currentUser = null;
-    document.getElementById("main-app").classList.remove("active");
-    document.getElementById("auth-app").style.display = "flex";
-    switchPanel("login-panel");
-}
-
-async function loadProfileData() {
-    if (!currentUser) return;
-    try {
-        document.getElementById("profile-name").textContent = currentUser.fullName || currentUser.username;
-        document.getElementById("profile-email").textContent = currentUser.email;
-        document.getElementById("profile-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
-        const res = await fetch(BACKEND_URL + "/api/user/" + currentUser.email, { headers: authHeaders() });
-        const data = await res.json();
-        if (data.success) {
-            const twofaStatus = document.getElementById("twofa-status");
-            const twofaBtn = document.getElementById("twofa-btn");
-            if (data.user.twoFAEnabled) {
-                twofaStatus.textContent = "Status: Enabled 🟢";
-                twofaBtn.textContent = "Disable 2FA";
-                twofaBtn.className = "btn btn-red";
-                twofaBtn.onclick = disable2FA;
-            } else {
-                twofaStatus.textContent = "Status: Disabled 🔴";
-                twofaBtn.textContent = "Enable 2FA Authenticator";
-                twofaBtn.className = "btn";
-                twofaBtn.onclick = setup2FA;
-            }
-        }
-    } catch(e) {}
-}
-
-async function changePassword() {
-    const oldPassword = document.getElementById("old-pass").value;
-    const newPassword = document.getElementById("new-pass").value;
-    if (!oldPassword || !newPassword) { alert("Fill both password fields"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
-        const data = await res.json();
-        if (data.success) { alert("✅ Password updated!"); document.getElementById("old-pass").value = ""; document.getElementById("new-pass").value = ""; }
-        else alert("❌ " + data.message);
-    } catch(e) { alert("❌ " + e.message); }
-}
-
-async function setup2FA() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email }) });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("twofa-qr").src = data.qrCode;
-            document.getElementById("twofa-qr-box").style.display = "block";
-        } else alert("❌ " + data.message);
-    } catch(e) { alert("❌ " + e.message); }
-}
-
-async function verifyAndEnable2FA() {
-    const code = document.getElementById("twofa-code").value.trim();
-    if (!code) { alert("Enter code"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code }) });
-        const data = await res.json();
-        if (data.success) { alert("✅ 2FA Enabled!"); document.getElementById("twofa-qr-box").style.display = "none"; loadProfileData(); }
-        else alert("❌ " + data.message);
-    } catch(e) { alert("❌ " + e.message); }
-}
-
-async function disable2FA() {
-    const code = prompt("Enter 2FA code to disable:");
-    if (!code) return;
-    try {
-        const res = await fetch(BACKEND_URL + "/api/2fa/disable", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code }) });
-        const data = await res.json();
-        if (data.success) { alert("✅ 2FA Disabled"); loadProfileData(); }
-        else alert("❌ " + data.message);
-    } catch(e) { alert("❌ " + e.message); }
-}
-
-async function submitComplaint() {
-    const username = document.getElementById("complaint-username").value.trim();
-    const subject = document.getElementById("complaint-subject").value.trim();
-    const message = document.getElementById("complaint-message").value.trim();
-    if (!username || !subject || !message) { alert("Fill all complaint fields"); return; }
-    try {
-        const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, subject, message }) });
-        const data = await res.json();
-        if (data.success) { alert("✅ Complaint submitted."); switchPanel("login-panel"); }
-        else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Server error"); }
+    location.reload();
 }
 
 async function loadPosts() {
@@ -483,23 +457,279 @@ async function loadPosts() {
         const res = await fetch(BACKEND_URL + "/api/feed/" + (currentUser ? currentUser.username : "guest"));
         const posts = await res.json();
         const list = document.getElementById("posts-list");
-        if (!posts.length) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts found</p>'; return; }
-        list.innerHTML = posts.map(p => '<div class="post-item"><div class="post-header"><div class="avatar">' + p.username[0].toUpperCase() + '</div><div><b>' + p.username + '</b><div style="font-size:12px; color:var(--muted);">' + new Date(p.createdAt).toLocaleTimeString() + '</div></div></div><div>' + p.content + '</div></div>').join("");
+        if (!posts.length) { list.innerHTML = '<p style="text-align:center;">No posts found</p>'; return; }
+        list.innerHTML = posts.map(p => `
+            <div class="post-item">
+                <div class="post-header">
+                    <div class="avatar" onclick="viewUserProfile('${p.username}')">${p.username[0].toUpperCase()}</div>
+                    <div>
+                        <b onclick="viewUserProfile('${p.username}')" style="cursor:pointer;">${p.username}</b>
+                        <div style="font-size:12px; color:var(--muted);">${new Date(p.createdAt).toLocaleTimeString()}</div>
+                    </div>
+                </div>
+                <div>${p.content}</div>
+                ${p.imageUrl ? `<div style="margin-top:10px;"><img src="${p.imageUrl}" style="max-width:100%; border-radius:12px;"></div>` : ''}
+                <div class="post-actions">
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'like')">👍 ${p.likes ? p.likes.length : 0}</button>
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'love')">❤️ ${p.loves ? p.loves.length : 0}</button>
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'fire')">🔥 ${p.fires ? p.fires.length : 0}</button>
+                    <button class="action-btn" onclick="sharePost('${p._id}')">🔁 Share</button>
+                </div>
+                <div class="comment-section">
+                    <div id="comments-${p._id}">
+                        ${(p.comments || []).map(c => `<div class="comment-item"><b>${c.username}:</b>${c.text}</div>`).join('')}
+                    </div>
+                    <div style="display:flex; gap:6px; margin-top:8px;">
+                        <input type="text" id="input-comment-${p._id}" placeholder="Write a comment..." style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-size:12px;">
+                        <button class="btn btn-sm" onclick="addComment('${p._id}')">Post</button>
+                    </div>
+                </div>
+            </div>
+        `).join("");
     } catch(e) {}
 }
 
 async function createPost() {
     const content = document.getElementById("post-content").value.trim();
-    if (!content) return;
+    const fileInput = document.getElementById("post-image-file");
+    if (!content && fileInput.files.length === 0) return;
+
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = async function() {
+            await sendPostData(content, reader.result);
+        };
+    } else {
+        await sendPostData(content, "");
+    }
+}
+
+async function sendPostData(content, imageUrl) {
     try {
-        await fetch(BACKEND_URL + "/api/posts", { method: "POST", headers: authHeaders(), body: JSON.stringify({ username: currentUser.username, content }) });
-        document.getElementById("post-content").value = "";
-        loadPosts();
+        const res = await fetch(BACKEND_URL + "/api/posts", { 
+            method: "POST", 
+            headers: { "Content-Type": "application/json" }, 
+            body: JSON.stringify({ username: currentUser.username, content, imageUrl }) 
+        });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("post-content").value = "";
+            document.getElementById("post-image-file").value = "";
+            loadPosts();
+        } else {
+            alert("❌ " + data.message);
+        }
+    } catch(e) { alert("❌ Error posting"); }
+}
+
+async function reactPost(postId, type) {
+    await fetch(BACKEND_URL + `/api/posts/${postId}/react`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, type }) });
+    loadPosts();
+}
+
+async function addComment(postId) {
+    const input = document.getElementById(`input-comment-${postId}`);
+    const text = input.value.trim();
+    if (!text) return;
+    const res = await fetch(BACKEND_URL + `/api/posts/${postId}/comment`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, text }) });
+    const data = await res.json();
+    if (!data.success) { alert("❌ " + data.message); return; }
+    input.value = "";
+    loadPosts();
+}
+
+async function sharePost(postId) {
+    await fetch(BACKEND_URL + `/api/posts/${postId}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
+    alert("✅ Post shared on your profile!");
+    loadPosts();
+}
+
+function openMyProfile() {
+    viewUserProfile(currentUser.username);
+}
+
+async function viewUserProfile(username) {
+    switchMainView("profile-view");
+    document.getElementById("view-profile-name").textContent = username;
+    document.getElementById("view-profile-avatar").textContent = username[0].toUpperCase();
+    
+    const actionArea = document.getElementById("profile-action-area");
+    if (username === currentUser.username) {
+        actionArea.innerHTML = `<span style="font-size:13px; color:var(--muted);">This is your profile</span>`;
+    } else {
+        const res = await fetch(BACKEND_URL + `/api/friend-status?user1=${currentUser.username}&user2=${username}`);
+        const data = await res.json();
+        if (data.status === "friends") {
+            actionArea.innerHTML = `<span style="color:var(--accent); font-weight:700;">✅ Friends</span>`;
+        } else if (data.status === "pending_sent") {
+            actionArea.innerHTML = `<span style="color:var(--muted); font-weight:600;">⏳ Friend Request Sent</span>`;
+        } else if (data.status === "pending_received") {
+            actionArea.innerHTML = `<button class="btn btn-sm btn-green" onclick="acceptFriend('${username}')">✔ Accept Request</button>`;
+        } else {
+            actionArea.innerHTML = `<button class="btn btn-sm btn-green" onclick="sendFriendRequest('${username}')">➕ Send Friend Request</button>`;
+        }
+    }
+
+    const resPosts = await fetch(BACKEND_URL + `/api/user-posts/${username}`);
+    const posts = await resPosts.json();
+    document.getElementById("user-posts-list").innerHTML = posts.map(p => `
+        <div class="post-item"><b>${p.username}</b>: ${p.content} ${p.imageUrl ? `<br><img src="${p.imageUrl}" style="max-width:100%; border-radius:10px; margin-top:8px;">` : ''}</div>
+    `).join("");
+}
+
+async function sendFriendRequest(targetUser) {
+    const res = await fetch(BACKEND_URL + "/api/friend-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: currentUser.username, receiver: targetUser }) });
+    const data = await res.json();
+    if (data.success) { alert("✅ Friend request sent!"); viewUserProfile(targetUser); }
+}
+
+async function acceptFriend(requester) {
+    const res = await fetch(BACKEND_URL + "/api/friend-accept", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user: currentUser.username, friend: requester }) });
+    const data = await res.json();
+    if (data.success) { alert("✅ Friend request accepted! You can now chat securely 1-to-1."); viewUserProfile(requester); loadFriendsList(); }
+}
+
+async function loadFriendsList() {
+    try {
+        const res = await fetch(BACKEND_URL + `/api/friends/${currentUser.username}`);
+        const data = await res.json();
+        const select = document.getElementById("friend-select-dropdown");
+        if (data.success && data.friends.length > 0) {
+            select.innerHTML = '<option value="">-- Select an accepted friend --</option>' + data.friends.map(f => `<option value="${f}">${f}</option>`).join('');
+        } else {
+            select.innerHTML = '<option value="">No accepted friends yet</option>';
+        }
     } catch(e) {}
 }
 
-function resetPassword() {
-    alert("Instructions sent to email!");
+async function loadPrivateChat(friendUsername) {
+    if (!friendUsername) return;
+    activeChatFriend = friendUsername;
+    const res = await fetch(BACKEND_URL + `/api/private-messages?user1=${currentUser.username}&user2=${friendUsername}`);
+    const data = await res.json();
+    const box = document.getElementById("private-chat-box");
+    if (data.success) {
+        box.innerHTML = data.messages.map(m => `
+            <div style="margin-bottom:8px; text-align:${m.sender === currentUser.username ? 'right' : 'left'};">
+                <span style="background:${m.sender === currentUser.username ? '#6c5ce7' : '#fff'}; color:${m.sender === currentUser.username ? '#fff' : '#000'}; padding:8px 12px; border-radius:12px; display:inline-block; max-width:75%; word-break:break-word;">
+                    <b>${m.sender}:</b> ${m.text}
+                </span>
+            </div>
+        `).join('') || '<p style="text-align:center; color:var(--muted);">No messages yet. Start conversation securely!</p>';
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+async function sendPrivateMessage() {
+    if (!activeChatFriend) { alert("Please select an accepted friend first!"); return; }
+    const text = document.getElementById("private-msg-input").value.trim();
+    if (!text) return;
+    const res = await fetch(BACKEND_URL + "/api/private-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: currentUser.username, receiver: activeChatFriend, text }) });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("private-msg-input").value = "";
+        loadPrivateChat(activeChatFriend);
+    } else {
+        alert("❌ " + data.message);
+    }
+}
+
+async function loadCommunityChat() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/community-messages");
+        const data = await res.json();
+        const box = document.getElementById("community-chat-box");
+        if (data.success) {
+            box.innerHTML = data.messages.map(m => `
+                <div style="margin-bottom:10px;">
+                    <b>${m.username}:</b> ${m.text}
+                    ${m.imageUrl ? `<br><img src="${m.imageUrl}" style="max-width:150px; border-radius:8px; margin-top:5px;">` : ''}
+                </div>
+            `).join('') || '<p style="text-align:center; color:var(--muted);">No community messages yet.</p>';
+            box.scrollTop = box.scrollHeight;
+        }
+    } catch(e) {}
+}
+
+async function sendCommunityMessage() {
+    const text = document.getElementById("community-msg-text").value.trim();
+    const fileInput = document.getElementById("community-img-file");
+    if (!text && fileInput.files.length === 0) return;
+
+    if (fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = async function() {
+            await sendCommunityData(text, reader.result);
+        };
+    } else {
+        await sendCommunityData(text, "");
+    }
+}
+
+async function sendCommunityData(text, imageUrl) {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/community-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, text, imageUrl }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("community-msg-text").value = "";
+            document.getElementById("community-img-file").value = "";
+            loadCommunityChat();
+        } else {
+            alert("❌ " + data.message);
+        }
+    } catch(e) { alert("❌ Error"); }
+}
+
+async function loadProfileData() {
+    if (!currentUser) return;
+    const res = await fetch(BACKEND_URL + "/api/user/" + currentUser.email);
+    const data = await res.json();
+    if (data.success) {
+        const twofaStatus = document.getElementById("twofa-status");
+        const twofaBtn = document.getElementById("twofa-btn");
+        if (data.user.twoFAEnabled) {
+            twofaStatus.textContent = "Status: Enabled 🟢";
+            twofaBtn.textContent = "Disable 2FA";
+            twofaBtn.className = "btn btn-red";
+        } else {
+            twofaStatus.textContent = "Status: Disabled 🔴";
+            twofaBtn.textContent = "Setup 2FA";
+            twofaBtn.className = "btn";
+        }
+    }
+}
+
+async function setup2FA() {
+    const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email }) });
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("twofa-qr").src = data.qrCode;
+        document.getElementById("twofa-qr-box").style.display = "block";
+    }
+}
+
+async function verifyAndEnable2FA() {
+    const code = document.getElementById("twofa-code").value.trim();
+    const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, code }) });
+    const data = await res.json();
+    if (data.success) { alert("✅ 2FA Enabled!"); loadProfileData(); }
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById("old-pass").value;
+    const newPassword = document.getElementById("new-pass").value;
+
+    if (!isStrongPassword(newPassword)) {
+        alert("⚠️ নতুন পাসওয়ার্ডটি শক্তিশালী হতে হবে! অন্তত ৮টি অক্ষর, ১টি বড় হাতের অক্ষর, ১টি ছোট হাতের অক্ষর, ১টি সংখ্যা এবং ১টি বিশেষ চিহ্ন ব্যবহার করুন।");
+        return;
+    }
+
+    const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
+    const data = await res.json();
+    if (data.success) alert("✅ Password updated!");
+    else alert("❌ " + data.message);
 }
 </script>
 </body>
