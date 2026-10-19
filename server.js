@@ -93,6 +93,18 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
+// SECURE ADMIN LOGIN (ONLY YOU CAN ACCESS)
+app.post('/api/admin/login', (req, res) => {
+    const { username, password } = req.body;
+    const ADMIN_USER = process.env.ADMIN_USER || "riyad";
+    const ADMIN_PASS = process.env.ADMIN_PASS || "riyad1234";
+
+    if (username === ADMIN_USER && password === ADMIN_PASS) {
+        return res.json({ success: true, message: "Admin verified" });
+    }
+    return res.status(401).json({ success: false, message: "Incorrect Admin Username or Password!" });
+});
+
 // USER PROFILE
 app.get('/api/user/:email', async (req, res) => {
     try {
@@ -203,7 +215,7 @@ app.post('/api/complaint/submit', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ADMIN API
+// ADMIN USERS LIST API
 app.get('/api/admin/users', async (req, res) => {
     try {
         const users = await User.find().select('username email twoFAEnabled createdAt');
@@ -216,3 +228,4 @@ app.use((req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
 app.listen(PORT, () => {
     console.log(`✅ SearchBook Server running on port ${PORT}`);
 });
+
