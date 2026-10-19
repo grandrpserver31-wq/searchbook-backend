@@ -1,4 +1,4 @@
-Require('dotenv').config();
+require('dotenv').config();
 const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
@@ -134,7 +134,6 @@ const MessageSchema = new mongoose.Schema({
 });
 const Message = mongoose.model('Message', MessageSchema);
 
-// Community Chat Schema
 const CommunityMessageSchema = new mongoose.Schema({
     sender: { type: String, required: true },
     text: { type: String, required: true },
@@ -170,7 +169,7 @@ app.post('/api/send-otp', async (req, res) => {
         const { email } = req.body;
         if (!email) return errRes(res, "Email required!", 400);
         const otp = Math.floor(100000 + Math.random() * 900000);
-        otpStore[email] = { otp, expiresAt: Date.now() + 30000 }; // 30 seconds expiration
+        otpStore[email] = { otp, expiresAt: Date.now() + 30000 };
         setTimeout(() => { if (otpStore[email] && Date.now() >= otpStore[email].expiresAt) delete otpStore[email]; }, 31000);
         res.json({ success: true, message: "OTP generated", otp });
     } catch (e) { errRes(res, e.message); }
@@ -403,7 +402,7 @@ app.post('/api/user/delete-self', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ SMART AI ALGORITHM & POSTS ============
+// ============ POSTS & AI ALGORITHM ============
 app.post('/api/posts/delete-own', async (req, res) => {
     try {
         const { postId, username } = req.body;
@@ -415,11 +414,10 @@ app.post('/api/posts/delete-own', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// In-code AI content moderation (Anti-toxic / Ad-blocker / Safety shield)
 function isToxicOrInappropriate(content) {
     if (!content) return false;
     const lower = content.toLowerCase();
-    const badWords = ["badword1", "badword2", "hate", "kill", "suicide", "nsfw", "porn", "xxx"]; // configurable toxic keywords
+    const badWords = ["badword1", "badword2", "hate", "suicide", "nsfw", "porn", "xxx"];
     for (let word of badWords) {
         if (lower.includes(word)) return true;
     }
@@ -431,19 +429,15 @@ app.post('/api/posts', async (req, res) => {
         const { username, content, media, mediaType, poll } = req.body;
         const u = await User.findOne({ username });
         if (u && u.isMuted) return errRes(res, "You are muted by admin", 403);
-        
-        // AI moderation check
         if (isToxicOrInappropriate(content)) {
-            return errRes(res, "Post flagged by AI moderation: Inappropriate or toxic content detected.", 400);
+            return errRes(res, "Post flagged by AI moderation: Inappropriate content detected.", 400);
         }
-
         const np = new Post({ username, content: content || "", media: media || "", mediaType: mediaType || "text", poll: poll || null });
         await np.save();
         res.status(201).json({ success: true, message: "Post created!" });
     } catch (e) { errRes(res, e.message); }
 });
 
-// AI Smart Feed Ranking Algorithm Engine
 app.get('/api/feed/:username', async (req, res) => {
     try {
         const currentUsername = req.params.username;
@@ -452,15 +446,13 @@ app.get('/api/feed/:username', async (req, res) => {
         const following = currentUser.following || [];
         const posts = await Post.find().limit(200).lean();
         const now = Date.now();
-        
         posts.forEach(p => {
             const ageHours = (now - new Date(p.createdAt).getTime()) / 3600000;
             const isFriend = following.includes(p.username) ? 20 : 0;
-            const mediaBoost = p.media ? 15 : 0; // Video & Image boost
+            const mediaBoost = p.media ? 15 : 0;
             const pollBoost = p.poll ? 10 : 0;
             const trendingScore = ((p.likes?.length || 0) * 3) + ((p.comments?.length || 0) * 4) + ((p.shares || 0) * 5) + ((p.views || 0) * 0.2) + (Object.values(p.reactions || {}).reduce((s, arr) => s + (arr?.length || 0), 0) * 3);
             const recencyDecay = Math.max(0, 72 - ageHours) * 1.5;
-            
             p.feedScore = isFriend + mediaBoost + pollBoost + trendingScore + recencyDecay;
         });
         posts.sort((a, b) => b.feedScore - a.feedScore);
@@ -586,7 +578,7 @@ app.get('/api/stories', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ PRIVATE & COMMUNITY CHAT ============
+// ============ CHAT ============
 app.post('/api/chat/room', async (req, res) => {
     try {
         const { user1, user2 } = req.body;
@@ -622,7 +614,6 @@ app.get('/api/chat/messages/:roomId', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// Community Chatroom endpoints
 app.get('/api/community/messages', async (req, res) => {
     try {
         const messages = await CommunityMessage.find().sort({ createdAt: 1 }).limit(100);
@@ -641,7 +632,7 @@ app.post('/api/community/message', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// ============ RECOMMENDATIONS & NOTIFICATIONS ============
+// ============ RECOMMENDATIONS ============
 app.get('/api/recommend/:username', async (req, res) => {
     try {
         const myUsername = req.params.username;
@@ -718,7 +709,6 @@ app.post('/api/2fa/disable', async (req, res) => {
     } catch (e) { errRes(res, e.message); }
 });
 
-// 2FA-Locked Password Reset Flow
 app.post('/api/forgot/check-email', async (req, res) => {
     try {
         const { email } = req.body;
