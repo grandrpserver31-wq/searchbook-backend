@@ -5,18 +5,16 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Searchbook - Global Social Network</title>
 <style>
-:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --warning: #fdcb6e; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.9); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
+:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --warning: #fdcb6e; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.92); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
 
-/* Auth Layout */
 #auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
 .auth-box { background: var(--white); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); }
 .auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
 .card { display: none; }
 .card.active { display: block; }
 
-/* UI Elements */
 .input-group { margin-bottom: 16px; }
 .input-group input, .input-group textarea, .input-group select { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; background: rgba(250, 251, 255, 0.8); color: var(--text); }
 .password-wrapper { position: relative; }
@@ -29,7 +27,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 600; }
 .divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
 
-/* Main App Layout */
 #main-app { display: none; }
 #main-app.active { display: block; }
 .top-bar { background: var(--white); backdrop-filter: blur(16px); padding: 12px 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
@@ -37,14 +34,12 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .top-icons { display: flex; gap: 8px; align-items: center; position: relative; }
 .top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(244,246,251,0.8); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-/* Three-Dot Dropdown Menu */
 .menu-dropdown { position: absolute; top: 52px; right: 0; background: var(--white); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-lg); width: 220px; display: none; flex-direction: column; padding: 8px; z-index: 150; }
 .menu-dropdown.show { display: flex; }
 .menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); }
 .menu-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
 .menu-item.logout { color: var(--danger); margin-top: 4px; border-top: 1px solid var(--border); }
 
-/* App Views */
 .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
 .main-content { flex: 1; max-width: 650px; margin: 0 auto; }
 .main-view { display: none; }
@@ -54,7 +49,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
 .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
 
-/* Admin Modal */
+/* Secure Admin Modal */
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
@@ -62,13 +57,11 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 </head>
 <body>
 
-<!-- AUTH SECTION -->
 <div id="auth-app">
     <div class="auth-box">
         <h1 class="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
         <p style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;" id="t-subtitle">Connect with friends, share your moments</p>
 
-        <!-- LOGIN CARD -->
         <div id="login-panel" class="card active">
             <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
             <div class="input-group">
@@ -84,7 +77,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <div onclick="switchPanel('complaint-panel')" style="margin-top:14px; padding:10px; text-align:center; background:rgba(240,240,255,0.8); border-radius:10px; cursor:pointer; font-weight:700; color:var(--primary); font-size:13px;">📢 Complaint Box</div>
         </div>
 
-        <!-- REGISTER CARD -->
         <div id="register-panel" class="card">
             <h2 style="text-align:center; margin-bottom:15px;">Create Account</h2>
             <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
@@ -100,7 +92,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
 
-        <!-- 2FA LOGIN CARD -->
         <div id="twofa-login-panel" class="card">
             <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Required</h2>
             <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter code from Google Authenticator</p>
@@ -109,7 +100,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <span class="link" onclick="switchPanel('login-panel')">← Back</span>
         </div>
 
-        <!-- FORGOT PASSWORD CARD -->
         <div id="forgot-panel" class="card">
             <h2 style="text-align:center; margin-bottom:15px;">🔑 Forgot Password</h2>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Account email"></div>
@@ -117,7 +107,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <span class="link" onclick="switchPanel('login-panel')">← Back</span>
         </div>
 
-        <!-- COMPLAINT BOX CARD -->
         <div id="complaint-panel" class="card">
             <h2 style="text-align:center; margin-bottom:15px;">📢 Complaint Box</h2>
             <div class="input-group"><input type="text" id="complaint-username" placeholder="Your username"></div>
@@ -129,7 +118,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
     </div>
 </div>
 
-<!-- MAIN APP SECTION -->
 <div id="main-app">
     <div class="top-bar">
         <div class="top-logo" onclick="handleLogoClick()">Searchbook</div>
@@ -137,7 +125,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
             <button class="top-icon-btn" onclick="toggleMenuDropdown()" title="Menu">⋮</button>
             
-            <!-- THREE-DOT MENU -->
             <div class="menu-dropdown" id="menu-dropdown">
                 <div class="menu-item" onclick="switchMainView('profile-view'); toggleMenuDropdown();">👤 Profile</div>
                 <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();">⚙️ Settings & Security</div>
@@ -149,7 +136,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
     <div class="layout">
         <div class="main-content">
-            <!-- SMART FEED VIEW (AI ALGORITHM ENGINED) -->
             <div id="feed-view" class="main-view active">
                 <div class="post-box">
                     <textarea id="post-content" placeholder="What's on your mind?"></textarea>
@@ -159,7 +145,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
             </div>
 
-            <!-- PROFILE VIEW -->
             <div id="profile-view" class="main-view">
                 <div class="card-box">
                     <h2>👤 User Profile</h2>
@@ -171,7 +156,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 </div>
             </div>
 
-            <!-- SETTINGS & SECURITY (PASS & 2FA) -->
             <div id="settings-view" class="main-view">
                 <div class="card-box">
                     <h2>⚙️ Settings & Security</h2>
@@ -203,7 +187,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 </div>
             </div>
 
-            <!-- LANGUAGE SWITCHER VIEW -->
             <div id="language-view" class="main-view">
                 <div class="card-box">
                     <h2>🌍 Multi-Language Switcher</h2>
@@ -228,15 +211,25 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
     </div>
 </div>
 
-<!-- SECRET EMERGENCY ADMIN PANEL -->
+<!-- SECURE ADMIN LOGIN MODAL -->
 <div id="admin-panel">
     <div class="admin-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="color:#e17055; margin:0;">🔐 Emergency Admin Panel</h2>
+            <h2 style="color:#e17055; margin:0;" id="admin-modal-title">🔐 Admin Authentication Required</h2>
             <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
         </div>
-        <p style="color:var(--muted); margin-bottom:15px;">System records & User Control:</p>
-        <div id="admin-user-list"><p>Loading system users...</p></div>
+        
+        <div id="admin-login-form">
+            <p style="color:var(--muted); margin-bottom:15px;">Enter admin credentials to access system control:</p>
+            <div class="input-group"><input type="text" id="admin-user-input" placeholder="Admin Username"></div>
+            <div class="input-group"><input type="password" id="admin-pass-input" placeholder="Admin Password"></div>
+            <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
+        </div>
+
+        <div id="admin-content-area" style="display:none;">
+            <p style="color:var(--muted); margin-bottom:15px;">System records & User Control:</p>
+            <div id="admin-user-list"><p>Loading system users...</p></div>
+        </div>
     </div>
 </div>
 
@@ -247,24 +240,11 @@ let logoClicks = 0;
 
 const translations = {
     en: { subtitle: "Connect with friends, share your moments", login: "Log In", forgot: "Forgot password?", create: "Create New Account" },
-    bn: { subtitle: "বন্ধুদের সাথে যুক্ত হোন, মুহূর্তগুলো শেয়ার করুন", login: "লগইন করুন", forgot: "পাসওয়ার্ড ভুলে গেছেন?", create: "নতুন অ্যাকাউন্ট খুলুন" },
-    hi: { subtitle: "दोस्तों से जुड़ें, अपने पल साझा करें", login: "लॉग इन करें", forgot: "पासवर्ड भूल गए?", create: "नया खाता बनाएँ" },
-    ur: { subtitle: "دوستوں سے جڑیں، اپنے لمحات کا اشتراک کریں", login: "لاگ ان کریں", forgot: "پاس ورڈ بھول گئے؟", create: "نیا اکاؤنٹ بنائیں" },
-    de: { subtitle: "Mit Freunden verbinden, Momente teilen", login: "Anmelden", forgot: "Passwort vergessen?", create: "Neues Konto erstellen" },
-    fr: { subtitle: "Connectez-vous avec vos amis, partagez vos moments", login: "Se connecter", forgot: "Mot de passe oublié ?", create: "Créer un nouveau compte" },
-    es: { subtitle: "Conéctate con amigos, comparte tus momentos", login: "Iniciar sesión", forgot: "¿Olvidaste tu contraseña?", create: "Crear cuenta nueva" },
-    jp: { subtitle: "友達とつながり、瞬間をシェアしよう", login: "ログイン", forgot: "パスワードをお忘れですか？", create: "新しいアカウントを作成" },
-    cn: { subtitle: "与朋友保持联系，分享精彩瞬间", login: "登录", forgot: "忘记密码？", create: "创建新账户" },
-    ru: { subtitle: "Общайтесь с друзьями, делитесь моментами", login: "Войти", forgot: "Забыли пароль?", create: "Создать аккаунт" }
+    bn: { subtitle: "বন্ধুদের সাথে যুক্ত হোন, মুহূর্তগুলো শেয়ার করুন", login: "লগইন করুন", forgot: "পাসওয়ার্ড ভুলে গেছেন?", create: "নতুন অ্যাকাউন্ট খুলুন" }
 };
 
 function changeLanguage(lang) {
     localStorage.setItem("searchbook_lang", lang);
-    const t = translations[lang] || translations.en;
-    document.getElementById("t-subtitle").textContent = t.subtitle;
-    document.getElementById("t-login-btn").textContent = t.login;
-    document.getElementById("t-forgot-link").textContent = t.forgot;
-    document.getElementById("t-create-btn").textContent = t.create;
 }
 
 function toggleMenuDropdown() {
@@ -283,15 +263,35 @@ function handleLogoClick() {
     logoClicks++;
     if (logoClicks >= 5) {
         logoClicks = 0;
-        openAdminPanel();
+        document.getElementById("admin-login-form").style.display = "block";
+        document.getElementById("admin-content-area").style.display = "none";
+        document.getElementById("admin-user-input").value = "";
+        document.getElementById("admin-pass-input").value = "";
+        document.getElementById("admin-panel").classList.add("active");
     }
     setTimeout(() => { logoClicks = 0; }, 3000);
 }
 
-async function openAdminPanel() {
-    document.getElementById("admin-panel").classList.add("active");
+async function verifyAdminLogin() {
+    const username = document.getElementById("admin-user-input").value.trim();
+    const password = document.getElementById("admin-pass-input").value;
+    if (!username || !password) { alert("Enter admin username and password"); return; }
     try {
-        const res = await fetch(BACKEND_URL + "/api/admin/users", { headers: authHeaders() });
+        const res = await fetch(BACKEND_URL + "/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("admin-login-form").style.display = "none";
+            document.getElementById("admin-content-area").style.display = "block";
+            loadAdminUsers();
+        } else {
+            alert("❌ " + data.message);
+        }
+    } catch(e) { alert("❌ Admin authentication failed"); }
+}
+
+async function loadAdminUsers() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/users");
         const data = await res.json();
         if (data.success) {
             document.getElementById("admin-user-list").innerHTML = data.users.map(u => 
@@ -299,7 +299,7 @@ async function openAdminPanel() {
             ).join("");
         }
     } catch(e) {
-        document.getElementById("admin-user-list").innerHTML = "<p>Admin access active.</p>";
+        document.getElementById("admin-user-list").innerHTML = "<p>Failed to load records.</p>";
     }
 }
 
@@ -310,10 +310,6 @@ function togglePassword(id, btn) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
-    const savedLang = localStorage.getItem("searchbook_lang") || "en";
-    document.getElementById("language-select").value = savedLang;
-    changeLanguage(savedLang);
-
     if (currentUser) {
         document.getElementById("auth-app").style.display = "none";
         document.getElementById("main-app").classList.add("active");
@@ -477,7 +473,7 @@ async function submitComplaint() {
     try {
         const res = await fetch(BACKEND_URL + "/api/complaint/submit", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, subject, message }) });
         const data = await res.json();
-        if (data.success) { alert("✅ Complaint submitted to Admin."); switchPanel("login-panel"); }
+        if (data.success) { alert("✅ Complaint submitted."); switchPanel("login-panel"); }
         else alert("❌ " + data.message);
     } catch(e) { alert("❌ Server error"); }
 }
