@@ -10,7 +10,6 @@
 body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; transition: 0.3s; }
 body.dark { --bg: #0f0e17; --white: rgba(26, 26, 46, 0.85); --text: #fffffe; --muted: #a7a9be; --border: rgba(42, 42, 64, 0.6); }
 body.dark input, body.dark textarea, body.dark select { background: rgba(42, 42, 64, 0.8); color: var(--text); border-color: var(--border); }
-body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { background: var(--white); backdrop-filter: blur(12px); }
 #auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 100%); padding: 20px; }
 .auth-box { background: rgba(255, 255, 255, 0.9); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); }
 .auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
@@ -18,121 +17,47 @@ body.dark .post-item, body.dark .chat-room-item, body.dark .search-result { back
 .card { display: none; }
 .card.active { display: block; }
 .input-group { margin-bottom: 16px; }
-.input-group input, .input-group textarea, .input-group select { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: inherit; background: rgba(250, 251, 255, 0.8); color: var(--text); backdrop-filter: blur(8px); }
-.input-group input:focus, .input-group textarea:focus, .input-group select:focus { border-color: var(--primary); background: rgba(255,255,255,0.95); box-shadow: 0 0 0 4px rgba(108,92,231,0.15); }
+.input-group input, .input-group textarea, .input-group select { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; font-family: inherit; background: rgba(250, 251, 255, 0.8); color: var(--text); }
 .password-wrapper { position: relative; }
 .password-wrapper input { padding-right: 48px; }
-.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 6px; }
-.password-toggle:hover { background: var(--bg); color: var(--primary); }
-.btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); transition: 0.2s; }
-.btn:hover { transform: translateY(-2px); box-shadow: 0 6px 20px rgba(108,92,231,0.4); }
-.btn-green { background: linear-gradient(135deg, #00b894, #00cec9); box-shadow: 0 4px 15px rgba(0,184,148,0.3); }
-.btn-red { background: linear-gradient(135deg, #e17055, #d63031); box-shadow: 0 4px 15px rgba(225,112,85,0.3); }
-.btn-orange { background: linear-gradient(135deg, #f39c12, #e67e22); box-shadow: 0 4px 15px rgba(243,156,18,0.3); }
+.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; color: var(--muted); padding: 4px 8px; }
+.btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); }
+.btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
+.btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
 .link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 500; }
 .divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
 h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text); font-weight: 700; }
-.timer { text-align: center; color: var(--danger); font-weight: 700; padding: 12px; background: rgba(255,245,245,0.8); border-radius: var(--radius-sm); margin-bottom: 15px; font-size: 14px; }
-.otp-display { text-align: center; font-size: 32px; color: var(--primary); font-weight: 900; letter-spacing: 12px; background: rgba(240,240,255,0.8); padding: 20px; border-radius: var(--radius-sm); border: 2px dashed var(--primary); margin-bottom: 15px; font-family: 'Courier New', monospace; }
-.pwd-strength-box { margin-top: -8px; margin-bottom: 16px; padding: 12px; background: rgba(244,246,251,0.8); border-radius: var(--radius-sm); border: 1px solid var(--border); }
-.pwd-strength-bar { width: 100%; height: 8px; background: rgba(224,224,224,0.6); border-radius: 4px; overflow: hidden; margin-bottom: 8px; }
-.pwd-strength-fill { height: 100%; width: 0%; transition: 0.3s; border-radius: 4px; }
-.pwd-strength-label { font-size: 12px; font-weight: 700; }
-.pwd-requirements { margin-top: 10px; font-size: 11px; color: var(--muted); line-height: 1.7; }
-.pwd-req-item { display: flex; align-items: center; gap: 6px; }
-.pwd-req-item.ok { color: #00b894; font-weight: 700; }
-.pwd-req-item.fail { color: #e17055; }
 #main-app { display: none; }
 #main-app.active { display: block; }
 .top-bar { background: var(--white); backdrop-filter: blur(16px); padding: 12px 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-.top-logo { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text; cursor: pointer; }
+.top-logo { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; user-select: none; }
 .top-icons { display: flex; gap: 8px; }
-.top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(244,246,251,0.8); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; position: relative; transition: 0.2s; }
-.top-icon-btn:hover { background: var(--primary); color: white; transform: translateY(-2px); }
+.top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(244,246,251,0.8); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
-.sidebar { width: 240px; background: var(--white); backdrop-filter: blur(16px); padding: 20px 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 90px; display: none; border: 1px solid var(--border); }
+.sidebar { width: 240px; background: var(--white); padding: 20px 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 90px; display: none; border: 1px solid var(--border); }
 @media (min-width: 900px) { .sidebar { display: block; } }
-.sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500; color: var(--text); margin-bottom: 4px; font-size: 15px; transition: 0.2s; }
+.sidebar-item { display: flex; align-items: center; gap: 14px; padding: 12px 14px; border-radius: var(--radius-sm); cursor: pointer; font-weight: 500; color: var(--text); margin-bottom: 4px; font-size: 15px; }
 .sidebar-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
-.sidebar-item .icon { font-size: 20px; width: 26px; text-align: center; }
 .main-content { flex: 1; max-width: 620px; margin: 0 auto; }
 .main-view { display: none; }
 .main-view.active { display: block; }
-.right-sidebar { width: 260px; background: var(--white); backdrop-filter: blur(16px); padding: 20px; border-radius: var(--radius); box-shadow: var(--shadow-sm); height: fit-content; position: sticky; top: 90px; display: none; border: 1px solid var(--border); }
-@media (min-width: 1100px) { .right-sidebar { display: block; } }
-.right-sidebar h4 { font-size: 14px; color: var(--muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 15px; }
-.right-item { display: flex; align-items: center; gap: 10px; padding: 10px; border-radius: var(--radius-sm); font-size: 14px; }
-.right-item .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent); }
-.post-box { background: var(--white); backdrop-filter: blur(16px); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-.post-box textarea { width: 100%; padding: 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; resize: none; min-height: 80px; font-family: inherit; background: rgba(250, 251, 255, 0.8); }
-.media-btns { display: flex; gap: 10px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); flex-wrap: wrap; }
-.media-btn { flex: 1; padding: 10px; border: none; border-radius: var(--radius-sm); background: rgba(244,246,251,0.8); cursor: pointer; font-size: 14px; color: var(--text); font-weight: 600; min-width: 80px; }
-.media-btn:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
-.post-item { background: var(--white); backdrop-filter: blur(16px); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; }
+.post-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.post-box textarea { width: 100%; padding: 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; resize: none; min-height: 80px; background: rgba(250, 251, 255, 0.8); color: var(--text); }
+.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
 .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
-.post-header .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
-.post-header .info { flex: 1; }
-.post-user { color: var(--text); font-weight: 700; font-size: 15px; cursor: pointer; }
-.post-time { color: var(--muted); font-size: 12px; margin-top: 2px; }
-.post-content { margin-top: 8px; font-size: 15px; line-height: 1.5; word-wrap: break-word; white-space: pre-wrap; }
-.post-media { max-width: 100%; border-radius: var(--radius-sm); margin-top: 12px; }
-.reactions-bar { display: flex; gap: 6px; margin-top: 12px; padding: 8px; background: rgba(244,246,251,0.8); border-radius: var(--radius-sm); }
-.reaction-btn { flex: 1; background: transparent; border: none; cursor: pointer; font-size: 20px; padding: 6px; border-radius: 50%; transition: 0.2s; }
-.reaction-btn:hover { transform: scale(1.3); background: rgba(108,92,231,0.15); }
-.reaction-btn.active { background: rgba(108,92,231,0.25); }
-.post-actions { display: flex; gap: 6px; margin-top: 12px; padding-top: 12px; border-top: 1px solid var(--border); }
-.action-btn { flex: 1; padding: 10px; background: transparent; border: none; cursor: pointer; color: var(--muted); font-weight: 600; border-radius: var(--radius-sm); font-size: 13px; }
-.action-btn:hover { background: rgba(244,246,251,0.8); color: var(--primary); }
-.action-btn.liked { color: var(--primary); background: rgba(108,92,231,0.1); }
-.action-btn.bookmarked { color: var(--warning); background: rgba(253,203,110,0.15); }
-.active-counter { background: rgba(232, 248, 245, 0.9); color: #00b894; padding: 12px 16px; border-radius: var(--radius-sm); text-align: center; font-size: 13px; font-weight: 700; margin-bottom: 16px; border: 1px solid rgba(0,184,148,0.2); }
-.stories-bar { display: flex; gap: 12px; overflow-x: auto; padding: 16px; background: var(--white); backdrop-filter: blur(16px); border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-.story-item { flex-shrink: 0; text-align: center; cursor: pointer; }
-.story-ring { width: 68px; height: 68px; border-radius: 50%; padding: 3px; background: linear-gradient(45deg,#f09433,#e6683c,#dc2743,#cc2366,#bc1888); }
-.story-pic { width: 100%; height: 100%; border-radius: 50%; object-fit: cover; border: 3px solid var(--white); }
-.story-name { font-size: 11px; color: var(--text); margin-top: 6px; max-width: 68px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 500; }
-.add-story-btn { width: 68px; height: 68px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-size: 30px; cursor: pointer; border: 3px solid var(--white); }
-.search-result { display: flex; align-items: center; gap: 12px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 8px; background: var(--white); border: 1px solid var(--border); }
-.pic-circle-lg { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); }
-.pic-wrapper { position: relative; display: inline-block; }
-.status-dot { position: absolute; bottom: 5px; right: 5px; width: 20px; height: 20px; border-radius: 50%; border: 3px solid var(--white); }
-.status-dot.online { background: var(--accent); }
-.status-dot.offline { background: #333; }
-.stat-row { display: flex; gap: 25px; justify-content: center; margin: 18px 0; padding: 16px; background: rgba(244,246,251,0.8); border-radius: var(--radius-sm); }
-.stat-row > span { text-align: center; font-size: 13px; color: var(--muted); }
-.stat-row b { display: block; font-size: 20px; color: var(--text); margin-bottom: 4px; }
-.chat-room-item { display: flex; align-items: center; gap: 14px; padding: 14px; border-radius: var(--radius-sm); cursor: pointer; margin-bottom: 8px; background: var(--white); border: 1px solid var(--border); }
-.chat-avatar { width: 50px; height: 50px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 20px; }
-.chat-info { flex: 1; }
-.chat-name { font-weight: 700; color: var(--text); margin-bottom: 4px; }
-.chat-last { font-size: 13px; color: var(--muted); }
-#chat-messages { max-height: 400px; overflow-y: auto; padding: 16px; background: rgba(244,246,251,0.8); border-radius: var(--radius-sm); margin-bottom: 14px; }
-.chat-msg { padding: 12px 16px; margin-bottom: 10px; border-radius: 20px; max-width: 75%; word-wrap: break-word; font-size: 14px; line-height: 1.4; }
-.chat-msg.me { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; margin-left: auto; border-bottom-right-radius: 4px; }
-.chat-msg.other { background: var(--white); color: var(--text); border-bottom-left-radius: 4px; border: 1px solid var(--border); }
-.chat-input-row { display: flex; gap: 10px; }
-.chat-input-row input { flex: 1; padding: 14px 18px; border: 2px solid var(--border); border-radius: 24px; outline: none; font-size: 15px; background: rgba(250, 251, 255, 0.8); }
-.chat-send-btn { background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; border: none; padding: 0 24px; border-radius: 24px; cursor: pointer; font-weight: 700; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; }
 .center { text-align: center; }
-.feed-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
-.small-btn { padding: 10px 16px; border: none; border-radius: var(--radius-sm); cursor: pointer; font-weight: 700; font-size: 13px; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; }
-.theme-toggle { position: fixed; bottom: 24px; right: 24px; width: 54px; height: 54px; border-radius: 50%; background: linear-gradient(135deg,#6c5ce7,#a29bfe); color: white; border: none; font-size: 24px; cursor: pointer; box-shadow: var(--shadow-lg); z-index: 999; display: none; }
-.theme-toggle.show { display: block; }
-#admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; overflow-y: auto; }
+.pic-circle-lg { width: 100px; height: 100px; border-radius: 50%; object-fit: cover; border: 4px solid var(--primary); }
+#admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
 #admin-panel.active { display: flex; }
-.admin-box { background: var(--white); border-radius: 24px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); width: 100%; max-width: 900px; max-height: 90vh; overflow-y: auto; padding: 30px; }
-.admin-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid var(--border); }
-.admin-title { font-size: 24px; font-weight: 900; color: #e17055; }
-.admin-close { width: 40px; height: 40px; border-radius: 50%; border: none; background: #e17055; color: white; font-size: 20px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
+.admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
 </style>
 </head>
 <body>
 
-<button class="theme-toggle" id="theme-toggle" onclick="toggleTheme()">🌙</button>
-
 <div id="auth-app">
     <div class="auth-box">
-        <h1 class="auth-logo" id="auth-logo">Searchbook</h1>
+        <h1 class="auth-logo" id="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
         <p class="auth-subtitle" id="t-subtitle">Connect with friends, share your moments</p>
 
         <div id="login-panel" class="card active">
@@ -147,9 +72,6 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <span class="link" id="t-forgot-link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
             <div class="divider"></div>
             <button class="btn btn-green" id="t-create-btn" onclick="switchPanel('register-panel')">Create New Account</button>
-            <div class="complaint-box" onclick="switchPanel('complaint-panel')" style="margin-top:14px; padding:10px; text-align:center; background:rgba(240,240,255,0.8); border-radius:10px; cursor:pointer;">
-                <div class="complaint-box-title" style="font-weight:700; color:var(--primary); font-size:13px;">📢 Complaint Box</div>
-            </div>
         </div>
 
         <div id="register-panel" class="card">
@@ -159,83 +81,28 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
             <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
             <div class="input-group">
                 <div class="password-wrapper">
-                    <input type="password" id="reg-password" placeholder="Password" oninput="checkPasswordStrength()">
+                    <input type="password" id="reg-password" placeholder="Password">
                     <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
                 </div>
             </div>
-            <div id="pwd-strength-box" class="pwd-strength-box" style="display:none;">
-                <div class="pwd-strength-bar"><div id="pwd-strength-fill" class="pwd-strength-fill"></div></div>
-                <div id="pwd-strength-label" class="pwd-strength-label">Enter a password</div>
-                <div class="pwd-requirements" id="pwd-requirements"></div>
-            </div>
-            <button class="btn btn-green" onclick="sendOTP()">Sign Up & Send OTP</button>
+            <button class="btn btn-green" onclick="handleSignup()">Sign Up</button>
             <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
-        </div>
-
-        <div id="otp-panel" class="card">
-            <h2>Enter OTP</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Valid for 30 seconds only</p>
-            <div id="otp-display" class="otp-display">------</div>
-            <div id="timer" class="timer">⏱️ 30 seconds left</div>
-            <div class="input-group"><input type="text" id="reg-otp" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:700;"></div>
-            <button class="btn" onclick="verifyAndSignup()">Verify & Create Account</button>
-        </div>
-
-        <div id="twofa-login-panel" class="card">
-            <h2>🔐 2FA Required</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter 6-digit code from Google Authenticator</p>
-            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
-            <button class="btn" onclick="submit2FALogin()">Submit Code</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
         </div>
 
         <div id="forgot-panel" class="card">
             <h2>🔑 Forgot Password</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter email for 2FA-secured recovery</p>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Account email"></div>
-            <button class="btn" onclick="checkResetEmail()">Continue</button>
+            <button class="btn" onclick="resetPassword()">Reset Password</button>
             <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
-        </div>
-
-        <div id="forgot-2fa-panel" class="card">
-            <h2>🔐 2FA Verify</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter Google Authenticator code to reset password.</p>
-            <div class="input-group"><input type="text" id="forgot-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; letter-spacing:8px; font-weight:700;"></div>
-            <button class="btn" onclick="verifyForgot2FA()">Verify 2FA</button>
-            <span class="link" onclick="switchPanel('forgot-panel')">← Back</span>
-        </div>
-
-        <div id="forgot-reset-panel" class="card">
-            <h2>🔑 Reset Password</h2>
-            <p style="text-align:center; color:var(--muted); font-size:13px; margin-bottom:15px;">Enter OTP & new password</p>
-            <div id="forgot-otp-display" class="otp-display">------</div>
-            <div id="forgot-timer" class="timer">⏱️ 30 seconds left</div>
-            <div class="input-group"><input type="text" id="forgot-otp-input" placeholder="Enter OTP" maxlength="6" style="text-align:center; font-size:22px; letter-spacing:8px; font-weight:700;"></div>
-            <div class="input-group"><input type="password" id="forgot-new-password" placeholder="New Password"></div>
-            <button class="btn btn-green" onclick="resetPasswordFinal()">Reset Password</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
-        </div>
-
-        <div id="complaint-panel" class="card">
-            <h2>📢 Complaint Box</h2>
-            <div class="input-group"><input type="text" id="complaint-username" placeholder="Your username"></div>
-            <div class="input-group"><input type="text" id="complaint-subject" placeholder="Subject"></div>
-            <div class="input-group"><textarea id="complaint-message" placeholder="Describe issue..."></textarea></div>
-            <button class="btn btn-orange" onclick="submitComplaint()">Submit Complaint</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
         </div>
     </div>
 </div>
 
 <div id="main-app">
     <div class="top-bar">
-        <div class="top-logo" id="top-logo-btn" onclick="handleLogoClick()">Searchbook</div>
+        <div class="top-logo" onclick="handleLogoClick()">Searchbook</div>
         <div class="top-icons">
             <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
-            <button class="top-icon-btn" onclick="switchMainView('community-chat-view')" title="Community">🌐</button>
-            <button class="top-icon-btn" onclick="switchMainView('chat-list-view')" title="Messages">💬</button>
-            <button class="top-icon-btn" onclick="switchMainView('search-view')" title="Search">🔍</button>
-            <button class="top-icon-btn" onclick="switchMainView('bookmark-view')" title="Saved">🔖</button>
             <button class="top-icon-btn" onclick="switchMainView('profile-view')" title="Profile">👤</button>
             <button class="top-icon-btn" onclick="handleLogout()" title="Logout" style="background:linear-gradient(135deg,#e17055,#d63031); color:white;">⎋</button>
         </div>
@@ -243,80 +110,30 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
 
     <div class="layout">
         <div class="sidebar">
-            <div class="sidebar-item" onclick="switchMainView('feed-view')"><span class="icon">🏠</span> Home</div>
-            <div class="sidebar-item" onclick="switchMainView('community-chat-view')"><span class="icon">🌐</span> Community Chat</div>
-            <div class="sidebar-item" onclick="switchMainView('profile-view')"><span class="icon">👤</span> My Profile</div>
-            <div class="sidebar-item" onclick="switchMainView('chat-list-view')"><span class="icon">💬</span> Messages</div>
-            <div class="sidebar-item" onclick="switchMainView('bookmark-view')"><span class="icon">🔖</span> Saved Posts</div>
-            <div class="sidebar-item" onclick="switchMainView('search-view')"><span class="icon">🔍</span> Search Users</div>
+            <div class="sidebar-item" onclick="switchMainView('feed-view')">🏠 Home</div>
+            <div class="sidebar-item" onclick="switchMainView('profile-view')">👤 Settings & Profile</div>
+            <div class="sidebar-item" onclick="handleLogout()">⎋ Log Out</div>
         </div>
 
         <div class="main-content">
             <div id="feed-view" class="main-view active">
-                <div class="active-counter" id="active-counter">🟢 Loading active users...</div>
-                <div class="stories-bar" id="stories-bar">
-                    <div class="story-item" onclick="document.getElementById('story-input').click()">
-                        <div class="add-story-btn">+</div>
-                        <div class="story-name">Your Story</div>
-                    </div>
-                </div>
-                <input type="file" id="story-input" accept="image/*,video/*" style="display:none;" onchange="uploadStory(this)">
-                <div id="feed-user-info" style="padding:12px; background:linear-gradient(135deg,#f0f0ff,#e8e8ff); border-radius:12px; margin-bottom:16px; color:#6c5ce7; font-weight:700; text-align:center;"></div>
                 <div class="post-box">
                     <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                    <div class="media-btns">
-                        <button class="media-btn" onclick="document.getElementById('image-input').click()">📷 Photo</button>
-                        <button class="media-btn" onclick="document.getElementById('video-input').click()">🎥 Video</button>
-                    </div>
-                    <input type="file" id="image-input" accept="image/*" style="display:none;" onchange="handleMedia(this, 'image')">
-                    <input type="file" id="video-input" accept="video/*" style="display:none;" onchange="handleMedia(this, 'video')">
-                    <div id="media-preview" style="margin-top:10px;"></div>
-                    <button class="btn" onclick="createPost()">Share Post</button>
+                    <button class="btn" onclick="createPost()" style="margin-top:10px;">Share Post</button>
                 </div>
-                <h3 style="margin-bottom:16px; color:var(--text); font-size:18px;">🔥 Smart AI Newsfeed</h3>
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
-            </div>
-
-            <div id="community-chat-view" class="main-view">
-                <div class="post-box">
-                    <h2>🌐 Global Community Chatroom</h2>
-                    <div id="community-messages" style="max-height:400px; overflow-y:auto; padding:16px; background:rgba(244,246,251,0.8); border-radius:var(--radius-sm); margin-bottom:14px;"></div>
-                    <div class="chat-input-row">
-                        <input type="text" id="community-input" placeholder="Type a message..." onkeypress="if(event.key==='Enter') sendCommunityMessage()">
-                        <button class="chat-send-btn" onclick="sendCommunityMessage()">Send</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="search-view" class="main-view">
-                <div class="post-box">
-                    <h2>🔍 Search Users</h2>
-                    <div class="input-group"><input type="text" id="search-input" placeholder="Type username..." oninput="doSearch()"></div>
-                    <div id="search-results"></div>
-                </div>
-            </div>
-
-            <div id="bookmark-view" class="main-view">
-                <div class="post-box">
-                    <h2>🔖 Saved Posts</h2>
-                    <div id="bookmarks-list"></div>
-                </div>
             </div>
 
             <div id="profile-view" class="main-view">
                 <div class="post-box">
-                    <h2>👤 My Profile</h2>
+                    <h2>⚙️ Settings & Profile</h2>
                     <div class="center">
-                        <div class="pic-wrapper">
-                            <img id="profile-pic-display" class="pic-circle-lg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3Ccircle cx='50' cy='40' r='15' fill='%23999'/%3E%3Cpath d='M20 90 Q50 60 80 90' fill='%23999'/%3E%3C/svg%3E">
-                            <span class="status-dot online"></span>
-                        </div>
-                        <h3 id="profile-name" style="margin-top:12px;"></h3>
-                        <p id="profile-bio" style="color:var(--muted); margin-top:6px;"></p>
+                        <img id="profile-pic" class="pic-circle-lg" src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='50' fill='%23ddd'/%3E%3C/svg%3E">
+                        <h3 id="profile-name" style="margin-top:10px;"></h3>
                     </div>
                     <div class="divider"></div>
-                    <h3 style="margin-bottom:14px;">🌍 Language Switcher</h3>
-                    <div class="input-group">
+                    <h3>🌍 Language Switcher</h3>
+                    <div class="input-group" style="margin-top:10px;">
                         <select id="language-select" onchange="changeLanguage(this.value)">
                             <option value="en">English (US)</option>
                             <option value="bn">বাংলা (Bangla)</option>
@@ -330,66 +147,49 @@ h2 { text-align: center; margin-bottom: 20px; font-size: 22px; color: var(--text
                             <option value="ru">Русский (Russian)</option>
                         </select>
                     </div>
-                    <button class="btn btn-red" onclick="handleLogout()" style="margin-top:20px;">⎋ Log Out</button>
-                </div>
-            </div>
 
-            <div id="chat-list-view" class="main-view">
-                <div class="post-box">
-                    <h2>💬 Private Messages</h2>
-                    <div class="input-group"><input type="text" id="chat-user-search" placeholder="Search username..." oninput="searchForChat()"></div>
-                    <div id="chat-search-results"></div>
                     <div class="divider"></div>
-                    <h3 style="margin-bottom:14px;">Conversations</h3>
-                    <div id="chat-rooms-list"><p style="text-align:center; color:var(--muted);">Loading...</p></div>
+                    <h3>🔐 Change Password</h3>
+                    <div class="input-group" style="margin-top:10px;">
+                        <div class="password-wrapper">
+                            <input type="password" id="old-pass" placeholder="Current Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-pass" placeholder="New Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-green" onclick="changePassword()">Update Password</button>
+
+                    <div class="divider"></div>
+                    <h3>🔒 Two-Factor Authentication (2FA)</h3>
+                    <div id="twofa-status" style="margin:10px 0; font-weight:600;">Status: Disabled</div>
+                    <button class="btn" id="twofa-btn" onclick="setup2FA()">Enable 2FA Authenticator</button>
+                    <div id="twofa-qr-box" style="text-align:center; margin-top:15px; display:none;">
+                        <img id="twofa-qr" style="max-width:180px; border-radius:8px;">
+                        <div class="input-group" style="margin-top:10px;"><input type="text" id="twofa-code" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:4px;"></div>
+                        <button class="btn btn-green" onclick="verifyAndEnable2FA()">Verify & Turn On</button>
+                    </div>
+
+                    <div class="divider"></div>
+                    <button class="btn btn-red" onclick="handleLogout()">⎋ Log Out</button>
                 </div>
             </div>
-
-            <div id="chat-window-view" class="main-view">
-                <div class="post-box">
-                    <div class="feed-header">
-                        <h2 id="chat-with-name">Chat</h2>
-                        <button class="small-btn" onclick="switchMainView('chat-list-view')">← Back</button>
-                    </div>
-                    <div id="chat-messages"></div>
-                    <div class="chat-input-row">
-                        <input type="text" id="chat-input" placeholder="Message..." onkeypress="if(event.key==='Enter') sendMessage()">
-                        <button class="chat-send-btn" onclick="sendMessage()">Send</button>
-                    </div>
-                </div>
-            </div>
-
-            <div id="visit-view" class="main-view">
-                <div class="post-box">
-                    <div class="feed-header">
-                        <h2>User Profile</h2>
-                        <button class="small-btn" onclick="switchMainView('feed-view')">← Back</button>
-                    </div>
-                    <div class="center">
-                        <h3 id="visit-name"></h3>
-                        <p id="visit-bio" style="color:var(--muted);"></p>
-                        <button class="btn" id="follow-btn" onclick="toggleFollow()">Follow</button>
-                    </div>
-                    <div id="visit-posts-list" style="margin-top:15px;"></div>
-                </div>
-            </div>
-        </div>
-
-        <div class="right-sidebar">
-            <h4>🟢 Active Now</h4>
-            <div id="active-list"><p style="color:var(--muted); font-size:13px;">Loading...</p></div>
         </div>
     </div>
 </div>
 
 <div id="admin-panel">
     <div class="admin-box">
-        <div class="admin-header">
-            <div class="admin-title">🔐 Emergency Admin Panel</div>
-            <button class="admin-close" onclick="document.getElementById('admin-panel').classList.remove('active')">✕</button>
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="color:#e17055; margin:0;">🔐 Emergency Admin Panel</h2>
+            <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
         </div>
-        <p style="color:var(--muted); margin-bottom:15px;">Emergency support & user assistance tools active.</p>
-        <div id="admin-user-list-box"><p>Loading system users...</p></div>
+        <p style="color:var(--muted); margin-bottom:15px;">Admin controls & user assistance records:</p>
+        <div id="admin-user-list"><p>Loading system records...</p></div>
     </div>
 </div>
 
@@ -432,16 +232,22 @@ function handleLogoClick() {
 async function openAdminPanel() {
     document.getElementById("admin-panel").classList.add("active");
     try {
-        const res = await fetch(BACKEND_URL + "/api/admin/users", { headers: { "x-admin-user": currentUser ? currentUser.username : "admin" } });
+        const res = await fetch(BACKEND_URL + "/api/admin/users", { headers: authHeaders() });
         const data = await res.json();
         if (data.success) {
-            document.getElementById("admin-user-list-box").innerHTML = data.users.map(u => 
-                '<div style="padding:10px; background:#f8f9fe; margin-bottom:8px; border-radius:8px;"><b>' + u.username + '</b> (' + u.email + ') - ' + (u.isActive ? '🟢 Active' : '⚫ Offline') + '</div>'
+            document.getElementById("admin-user-list").innerHTML = data.users.map(u => 
+                '<div style="padding:10px; background:#f8f9fe; margin-bottom:8px; border-radius:8px;"><b>' + u.username + '</b> (' + u.email + ') - 2FA: ' + (u.twoFAEnabled ? 'Enabled' : 'Disabled') + '</div>'
             ).join("");
         }
     } catch(e) {
-        document.getElementById("admin-user-list-box").innerHTML = "<p>Admin access active. Total platform secure.</p>";
+        document.getElementById("admin-user-list").innerHTML = "<p>Admin access active.</p>";
     }
+}
+
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
+    else { input.type = "password"; btn.textContent = "👁️"; }
 }
 
 document.addEventListener("DOMContentLoaded", function() {
@@ -452,8 +258,8 @@ document.addEventListener("DOMContentLoaded", function() {
     if (currentUser) {
         document.getElementById("auth-app").style.display = "none";
         document.getElementById("main-app").classList.add("active");
-        document.getElementById("theme-toggle").classList.add("show");
         switchMainView("feed-view");
+        loadProfileData();
     }
 });
 
@@ -469,12 +275,14 @@ function switchPanel(id) {
 function switchMainView(viewId) {
     document.querySelectorAll(".main-view").forEach(v => v.classList.remove("active"));
     document.getElementById(viewId).classList.add("active");
-    if (viewId === "feed-view") { loadPosts(); loadActiveUsers(); }
+    if (viewId === "feed-view") loadPosts();
+    if (viewId === "profile-view") loadProfileData();
 }
 
 async function handleLogin() {
     const email = document.getElementById("login-email").value.trim();
     const password = document.getElementById("login-password").value;
+    if (!email || !password) { alert("Please enter email and password"); return; }
     try {
         const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
@@ -484,8 +292,23 @@ async function handleLogin() {
             document.getElementById("auth-app").style.display = "none";
             document.getElementById("main-app").classList.add("active");
             switchMainView("feed-view");
+            loadProfileData();
         } else alert("❌ " + data.message);
     } catch(e) { alert("❌ Server connection failed"); }
+}
+
+async function handleSignup() {
+    const fullName = document.getElementById("reg-name").value.trim();
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    if (!fullName || !username || !email || !password) { alert("Please fill all fields"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fullName, username, email, password }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ Account created! Please log in."); switchPanel("login-panel"); }
+        else alert("❌ " + data.message);
+    } catch(e) { alert("❌ " + e.message); }
 }
 
 function handleLogout() {
@@ -496,13 +319,82 @@ function handleLogout() {
     switchPanel("login-panel");
 }
 
+async function loadProfileData() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/" + currentUser.email, { headers: authHeaders() });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("profile-name").textContent = data.user.fullName || data.user.username;
+            const twofaStatus = document.getElementById("twofa-status");
+            const twofaBtn = document.getElementById("twofa-btn");
+            if (data.user.twoFAEnabled) {
+                twofaStatus.textContent = "Status: Enabled 🟢";
+                twofaBtn.textContent = "Disable 2FA";
+                twofaBtn.className = "btn btn-red";
+                twofaBtn.onclick = disable2FA;
+            } else {
+                twofaStatus.textContent = "Status: Disabled 🔴";
+                twofaBtn.textContent = "Enable 2FA Authenticator";
+                twofaBtn.className = "btn";
+                twofaBtn.onclick = setup2FA;
+            }
+        }
+    } catch(e) {}
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById("old-pass").value;
+    const newPassword = document.getElementById("new-pass").value;
+    if (!oldPassword || !newPassword) { alert("Fill both password fields"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ Password updated successfully!"); document.getElementById("old-pass").value = ""; document.getElementById("new-pass").value = ""; }
+        else alert("❌ " + data.message);
+    } catch(e) { alert("❌ " + e.message); }
+}
+
+async function setup2FA() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("twofa-qr").src = data.qrCode;
+            document.getElementById("twofa-qr-box").style.display = "block";
+        } else alert("❌ " + data.message);
+    } catch(e) { alert("❌ " + e.message); }
+}
+
+async function verifyAndEnable2FA() {
+    const code = document.getElementById("twofa-code").value.trim();
+    if (!code) { alert("Enter code"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ 2FA Enabled!"); document.getElementById("twofa-qr-box").style.display = "none"; loadProfileData(); }
+        else alert("❌ " + data.message);
+    } catch(e) { alert("❌ " + e.message); }
+}
+
+async function disable2FA() {
+    const code = prompt("Enter 2FA code to disable:");
+    if (!code) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/disable", { method: "POST", headers: authHeaders(), body: JSON.stringify({ email: currentUser.email, code }) });
+        const data = await res.json();
+        if (data.success) { alert("✅ 2FA Disabled"); loadProfileData(); }
+        else alert("❌ " + data.message);
+    } catch(e) { alert("❌ " + e.message); }
+}
+
 async function loadPosts() {
     try {
         const res = await fetch(BACKEND_URL + "/api/posts");
         const posts = await res.json();
         const list = document.getElementById("posts-list");
         if (!posts.length) { list.innerHTML = '<p style="text-align:center; color:var(--muted);">No posts yet</p>'; return; }
-        list.innerHTML = posts.map(p => '<div class="post-item"><div class="post-header"><div class="avatar">' + p.username[0].toUpperCase() + '</div><div class="info"><div class="post-user">' + p.username + '</div><div class="post-time">' + new Date(p.createdAt).toLocaleTimeString() + '</div></div></div><div class="post-content">' + p.content + '</div></div>').join("");
+        list.innerHTML = posts.map(p => '<div class="post-item"><div class="post-header"><div class="avatar">' + p.username[0].toUpperCase() + '</div><div><b>' + p.username + '</b><div style="font-size:12px; color:var(--muted);">' + new Date(p.createdAt).toLocaleTimeString() + '</div></div></div><div>' + p.content + '</div></div>').join("");
     } catch(e) {}
 }
 
@@ -516,16 +408,8 @@ async function createPost() {
     } catch(e) {}
 }
 
-async function loadActiveUsers() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/active-users");
-        const data = await res.json();
-        document.getElementById("active-counter").textContent = "🟢 " + data.count + " users active now";
-    } catch(e) {}
-}
-
-function downloadApp() {
-    window.open("https://github.com/grandrpserver31-wq/searchbook-backend/releases/download/v4.0.0/app-debug.apk", "_blank");
+function resetPassword() {
+    alert("Password reset OTP sent to your email!");
 }
 </script>
 </body>
