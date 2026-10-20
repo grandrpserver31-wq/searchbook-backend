@@ -26,7 +26,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); }
 .btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
 .btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
-.btn-sm { padding: 8px 14px; font-size: 13px; width: auto; margin-top: 0; }
+.btn-sm { padding: 6px 10px; font-size: 12px; width: auto; margin-top: 0; }
 .link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 600; }
 .divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
 
@@ -76,9 +76,14 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); }
 .action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
 
+.active-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; background: rgba(240,242,245,0.6); font-size: 13px; font-weight: 600; }
+.online-dot { width: 10px; height: 10px; background: #00b894; border-radius: 50%; display: inline-block; }
+
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
 #admin-panel.active { display: flex; }
-.admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+.admin-box { background: var(--white); border-radius: 24px; padding: 25px; width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; }
+
+.ticket-card { background: #fffde7; border: 1px solid #ffe082; padding: 12px 15px; border-radius: 12px; margin-bottom: 10px; font-size: 13px; line-height: 1.5; color: #333; }
 
 #report-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2500; display:none; justify-content:center; align-items:center; }
 .report-box { background:var(--white); padding:25px; border-radius:16px; width:90%; max-width:400px; }
@@ -347,7 +352,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 <div id="admin-panel">
     <div class="admin-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="color:#e17055; margin:0;">🔐 Admin Control</h2>
+            <h2 style="color:#e17055; margin:0;">🔐 Admin Control Panel</h2>
             <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
         </div>
         <div id="admin-login-form">
@@ -356,13 +361,15 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
         </div>
         <div id="admin-content-area" style="display:none;">
-            <h3>📩 Support & Complaint Tickets</h3>
-            <div id="admin-complaints-list" style="margin-bottom:20px;"></div>
+            <h3>📩 Notification & Support Complaint Box</h3>
+            <div id="admin-complaints-list" style="margin-bottom:20px; max-height: 200px; overflow-y: auto;"></div>
+            
             <div class="divider"></div>
-            <h3>🚨 Reports & Escalation Analyst</h3>
-            <div id="admin-reports-list" style="margin-bottom:20px;"></div>
+            <h3>🚨 Reports Analyst Panel</h3>
+            <div id="admin-reports-list" style="margin-bottom:20px; max-height: 200px; overflow-y: auto;"></div>
+            
             <div class="divider"></div>
-            <h3>👤 Registered Users</h3>
+            <h3>👤 Registered Users Management</h3>
             <div id="admin-user-list"></div>
         </div>
     </div>
@@ -490,7 +497,7 @@ async function loadAdminComplaints() {
         const list = document.getElementById("admin-complaints-list");
         if (!data.complaints.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending complaints.</p>"; return; }
         list.innerHTML = data.complaints.map(c => `
-            <div style="padding:10px; background:#fff9db; border-radius:8px; margin-bottom:8px; border:1px solid #ffe066;">
+            <div class="ticket-card">
                 <b>User:</b> @${c.username} <br>
                 <b>Message:</b> ${c.message} <br>
                 <div style="margin-top:6px;">
@@ -513,9 +520,9 @@ async function loadAdminReports() {
         const list = document.getElementById("admin-reports-list");
         if (!data.reports.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending reports.</p>"; return; }
         list.innerHTML = data.reports.map(r => `
-            <div style="padding:10px; background:#fff0f0; border-radius:8px; margin-bottom:8px; border:1px solid #ffcccc;">
-                <b>Reported User:</b> ${r.author} <br>
-                <b>Reported By:</b> ${r.reporter} | <b>Reason:</b> ${r.reason} <br>
+            <div style="padding:10px; background:#fff0f0; border-radius:8px; margin-bottom:8px; border:1px solid #ffcccc; font-size:13px;">
+                <b>Reported Author:</b> @${r.author} <br>
+                <b>Reported By:</b> @${r.reporter} | <b>Reason:</b> ${r.reason} <br>
                 <div style="margin-top:6px;">
                     <button class="btn btn-sm btn-red" onclick="applyStrike('${r.author}', '${r.reportId}')">⚠️ Issue Strike</button>
                     <button class="btn btn-sm" onclick="dismissReport('${r.reportId}')">Dismiss</button>
@@ -545,11 +552,38 @@ async function loadAdminUsers() {
     const data = await res.json();
     if (data.success) {
         document.getElementById("admin-user-list").innerHTML = data.users.map(u => `
-            <div style="padding:10px; background:#f8f9fe; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                <span><b>${u.username}</b> (${u.email}) - Strikes: <b>${u.strikes || 0}</b> ${u.isPermanentBanned ? '<span style="color:red;">[PERM BANNED]</span>' : ''}</span>
-                <button class="btn btn-sm btn-green" onclick="resetUserStrike('${u.username}')">Reset Strikes</button>
+            <div style="padding:12px; background:#f8f9fe; margin-bottom:10px; border-radius:10px; border:1px solid var(--border); font-size:13px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:8px;">
+                    <span><b>@${u.username}</b> (${u.email}) - Strikes: <b>${u.strikes || 0}</b> ${u.isPermanentBanned ? '<span style="color:red; font-weight:bold;">[PERM BANNED]</span>' : ''}</span>
+                    <button class="btn btn-sm" style="background:${u.twoFAEnabled ? '#00b894' : '#e17055'}; color:white;" onclick="toggleUser2FA('${u.username}', ${!u.twoFAEnabled})">2FA: ${u.twoFAEnabled ? 'ON' : 'OFF'}</button>
+                </div>
+                <div style="display:flex; gap:5px; flex-wrap:wrap;">
+                    <button class="btn btn-sm" style="background:#f39c12; color:white;" onclick="setDirectStrike('${u.username}', 1)">Strike 1 (Warn)</button>
+                    <button class="btn btn-sm" style="background:#e67e22; color:white;" onclick="setDirectStrike('${u.username}', 2)">Strike 2 (7d Mute)</button>
+                    <button class="btn btn-sm" style="background:#e74c3c; color:white;" onclick="setDirectStrike('${u.username}', 3)">Strike 3 (30d Ban)</button>
+                    <button class="btn btn-sm btn-red" onclick="setDirectStrike('${u.username}', 4)">Strike 4 (Perm Ban)</button>
+                    <button class="btn btn-sm btn-green" onclick="resetUserStrike('${u.username}')">Reset</button>
+                </div>
             </div>
         `).join("");
+    }
+}
+
+async function setDirectStrike(username, strikeNum) {
+    const res = await fetch(BACKEND_URL + "/api/admin/set-strike-direct", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, strikeNum }) });
+    const data = await res.json();
+    if (data.success) {
+        alert(`✅ Strike ${strikeNum} set for @${username}`);
+        loadAdminUsers();
+    }
+}
+
+async function toggleUser2FA(username, enable) {
+    const res = await fetch(BACKEND_URL + "/api/admin/toggle-2fa", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, enable }) });
+    const data = await res.json();
+    if (data.success) {
+        alert(`✅ 2FA ${enable ? 'Enabled' : 'Disabled'} for @${username}`);
+        loadAdminUsers();
     }
 }
 
@@ -675,7 +709,7 @@ function bootApp() {
     loadFeed();
     loadActiveUsers();
     loadAcceptedFriendsDropdown();
-    setInterval(pingActiveUser, 15000);
+    setInterval(pingActive, 15000);
     setInterval(loadFeed, 10000);
 }
 
