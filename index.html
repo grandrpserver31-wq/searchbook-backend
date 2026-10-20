@@ -4,527 +4,508 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Searchbook - Global Social Network</title>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <style>
-        :root { --primary: #1877f2; --bg: #f0f2f5; --card: #ffffff; --text: #050505; --text-sec: #65676b; }
-        body.dark { --bg: #18191a; --card: #242526; --text: #e4e6eb; --text-sec: #b0b3b8; }
-        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: background 0.3s; }
-        header { background: var(--card); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
-        .logo { font-size: 24px; font-weight: bold; color: var(--primary); cursor: pointer; }
-        .container { display: flex; max-width: 1200px; margin: 20px auto; gap: 20px; padding: 0 10px; }
-        .sidebar { width: 250px; background: var(--card); padding: 15px; border-radius: 8px; height: fit-content; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
-        .main-content { flex: 1; max-width: 650px; }
-        .card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
-        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background: var(--card); color: var(--text); }
-        button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
-        button:hover { opacity: 0.9; }
+        :root {
+            --primary: #6366f1;
+            --primary-hover: #4f46e5;
+            --bg: #f8fafc;
+            --card: #ffffff;
+            --text: #0f172a;
+            --text-sec: #64748b;
+            --border: #e2e8f0;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Plus Jakarta Sans', sans-serif; }
+        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+        
+        /* Navbar */
+        header {
+            background: var(--card);
+            border-bottom: 1px solid var(--border);
+            padding: 12px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        .logo { font-size: 22px; font-weight: 700; color: var(--primary); cursor: pointer; }
+        .nav-right { display: flex; align-items: center; gap: 16px; }
+        .nav-icon { font-size: 20px; cursor: pointer; color: var(--text-sec); position: relative; }
+        .nav-icon:hover { color: var(--primary); }
+        
+        /* Dropdown Menu */
+        .dropdown-menu {
+            position: absolute;
+            right: 20px;
+            top: 60px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            box-shadow: 0 10px 25px -5px rgba(0,0,0,0.1);
+            width: 220px;
+            display: none;
+            z-index: 200;
+            overflow: hidden;
+        }
+        .dropdown-menu div {
+            padding: 12px 16px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            transition: 0.2s;
+        }
+        .dropdown-menu div:hover { background: #f1f5f9; color: var(--primary); }
+
+        /* Container & Cards */
+        .container { max-width: 1000px; margin: 24px auto; padding: 0 16px; display: flex; gap: 24px; }
+        .main-feed { flex: 1; }
+        .sidebar-right { width: 280px; }
+        
+        .card {
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.02);
+            position: relative;
+        }
+
+        /* Inputs & Buttons */
+        input, textarea, select {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            margin-top: 8px;
+            margin-bottom: 12px;
+            font-size: 14px;
+            outline: none;
+            background: #f8fafc;
+        }
+        input:focus, textarea:focus { border-color: var(--primary); background: #fff; }
+        button {
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 14px;
+            cursor: pointer;
+            transition: 0.2s;
+            width: 100%;
+        }
+        button:hover { background: var(--primary-hover); }
+
+        /* Post Menu & Reactions */
+        .post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+        .avatar { width: 40px; height: 40px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+        .post-dots { position: absolute; right: 20px; top: 20px; cursor: pointer; color: var(--text-sec); }
+        .post-menu { position: absolute; right: 20px; top: 45px; background: #fff; border: 1px solid var(--border); border-radius: 8px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); }
+        .post-menu div { padding: 8px 16px; font-size: 13px; cursor: pointer; }
+        .post-menu div:hover { background: #f1f5f9; }
+
+        .reactions { display: flex; gap: 16px; margin-top: 14px; border-top: 1px solid var(--border); padding-top: 12px; font-size: 13px; font-weight: 600; color: var(--text-sec); }
+        .reactions span { cursor: pointer; }
+        .reactions span:hover { color: var(--primary); }
+
+        /* Utility */
         .hidden { display: none !important; }
-        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; }
-        .modal-content { background: var(--card); padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto; }
-        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; }
-        .post-actions { display: flex; justify-content: space-around; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 8px 0; margin: 10px 0; cursor: pointer; }
-        .menu-dots { position: absolute; top: 15px; right: 15px; cursor: pointer; font-weight: bold; font-size: 18px; }
-        .dropdown-menu { position: absolute; top: 40px; right: 15px; background: var(--card); border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; display: none; }
-        .dropdown-menu div { padding: 8px 15px; cursor: pointer; font-size: 14px; }
-        .dropdown-menu div:hover { background: #eee; }
-        .footer-branding { text-align: center; margin-top: 20px; font-size: 12px; color: var(--text-sec); }
+        .modal { position: fixed; inset: 0; background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(4px); display: flex; align-items: center; justify-content: center; z-index: 1000; }
+        .modal-card { background: #fff; border-radius: 20px; width: 100%; max-width: 480px; padding: 28px; position: relative; }
+        .close-modal { position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 20px; color: var(--text-sec); }
     </style>
 </head>
 <body>
 
-    <!-- Header -->
+    <!-- Header Navigation -->
     <header>
         <div class="logo" id="logoBtn">Searchbook</div>
-        <div style="display: flex; gap: 10px; align-items: center;">
-            <select id="langSelect" onchange="changeLanguage()" style="width: auto; padding: 5px;">
-                <option value="en">English</option>
-                <option value="bn">বাংলা</option>
-            </select>
-            <span id="navUsername" class="hidden"></span>
-            <button id="logoutBtn" class="hidden" onclick="logout()" style="width: auto; padding: 5px 10px; background: #e41e3f;">Logout</button>
+        <div class="nav-right">
+            <div class="nav-icon" onclick="toggleNavMenu()">🏠</div>
+            <div class="nav-icon" onclick="toggleNavMenu()">🌐</div>
+            <div class="nav-icon" onclick="toggleNavMenu()">💬</div>
+            <div class="nav-icon" onclick="toggleNavMenu()">⋮</div>
         </div>
     </header>
 
-    <!-- Auth / Login View -->
-    <div id="authView" class="container" style="justify-content: center; margin-top: 50px;">
-        <div class="card" style="width: 400px; text-align: center;">
-            <h2 id="loginTitle">Login to Searchbook</h2>
-            <div id="loginForm">
-                <input type="email" id="loginEmail" placeholder="Email">
+    <!-- Top Right Nav Dropdown -->
+    <div class="dropdown-menu" id="navDropdown">
+        <div onclick="openProfile()"><span class="avatar" style="width:24px;height:24px;font-size:12px;">👤</span> My Profile</div>
+        <div onclick="showSection('community')">🌐 Community Chat</div>
+        <div onclick="showSection('private')">💬 Private Messages</div>
+        <div onclick="openSettings()">⚙️ Settings & Security</div>
+        <div onclick="openLanguage()">🌐 Language</div>
+        <div onclick="logout()" style="color: #ef4444;">🚪 Log Out</div>
+    </div>
+
+    <!-- Auth View (Login/Signup/Complaint) -->
+    <div id="authView" class="container" style="justify-content: center; margin-top: 40px;">
+        <div class="card" style="width: 420px; text-align: center;">
+            <h2 id="authTitle" style="margin-bottom: 8px;">Login to Searchbook</h2>
+            <p style="font-size: 13px; color: var(--text-sec); margin-bottom: 20px;">Connect with friends, share your moments</p>
+            
+            <div id="loginBlock">
+                <input type="email" id="loginEmail" placeholder="Email address">
                 <input type="password" id="loginPassword" placeholder="Password">
-                <input type="text" id="twoFACodeInput" placeholder="Google Authenticator 2FA Code (if enabled)" class="hidden">
+                <input type="text" id="twoFACode" placeholder="2FA Code (if enabled)" class="hidden">
                 <button onclick="login()">Log In</button>
-                <p style="margin-top: 15px;"><a href="#" onclick="toggleAuth(true)" id="toSignupText">Create New Account</a></p>
-                <p style="margin-top: 10px;"><a href="#" onclick="openComplaintModal()">Complaint Box / Support</a></p>
+                <div style="margin-top: 16px; font-size: 14px;">
+                    <a href="#" onclick="toggleAuth(true)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Create New Account</a>
+                </div>
+                <div style="margin-top: 10px; font-size: 13px;">
+                    <a href="#" onclick="openComplaint()" style="color: var(--text-sec); text-decoration: none;">Complaint Box / Support</a>
+                </div>
             </div>
-            <div id="signupForm" class="hidden">
-                <input type="text" id="signupUsername" placeholder="Username">
+
+            <div id="signupBlock" class="hidden">
+                <input type="text" id="signupUser" placeholder="Username">
                 <input type="email" id="signupEmail" placeholder="Email">
-                <input type="text" id="signupFullName" placeholder="Full Name">
-                <input type="password" id="signupPassword" placeholder="Password (Strong: A-Z, a-z, 0-9, special)">
-                <button onclick="signup()">Sign Up</button>
-                <p style="margin-top: 15px;"><a href="#" onclick="toggleAuth(false)" id="toLoginText">Already have an account? Login</a></p>
+                <input type="text" id="signupName" placeholder="Full Name">
+                <input type="password" id="signupPass" placeholder="Password (Strong required)">
+                <button onclick="signup()">Create Account</button>
+                <div style="margin-top: 16px; font-size: 14px;">
+                    <a href="#" onclick="toggleAuth(false)" style="color: var(--primary); text-decoration: none; font-weight: 600;">Already have an account? Log In</a>
+                </div>
             </div>
-            <div class="footer-branding">
+
+            <p style="font-size: 11px; color: var(--text-sec); margin-top: 24px;">
                 Developed by Riyad Ahmed<br>
-                <a href="https://github.com/grandrpset31-wq/searchbook-backend/releases" target="_blank">Download Searchbook App (GitHub)</a>
-            </div>
+                <a href="https://github.com/grandrpset31-wq/searchbook-backend/releases" target="_blank" style="color: var(--primary);">📥 Download Searchbook App (GitHub)</a>
+            </p>
         </div>
     </div>
 
-    <!-- Main App View -->
+    <!-- Main App Container -->
     <div id="appView" class="container hidden">
-        <div class="sidebar">
-            <h3 id="welcomeUser">Profile</h3>
-            <button onclick="openProfileView()" style="margin-bottom: 10px;">My Profile & Posts</button>
-            <button onclick="openSettingsView()" style="margin-bottom: 10px;">Settings & Security</button>
-            <hr>
-            <h4>Active Friends</h4>
-            <div id="activeFriendsList" style="max-height: 200px; overflow-y: auto;"></div>
-        </div>
-
-        <div class="main-content" id="mainContentArea">
-            <div class="card" id="postCreationCard">
-                <textarea id="postContent" placeholder="What's on your mind?"></textarea>
-                <input type="text" id="postImageUrl" placeholder="Image URL (optional)">
-                <button onclick="createPost()">Post</button>
+        <div class="main-feed" id="mainFeedArea">
+            <!-- Create Post Card -->
+            <div class="card" id="createPostBox">
+                <div style="display: flex; gap: 12px; align-items: center;">
+                    <div class="avatar" id="myAvatar">U</div>
+                    <textarea id="postText" placeholder="What's on your mind?" rows="2" style="margin:0;"></textarea>
+                </div>
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
+                    <input type="text" id="postImg" placeholder="Photo URL (optional)" style="margin:0; width: 70%;">
+                    <button onclick="submitPost()" style="width: 25%;">Share Post</button>
+                </div>
             </div>
-            <div id="feedContainer"></div>
+
+            <h4 style="margin-bottom: 12px; color: var(--text-sec);">🔥 Smart AI Algorithm Newsfeed</h4>
+            <div id="feedPosts"></div>
         </div>
 
-        <div class="sidebar" style="width: 300px;">
-            <h3>Community Chat</h3>
-            <div id="communityChatBox" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 8px; font-size: 13px;"></div>
-            <input type="text" id="communityMsgInput" placeholder="Type public message...">
-            <button onclick="sendCommunityMessage()">Send</button>
+        <div class="sidebar-right">
+            <div class="card">
+                <h4 style="margin-bottom: 12px;">🟢 Active Friends</h4>
+                <div id="activeList" style="font-size: 13px; color: var(--text-sec);">No friends active</div>
+            </div>
         </div>
     </div>
 
-    <!-- Settings & Security Modal -->
+    <!-- Settings Modal -->
     <div id="settingsModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
-            <h3>Settings & Security</h3>
+        <div class="modal-card">
+            <span class="close-modal" onclick="closeModal('settingsModal')">✕</span>
+            <h3>⚙️ Settings & Security</h3>
+            <hr style="margin: 16px 0; border: none; border-top: 1px solid var(--border);">
             <h4>Change Password</h4>
-            <input type="password" id="oldPassword" placeholder="Current Password">
-            <input type="password" id="newPassword" placeholder="New Password">
+            <input type="password" id="oldPass" placeholder="Current Password">
+            <input type="password" id="newPass" placeholder="New Password">
             <button onclick="changePassword()">Update Password</button>
-            <hr>
-            <h4>Delete Account</h4>
-            <input type="password" id="deleteAccountPassword" placeholder="Enter Password to Confirm">
-            <button onclick="deleteAccount()" style="background: #e41e3f;">Delete My Account Permanently</button>
+            <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
+            <h4 style="color: #ef4444;">Delete Account</h4>
+            <input type="password" id="delPass" placeholder="Enter Password to Confirm">
+            <button onclick="deleteAccount()" style="background: #ef4444;">Delete Account Permanently</button>
         </div>
     </div>
 
-    <!-- Complaint Modal -->
+    <!-- Support Complaint Modal -->
     <div id="complaintModal" class="modal hidden">
-        <div class="modal-content">
-            <span class="close-btn" onclick="closeComplaintModal()">&times;</span>
-            <h3>Complaint & Support Box</h3>
-            <p style="font-size: 13px; color: gray;">To submit a complaint (e.g. 2FA reset or password issue), please verify with your credentials.</p>
-            <input type="text" id="compUsername" placeholder="Your Username">
-            <input type="password" id="compPassword" placeholder="Your Password">
-            <textarea id="compMessage" placeholder="Describe your problem..."></textarea>
-            <button onclick="submitComplaint()">Submit Complaint</button>
+        <div class="modal-card">
+            <span class="close-modal" onclick="closeModal('complaintModal')">✕</span>
+            <h3>📩 Support & Complaint Box</h3>
+            <p style="font-size: 12px; color: var(--text-sec); margin-top: 4px; margin-bottom: 12px;">Enter your username and password to verify ownership before sending a complaint.</p>
+            <input type="text" id="compUser" placeholder="Username">
+            <input type="password" id="compPass" placeholder="Password">
+            <textarea id="compText" placeholder="Describe your issue (e.g., Reset 2FA, Login issue)" rows="3"></textarea>
+            <button onclick="sendComplaint()">Submit Complaint</button>
         </div>
     </div>
 
-    <!-- Secret Admin Modal -->
+    <!-- Admin Panel Modal -->
     <div id="adminModal" class="modal hidden">
-        <div class="modal-content" style="max-width: 800px;">
-            <span class="close-btn" onclick="closeAdminModal()">&times;</span>
-            <h2>🔐 Admin Control</h2>
-            <div id="adminLoginForm">
-                <input type="text" id="adminUser" placeholder="Admin Username">
-                <input type="password" id="adminPass" placeholder="Admin Password">
+        <div class="modal-card" style="max-width: 650px;">
+            <span class="close-modal" onclick="closeModal('adminModal')">✕</span>
+            <h3>🔐 Admin Control Panel</h3>
+            <div id="adminAuth">
+                <input type="text" id="admUser" placeholder="Admin Username">
+                <input type="password" id="admPass" placeholder="Admin Password">
                 <button onclick="adminLogin()">Login as Admin</button>
             </div>
-            <div id="adminDashboard" class="hidden">
-                <h3>Support Complaints & Requests</h3>
-                <div id="adminComplaintsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
-                <h3>Reports & Escalation Analyst</h3>
-                <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
-                <h3>Registered Users & Strike Management</h3>
-                <div id="adminUsersList" style="max-height: 300px; overflow-y: auto;"></div>
+            <div id="adminDash" class="hidden">
+                <h4 style="margin-top: 12px;">📩 Complaints Notification Panel</h4>
+                <div id="complaintsBox" style="max-height: 120px; overflow-y: auto; font-size: 13px; margin-bottom: 12px;"></div>
+                <h4>🚩 Reports & Escalation Analyst</h4>
+                <div id="reportsBox" style="max-height: 120px; overflow-y: auto; font-size: 13px; margin-bottom: 12px;"></div>
+                <h4>👤 Users & Strike System</h4>
+                <div id="usersBox" style="max-height: 200px; overflow-y: auto; font-size: 13px;"></div>
             </div>
         </div>
     </div>
 
     <script>
-        const API_URL = "";
-        let currentUser = null;
-        let logoClicks = 0;
+        const API = "";
+        let currentUser = localStorage.getItem('sb_user') || null;
+        let logoCount = 0;
 
-        document.getElementById('logoBtn').addEventListener('click', () => {
-            logoClicks++;
-            if (logoClicks >= 5) {
-                logoClicks = 0;
-                document.getElementById('adminModal').classList.remove('hidden');
-            }
-        });
+        document.getElementById('logoBtn').onclick = () => {
+            logoCount++;
+            if (logoCount >= 5) { logoCount = 0; openModal('adminModal'); }
+        };
 
-        function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); }
-        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
-        function closeComplaintModal() { document.getElementById('complaintModal').classList.add('hidden'); }
-        function openSettingsView() { document.getElementById('settingsModal').classList.remove('hidden'); }
-        function openComplaintModal() { document.getElementById('complaintModal').classList.remove('hidden'); }
-
-        function toggleAuth(isSignup) {
-            if (isSignup) {
-                document.getElementById('loginForm').classList.add('hidden');
-                document.getElementById('signupForm').classList.remove('hidden');
-            } else {
-                document.getElementById('signupForm').classList.add('hidden');
-                document.getElementById('loginForm').classList.remove('hidden');
-            }
+        function toggleNavMenu() {
+            const menu = document.getElementById('navDropdown');
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
 
-        async function signup() {
-            const username = document.getElementById('signupUsername').value;
-            const email = document.getElementById('signupEmail').value;
-            const fullName = document.getElementById('signupFullName').value;
-            const password = document.getElementById('signupPassword').value;
-            const res = await fetch(`${API_URL}/api/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, fullName, password })
-            });
-            const data = await res.json();
-            if (data.success) { alert('Signup successful! Please login.'); toggleAuth(false); }
-            else { alert(data.message || 'Signup failed'); }
+        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
+        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+
+        function toggleAuth(isSignup) {
+            document.getElementById('loginBlock').classList.toggle('hidden', isSignup);
+            document.getElementById('signupBlock').classList.toggle('hidden', !isSignup);
         }
 
         async function login() {
             const email = document.getElementById('loginEmail').value;
             const password = document.getElementById('loginPassword').value;
-            const twoFACode = document.getElementById('twoFACodeInput').value;
-            const res = await fetch(`${API_URL}/api/login`, {
+            const twoFACode = document.getElementById('twoFACode').value;
+            const res = await fetch(`${API}/api/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password, twoFACode })
             });
-            const data = await res.json();
-            if (data.requires2FA) {
-                document.getElementById('twoFACodeInput').classList.remove('hidden');
-                alert('Please enter your Google Authenticator 2FA code.');
-                return;
-            }
-            if (data.banned) { alert(data.message); return; }
-            if (data.success) {
-                currentUser = data.username;
-                localStorage.setItem('searchbook_user', currentUser);
-                localStorage.setItem('searchbook_email', data.email);
-                initApp();
-            } else { alert(data.message || 'Login failed'); }
+            const d = await res.json();
+            if (d.requires2FA) { document.getElementById('twoFACode').classList.remove('hidden'); return Swal.fire('2FA Required', 'Enter Google Authenticator code', 'info'); }
+            if (d.banned) return Swal.fire('Account Suspended', d.message, 'error');
+            if (d.success) {
+                currentUser = d.username;
+                localStorage.setItem('sb_user', currentUser);
+                localStorage.setItem('sb_email', d.email);
+                init();
+            } else { Swal.fire('Error', d.message, 'error'); }
         }
 
-        function logout() {
-            localStorage.clear();
-            location.reload();
+        async function signup() {
+            const username = document.getElementById('signupUser').value;
+            const email = document.getElementById('signupEmail').value;
+            const fullName = document.getElementById('signupName').value;
+            const password = document.getElementById('signupPass').value;
+            const res = await fetch(`${API}/api/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, fullName, password })
+            });
+            const d = await res.json();
+            if (d.success) { Swal.fire('Success', 'Account created! Please login.', 'success'); toggleAuth(false); }
+            else { Swal.fire('Error', d.message, 'error'); }
         }
 
-        function initApp() {
+        function logout() { localStorage.clear(); location.reload(); }
+
+        function init() {
             document.getElementById('authView').classList.add('hidden');
             document.getElementById('appView').classList.remove('hidden');
-            document.getElementById('navUsername').textContent = currentUser;
-            document.getElementById('navUsername').classList.remove('hidden');
-            document.getElementById('logoutBtn').classList.remove('hidden');
-            document.getElementById('welcomeUser').textContent = `Hello, ${currentUser}`;
+            document.getElementById('myAvatar').textContent = currentUser[0].toUpperCase();
             loadFeed();
-            loadCommunityChat();
-            loadActiveFriends();
             setInterval(pingActive, 15000);
-            setInterval(loadCommunityChat, 5000);
-            setInterval(loadFeed, 10000);
         }
 
-        async function createPost() {
-            const content = document.getElementById('postContent').value;
-            const imageUrl = document.getElementById('postImageUrl').value;
-            const res = await fetch(`${API_URL}/api/posts`, {
+        async function submitPost() {
+            const content = document.getElementById('postText').value;
+            const imageUrl = document.getElementById('postImg').value;
+            const res = await fetch(`${API}/api/posts`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser, content, imageUrl })
             });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('postContent').value = '';
-                document.getElementById('postImageUrl').value = '';
-                loadFeed();
-            } else { alert(data.message); }
+            const d = await res.json();
+            if (d.success) { document.getElementById('postText').value = ''; loadFeed(); }
+            else { Swal.fire('Restricted', d.message, 'warning'); }
         }
 
         async function loadFeed() {
-            if (!currentUser) return;
-            const res = await fetch(`${API_URL}/api/feed/${currentUser}`);
+            const res = await fetch(`${API}/api/feed/${currentUser}`);
             const posts = await res.json();
-            renderPosts(posts, document.getElementById('feedContainer'));
+            renderPosts(posts, document.getElementById('feedPosts'));
         }
 
         function renderPosts(posts, container) {
             container.innerHTML = posts.map(p => `
                 <div class="card">
-                    <b>@${p.username}</b> <span style="font-size: 11px; color: gray;">${new Date(p.createdAt).toLocaleString()}</span>
+                    <div class="post-header">
+                        <div class="avatar">${p.username[0].toUpperCase()}</div>
+                        <div>
+                            <b>@${p.username}</b><br>
+                            <span style="font-size:11px;color:var(--text-sec);">${new Date(p.createdAt).toLocaleTimeString()}</span>
+                        </div>
+                    </div>
                     ${p.username === currentUser ? `
-                        <div class="menu-dots" onclick="toggleMenu('${p._id}')">⋮</div>
-                        <div id="menu-${p._id}" class="dropdown-menu">
-                            <div onclick="copyPostText('${encodeURIComponent(p.content || '')}')">Copy Text</div>
-                            <div onclick="deletePost('${p._id}')" style="color: red;">Delete Post</div>
+                        <div class="post-dots" onclick="togglePostMenu('${p._id}')">⋮</div>
+                        <div class="post-menu" id="pm-${p._id}">
+                            <div onclick="copyText('${encodeURIComponent(p.content)}')">📋 Copy Text</div>
+                            <div onclick="delPost('${p._id}')" style="color:red;">🗑️ Delete Post</div>
                         </div>
                     ` : ''}
-                    <p>${p.content || ''}</p>
-                    ${p.imageUrl ? `<img src="${p.imageUrl}" style="max-width: 100%; border-radius: 6px;">` : ''}
-                    <div class="post-actions">
-                        <span onclick="react('${p._id}', 'like')">👍 Like (${p.likes?.length || 0})</span>
-                        <span onclick="react('${p._id}', 'love')">❤️ Love (${p.loves?.length || 0})</span>
-                        <span onclick="react('${p._id}', 'fire')">🔥 Fire (${p.fires?.length || 0})</span>
-                        <span onclick="reportPostModal('${p._id}')">🚩 Report</span>
+                    <p style="margin-top:8px;">${p.content || ''}</p>
+                    ${p.imageUrl ? `<img src="${p.imageUrl}" style="max-width:100%;border-radius:10px;margin-top:8px;">` : ''}
+                    <div class="reactions">
+                        <span onclick="react('${p._id}','like')">🔥 ${p.likes?.length || 0}</span>
+                        <span onclick="react('${p._id}','love')">❤️ ${p.loves?.length || 0}</span>
+                        <span onclick="report('${p._id}')">🚩 Report</span>
                     </div>
                 </div>
             `).join('');
         }
 
-        function toggleMenu(postId) {
-            const menu = document.getElementById(`menu-${postId}`);
-            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
+        function togglePostMenu(id) {
+            const m = document.getElementById(`pm-${id}`);
+            m.style.display = m.style.display === 'block' ? 'none' : 'block';
         }
 
-        function copyPostText(text) {
-            navigator.clipboard.writeText(decodeURIComponent(text));
-            alert('Post text copied to clipboard!');
-        }
+        function copyText(t) { navigator.clipboard.writeText(decodeURIComponent(t)); Swal.fire('Copied', 'Post copied to clipboard', 'success'); }
 
-        async function deletePost(postId) {
-            if (!confirm('Are you sure you want to delete this post?')) return;
-            const res = await fetch(`${API_URL}/api/posts/${postId}`, {
+        async function delPost(id) {
+            const res = await fetch(`${API}/api/posts/${id}`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username: currentUser })
             });
-            const data = await res.json();
-            if (data.success) { loadFeed(); }
-            else { alert(data.message); }
+            if ((await res.json()).success) loadFeed();
         }
 
-        async function reportPostModal(postId) {
-            const reason = prompt("Reason for reporting this post:");
-            if (!reason) return;
-            await fetch(`${API_URL}/api/report-post`, {
+        async function react(id, type) {
+            await fetch(`${API}/api/posts/${id}/react`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ postId, reporter: currentUser, reason })
+                body: JSON.stringify({ username: currentUser, type })
             });
-            alert('Report submitted to admin analyst successfully.');
+            loadFeed();
         }
 
-        async function openProfileView() {
-            const res = await fetch(`${API_URL}/api/user-posts/${currentUser}`);
-            const posts = await res.json();
-            const container = document.getElementById('mainContentArea');
-            container.innerHTML = `
-                <div class="card" style="text-align: center;">
-                    <h2>@${currentUser}</h2>
-                    <p>Your Profile & Posts</p>
-                    <button onclick="initApp()">Back to Feed</button>
-                </div>
-                <div id="userProfilePosts"></div>
-            `;
-            renderPosts(posts, document.getElementById('userProfilePosts'));
+        async function report(id) {
+            const { value: reason } = await Swal.fire({ title: 'Report Post', input: 'text', placeholder: 'Reason for report' });
+            if (reason) {
+                await fetch(`${API}/api/report-post`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ postId: id, reporter: currentUser, reason })
+                });
+                Swal.fire('Submitted', 'Report sent to admin', 'success');
+            }
         }
+
+        async function openProfile() {
+            const res = await fetch(`${API}/api/user-posts/${currentUser}`);
+            const posts = await res.json();
+            document.getElementById('mainFeedArea').innerHTML = `
+                <div class="card" style="text-align:center;">
+                    <div class="avatar" style="width:60px;height:60px;margin:0 auto 10px;font-size:24px;">${currentUser[0].toUpperCase()}</div>
+                    <h2>@${currentUser}</h2>
+                    <p style="font-size:13px;color:var(--text-sec);">Your Profile Posts</p>
+                    <button onclick="location.reload()" style="margin-top:12px;width:auto;">Back to Feed</button>
+                </div>
+                <div id="profPosts"></div>
+            `;
+            renderPosts(posts, document.getElementById('profPosts'));
+        }
+
+        function openSettings() { openModal('settingsModal'); }
+        function openComplaint() { openModal('complaintModal'); }
 
         async function changePassword() {
-            const oldPassword = document.getElementById('oldPassword').value;
-            const newPassword = document.getElementById('newPassword').value;
-            const email = localStorage.getItem('searchbook_email');
-            const res = await fetch(`${API_URL}/api/user/change-password`, {
+            const oldPassword = document.getElementById('oldPass').value;
+            const newPassword = document.getElementById('newPass').value;
+            const email = localStorage.getItem('sb_email');
+            const res = await fetch(`${API}/api/user/change-password`, {
                 method: 'PUT',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, oldPassword, newPassword })
             });
-            const data = await res.json();
-            if (data.success) { alert('Password changed successfully!'); closeSettingsModal(); }
-            else { alert(data.message); }
+            const d = await res.json();
+            if (d.success) { Swal.fire('Success', 'Password updated', 'success'); closeModal('settingsModal'); }
+            else Swal.fire('Error', d.message, 'error');
         }
 
         async function deleteAccount() {
-            const password = document.getElementById('deleteAccountPassword').value;
-            const email = localStorage.getItem('searchbook_email');
-            if (!password) return alert('Enter password to confirm deletion.');
-            const res = await fetch(`${API_URL}/api/user/delete`, {
+            const password = document.getElementById('delPass').value;
+            const email = localStorage.getItem('sb_email');
+            const res = await fetch(`${API}/api/user/delete`, {
                 method: 'DELETE',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ email, password })
             });
-            const data = await res.json();
-            if (data.success) { alert('Account deleted.'); logout(); }
-            else { alert(data.message); }
+            if ((await res.json()).success) { Swal.fire('Deleted', 'Account removed', 'info'); logout(); }
         }
 
-        async function submitComplaint() {
-            const username = document.getElementById('compUsername').value;
-            const password = document.getElementById('compPassword').value;
-            const message = document.getElementById('compMessage').value;
-            const res = await fetch(`${API_URL}/api/complaints`, {
+        async function sendComplaint() {
+            const username = document.getElementById('compUser').value;
+            const password = document.getElementById('compPass').value;
+            const message = document.getElementById('compText').value;
+            const res = await fetch(`${API}/api/complaints`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password, message })
             });
-            const data = await res.json();
-            if (data.success) { alert('Complaint submitted successfully!'); closeComplaintModal(); }
-            else { alert(data.message); }
-        }
-
-        async function sendCommunityMessage() {
-            const text = document.getElementById('communityMsgInput').value;
-            if (!text) return;
-            const res = await fetch(`${API_URL}/api/community-messages`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, text })
-            });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('communityMsgInput').value = '';
-                loadCommunityChat();
-            } else { alert(data.message); }
-        }
-
-        async function loadCommunityChat() {
-            const res = await fetch(`${API_URL}/api/community-messages`);
-            const data = await res.json();
-            if (data.success) {
-                const box = document.getElementById('communityChatBox');
-                box.innerHTML = data.messages.map(m => `<div><b>@${m.username}:</b> ${m.text}</div>`).join('');
-                box.scrollTop = box.scrollHeight;
-            }
+            const d = await res.json();
+            if (d.success) { Swal.fire('Sent', 'Complaint submitted to support', 'success'); closeModal('complaintModal'); }
+            else Swal.fire('Error', d.message, 'error');
         }
 
         async function pingActive() {
             if (currentUser) {
-                await fetch(`${API_URL}/api/ping`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ username: currentUser })
-                });
-                loadActiveFriends();
-            }
-        }
-
-        async function loadActiveFriends() {
-            const res = await fetch(`${API_URL}/api/active-users`);
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('activeFriendsList').innerHTML = data.users.map(u => `<div>🟢 ${u}</div>`).join('');
+                await fetch(`${API}/api/ping`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ username: currentUser }) });
             }
         }
 
         async function adminLogin() {
-            const username = document.getElementById('adminUser').value;
-            const password = document.getElementById('adminPass').value;
-            const res = await fetch(`${API_URL}/api/admin/login`, {
+            const username = document.getElementById('admUser').value;
+            const password = document.getElementById('admPass').value;
+            const res = await fetch(`${API}/api/admin/login`, {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({ username, password })
             });
-            const data = await res.json();
-            if (data.success) {
-                document.getElementById('adminLoginForm').classList.add('hidden');
-                document.getElementById('adminDashboard').classList.remove('hidden');
+            if ((await res.json()).success) {
+                document.getElementById('adminAuth').classList.add('hidden');
+                document.getElementById('adminDash').classList.remove('hidden');
                 loadAdminData();
-            } else { alert(data.message); }
+            } else Swal.fire('Failed', 'Invalid Admin Credentials', 'error');
         }
 
         async function loadAdminData() {
-            const resComp = await fetch(`${API_URL}/api/admin/complaints`);
-            const dataComp = await resComp.json();
-            if (dataComp.success) {
-                document.getElementById('adminComplaintsList').innerHTML = dataComp.complaints.map(c => `
-                    <div style="border-bottom: 1px solid #ddd; padding: 5px;">
-                        <b>@${c.username}</b>: ${c.message} <button onclick="resolveComplaint('${c._id}')" style="width: auto; padding: 2px 5px;">Resolve</button>
-                    </div>
-                `).join('') || 'No complaints.';
-            }
+            const cRes = await fetch(`${API}/api/admin/complaints`);
+            const cData = await cRes.json();
+            document.getElementById('complaintsBox').innerHTML = (cData.complaints || []).map(c => `<div><b>@${c.username}:</b> ${c.message}</div>`).join('') || 'No complaints';
 
-            const resReports = await fetch(`${API_URL}/api/admin/reports`);
-            const dataReports = await resReports.json();
-            if (dataReports.success) {
-                document.getElementById('adminReportsList').innerHTML = dataReports.reports.map(r => `
-                    <div style="border-bottom: 1px solid #ddd; padding: 5px;">
-                        Reporter: <b>@${r.reporter}</b> reported <b>@${r.author}</b><br>
-                        Reason: <i>${r.reason}</i><br>
-                        <button onclick="issueStrike('${r.author}', '${r.reportId}')" style="width: auto; padding: 2px 5px; background: #e41e3f;">Issue Strike</button>
-                        <button onclick="dismissReport('${r.reportId}')" style="width: auto; padding: 2px 5px; background: gray;">Dismiss</button>
-                    </div>
-                `).join('') || 'No pending reports.';
-            }
+            const rRes = await fetch(`${API}/api/admin/reports`);
+            const rData = await rRes.json();
+            document.getElementById('reportsBox').innerHTML = (rData.reports || []).map(r => `<div><b>@${r.reporter}</b> reported <b>@${r.author}</b>: ${r.reason}</div>`).join('') || 'No reports';
 
-            const resUsers = await fetch(`${API_URL}/api/admin/users`);
-            const dataUsers = await resUsers.json();
-            if (dataUsers.success) {
-                document.getElementById('adminUsersList').innerHTML = dataUsers.users.map(u => `
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
-                        <span><b>${u.username}</b> (Strikes: ${u.strikes || 0}) ${u.isPermanentBanned ? '[BANNED]' : ''}</span>
-                        <button onclick="resetStrike('${u.username}')" style="width: auto; padding: 5px;">Reset Strikes</button>
-                    </div>
-                `).join('');
-            }
+            const uRes = await fetch(`${API}/api/admin/users`);
+            const uData = await uRes.json();
+            document.getElementById('usersBox').innerHTML = (uData.users || []).map(u => `<div><b>@${u.username}</b> (Strikes: ${u.strikes})</div>`).join('');
         }
 
-        async function resolveComplaint(complaintId) {
-            await fetch(`${API_URL}/api/admin/resolve-complaint`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ complaintId })
-            });
-            loadAdminData();
-        }
-
-        async function issueStrike(username, reportId) {
-            await fetch(`${API_URL}/api/admin/issue-strike`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, reportId })
-            });
-            loadAdminData();
-        }
-
-        async function dismissReport(reportId) {
-            await fetch(`${API_URL}/api/admin/dismiss-report`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ reportId })
-            });
-            loadAdminData();
-        }
-
-        async function resetStrike(username) {
-            await fetch(`${API_URL}/api/admin/reset-strike`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username })
-            });
-            loadAdminData();
-        }
-
-        function changeLanguage() {
-            const lang = document.getElementById('langSelect').value;
-            if (lang === 'bn') {
-                document.getElementById('loginTitle').textContent = 'সার্চবুকে লগইন করুন';
-                document.getElementById('toSignupText').textContent = 'নতুন অ্যাকাউন্ট তৈরি করুন';
-                document.getElementById('toLoginText').textContent = 'ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন';
-            } else {
-                document.getElementById('loginTitle').textContent = 'Login to Searchbook';
-                document.getElementById('toSignupText').textContent = 'Create New Account';
-                document.getElementById('toLoginText').textContent = "Already have an account? Login";
-            }
-        }
-
-        window.onload = () => {
-            const savedUser = localStorage.getItem('searchbook_user');
-            if (savedUser) {
-                currentUser = savedUser;
-                initApp();
-            }
-        };
+        window.onload = () => { if (currentUser) init(); };
     </script>
 </body>
 </html>
