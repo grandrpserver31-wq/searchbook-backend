@@ -171,12 +171,27 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
 });
 
-app.post('/api/admin/login', (req, res) => {
-    const { username, password } = req.body;
-    if (username === (process.env.ADMIN_USER || "riyad") && password === (process.env.ADMIN_PASS || "riyad1234")) {
-        return res.json({ success: true });
+// Secure Database-based Admin Login Route
+app.post('/api/admin/login', async (req, res) => {
+    try {
+        const { username, password } = req.body;
+        const AdminModel = mongoose.connection.collection('admins');
+        const adminUser = await AdminModel.findOne({ username: username });
+        
+        if (!adminUser) {
+            return res.status(401).json({ success: false, message: "Invalid admin username" });
+        }
+
+        const isMatch = await bcrypt.compare(password, adminUser.passwordHash);
+        if (!isMatch) {
+            return res.status(401).json({ success: false, message: "Invalid admin password" });
+        }
+
+        await AdminModel.updateOne({ username: username }, { $set: { lastLogin: new Date() } });
+        res.json({ success: true, message: "Admin login successful" });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
     }
-    res.status(401).json({ success: false });
 });
 
 app.get('/api/admin/users', async (req, res) => {
