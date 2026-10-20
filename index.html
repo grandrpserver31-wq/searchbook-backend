@@ -3,14 +3,16 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Searchbook - Global Social Network</title>
+<title id="app-title">Searchbook - Global Social Network</title>
 <style>
 :root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.95); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
 * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
 
-#auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; }
-.auth-box { background: var(--white); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); }
+#auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; flex-direction: column; }
+.auth-box { background: var(--white); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); position: relative; }
+.auth-top-bar { position: absolute; top: 15px; right: 20px; }
+.auth-top-bar select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; outline: none; }
 .auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
 .card { display: none; }
 .card.active { display: block; }
@@ -29,6 +31,9 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
 .pass-hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; background: rgba(108, 92, 231, 0.08); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary); }
 .alert-warning-box { background: rgba(253, 203, 110, 0.25); border-left: 4px solid #f39c12; color: #d35400; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; line-height: 1.4; font-weight: 600; }
+.developer-tag { text-align: center; margin-top: 15px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.github-download-link { text-align: center; margin-top: 8px; font-size: 13px; }
+.github-download-link a { color: var(--primary); text-decoration: none; font-weight: 700; }
 
 #main-app { display: none; }
 #main-app.active { display: block; }
@@ -45,34 +50,56 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
 .layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
 .main-content { flex: 1; max-width: 650px; margin: 0 auto; }
+.sidebar-right { width: 260px; background: var(--white); backdrop-filter: blur(16px); padding: 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); height: fit-content; position: sticky; top: 80px; }
 .main-view { display: none; }
 .main-view.active { display: block; }
+
 .post-box, .card-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-.post-header { display: flex; align-items: center; gap: 12px; margin-bottom: 12px; }
+.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; }
+.post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.post-user-info { display: flex; align-items: center; gap: 12px; }
 .avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; }
+
+.post-options-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 50%; }
+.post-options-btn:hover { background: rgba(0,0,0,0.05); }
+.post-dropdown-menu { position: absolute; right: 20px; top: 45px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); display: none; flex-direction: column; width: 140px; z-index: 10; padding: 6px; }
+.post-dropdown-menu.show { display: flex; }
+.post-dropdown-item { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; }
+.post-dropdown-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
 
 .post-creator-container { display: flex; gap: 12px; align-items: flex-start; }
 .post-creator-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; flex-shrink: 0; }
 .post-creator-inputs { flex: 1; }
 
 .post-actions { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
-.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; }
+.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); }
 .action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
 .comment-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
 .comment-item { font-size: 13px; background: rgba(245,247,250,0.9); padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; }
 
+.active-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; background: rgba(240,242,245,0.6); font-size: 13px; font-weight: 600; }
+.online-dot { width: 10px; height: 10px; background: #00b894; border-radius: 50%; display: inline-block; }
+
 #admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+
+#report-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2500; display:none; justify-content:center; align-items:center; }
+.report-box { background:var(--white); padding:25px; border-radius:16px; width:90%; max-width:400px; }
 </style>
 </head>
 <body>
 
 <div id="auth-app">
     <div class="auth-box">
+        <div class="auth-top-bar">
+            <select id="auth-lang-select" onchange="changeLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+            </select>
+        </div>
         <h1 class="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
-        <p style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;">Connect with friends, share your moments</p>
+        <p id="txt-subtitle" style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;">Connect with friends, share your moments</p>
 
         <div id="login-panel" class="card active">
             <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
@@ -82,14 +109,14 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                     <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
                 </div>
             </div>
-            <button class="btn" onclick="handleLogin()">Log In</button>
-            <span class="link" onclick="switchPanel('forgot-panel')">Forgot password?</span>
+            <button class="btn" id="btn-login-text" onclick="handleLogin()">Log In</button>
+            <span class="link" id="txt-forgot" onclick="switchPanel('forgot-panel')">Forgot password?</span>
             <div class="divider"></div>
-            <button class="btn btn-green" onclick="switchPanel('register-panel')">Create New Account</button>
+            <button class="btn btn-green" id="btn-create-acc" onclick="switchPanel('register-panel')">Create New Account</button>
         </div>
 
         <div id="register-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">Create Account</h2>
+            <h2 id="txt-reg-title" style="text-align:center; margin-bottom:15px;">Create Account</h2>
             <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
             <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
             <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
@@ -98,18 +125,18 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                     <input type="password" id="reg-password" placeholder="Password">
                     <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
                 </div>
-                <div class="pass-hint">
-                    🔒 <b>পাসওয়ার্ড নির্দেশাবলী:</b> অন্তত ৮টি অক্ষর, বড় হাতের অক্ষর (A-Z), ছোট হাতের অক্ষর (a-z), সংখ্যা (0-9) এবং স্পেশাল চিহ্ন (!@#$%^&*) থাকতে হবে।
+                <div class="pass-hint" id="txt-pass-hint">
+                    🔒 Password must be at least 8 chars with upper, lower, number & special char.
                 </div>
             </div>
-            <button class="btn btn-green" onclick="handleSignup()">Sign Up</button>
-            <span class="link" onclick="switchPanel('login-panel')">Already have account?</span>
+            <button class="btn btn-green" id="btn-signup-text" onclick="handleSignup()">Sign Up</button>
+            <span class="link" id="txt-have-acc" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
 
         <div id="forgot-panel" class="card">
             <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset</h2>
-            <div class="alert-warning-box">
-                ⚠️ <b>গুরুত্বপূর্ণ সতর্কবার্তা:</b> পাসওয়ার্ড পুনরুদ্ধারের জন্য এবং আপনার অ্যাকাউন্ট সুরক্ষিত রাখতে অবশ্যই <b>2FA (Google Authenticator)</b> চালু রাখতে হবে।
+            <div class="alert-warning-box" id="txt-forgot-warning">
+                ⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.
             </div>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Enter registered email"></div>
             <button class="btn" onclick="resetPassword()">Send Reset Link</button>
@@ -121,6 +148,11 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; font-weight:700;"></div>
             <button class="btn" onclick="submit2FALogin()">Submit</button>
             <span class="link" onclick="switchPanel('login-panel')">← Back</span>
+        </div>
+
+        <div class="developer-tag">Developed by Riyad Ahmed</div>
+        <div class="github-download-link">
+            <a href="https://github.com/grandrpserver31-wq/searchbook-backend/releases" target="_blank">📥 Download Searchbook App (GitHub)</a>
         </div>
     </div>
 </div>
@@ -135,12 +167,12 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <button class="top-icon-btn" onclick="toggleMenuDropdown()" title="Menu">⋮</button>
             
             <div class="menu-dropdown" id="menu-dropdown">
-                <div class="menu-item" onclick="openMyProfile(); toggleMenuDropdown();">👤 My Profile</div>
-                <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();">🌐 Community Chat</div>
-                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();">💬 Private Messages</div>
-                <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();">⚙️ Settings & Security</div>
-                <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();">🌍 Language</div>
-                <div class="menu-item logout" onclick="handleLogout()">⎋ Log Out</div>
+                <div class="menu-item" onclick="openMyProfile(); toggleMenuDropdown();" id="m-profile">👤 My Profile</div>
+                <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();" id="m-community">🌐 Community Chat</div>
+                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();" id="m-messages">💬 Private Messages</div>
+                <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();" id="m-settings">⚙️ Settings & Security</div>
+                <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();" id="m-language">🌍 Language</div>
+                <div class="menu-item logout" onclick="handleLogout()" id="m-logout">⎋ Log Out</div>
             </div>
         </div>
     </div>
@@ -199,7 +231,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 <div id="user-posts-list"></div>
             </div>
 
-            <!-- PRIVATE MESSAGES VIEW (1-TO-1 SECURE CHAT) -->
+            <!-- PRIVATE MESSAGES VIEW -->
             <div id="messages-view" class="main-view">
                 <div class="card-box">
                     <h2>💬 Secure 1-to-1 Private Chat</h2>
@@ -236,9 +268,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                             <input type="password" id="new-pass" placeholder="New Password">
                             <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
                         </div>
-                        <div class="pass-hint">
-                            🔒 <b>পাসওয়ার্ড নির্দেশাবলী:</b> অন্তত ৮টি অক্ষর, বড় হাতের অক্ষর (A-Z), ছোট হাতের অক্ষর (a-z), সংখ্যা (0-9) এবং বিশেষ চিহ্ন থাকতে হবে।
-                        </div>
                     </div>
                     <button class="btn btn-green" onclick="changePassword()">Update Password</button>
 
@@ -257,23 +286,44 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <!-- LANGUAGE SWITCHER VIEW -->
             <div id="language-view" class="main-view">
                 <div class="card-box">
-                    <h2>🌍 Multi-Language Switcher</h2>
+                    <h2>🌍 Language Settings</h2>
                     <div class="input-group" style="margin-top:15px;">
-                        <select id="language-select" onchange="changeLanguage(this.value)">
+                        <select id="main-lang-select" onchange="changeLanguage(this.value)">
                             <option value="en">English (US)</option>
                             <option value="bn">বাংলা (Bangla)</option>
-                            <option value="hi">हिन्दी (Hindi)</option>
-                            <option value="ur">اردو (Urdu)</option>
-                            <option value="de">Deutsch (German)</option>
-                            <option value="fr">Français (French)</option>
-                            <option value="es">Español (Spanish)</option>
-                            <option value="jp">日本語 (Japanese)</option>
-                            <option value="cn">中文 (Chinese)</option>
-                            <option value="ru">Русский (Russian)</option>
                         </select>
                     </div>
                 </div>
             </div>
+        </div>
+
+        <!-- RIGHT SIDEBAR: ACTIVE USERS -->
+        <div class="sidebar-right">
+            <h4 style="margin-bottom:12px; font-size:15px; display:flex; align-items:center; gap:6px;">🟢 Active Friends</h4>
+            <div id="active-users-list">
+                <p style="font-size:12px; color:var(--muted);">Loading active users...</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- REPORT MODAL -->
+<div id="report-modal">
+    <div class="report-box">
+        <h3>🚨 Report Post</h3>
+        <p style="font-size:13px; color:var(--muted); margin:10px 0;">Select reason for reporting:</p>
+        <div class="input-group">
+            <select id="report-reason">
+                <option value="Bullying">Bullying or Harassment</option>
+                <option value="Suicide">Suicide or Self-Injury</option>
+                <option value="Hate Speech">Hate Speech</option>
+                <option value="Spam">Spam or Fake News</option>
+                <option value="Adult Content">Explicit / Adult Content</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn btn-sm btn-red" onclick="submitReport()">Submit Report</button>
+            <button class="btn btn-sm" onclick="document.getElementById('report-modal').style.display='none'">Cancel</button>
         </div>
     </div>
 </div>
@@ -291,6 +341,10 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
         </div>
         <div id="admin-content-area" style="display:none;">
+            <h3>🚨 Reports & Escalation Panel</h3>
+            <div id="admin-reports-list" style="margin-bottom:20px;"></div>
+            <div class="divider"></div>
+            <h3>👤 Registered Users</h3>
             <div id="admin-user-list"></div>
         </div>
     </div>
@@ -301,22 +355,72 @@ const BACKEND_URL = "";
 let currentUser = JSON.parse(localStorage.getItem("searchbook_user")) || null;
 let logoClicks = 0;
 let activeChatFriend = "";
+let currentReportingPostId = null;
+let currentLang = localStorage.getItem("searchbook_lang") || "en";
 
-function toggleMenuDropdown() { document.getElementById("menu-dropdown").classList.toggle("show"); }
+const translations = {
+    en: {
+        subtitle: "Connect with friends, share your moments",
+        loginBtn: "Log In",
+        forgot: "Forgot password?",
+        createAcc: "Create New Account",
+        regTitle: "Create Account",
+        signupBtn: "Sign Up",
+        haveAcc: "Already have account?",
+        passHint: "🔒 Password must be at least 8 chars with upper, lower, number & special char.",
+        forgotWarning: "⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.",
+        mProfile: "👤 My Profile",
+        mCommunity: "🌐 Community Chat",
+        mMessages: "💬 Private Messages",
+        mSettings: "⚙️ Settings & Security",
+        mLanguage: "🌍 Language",
+        mLogout: "⎋ Log Out"
+    },
+    bn: {
+        subtitle: "বন্ধুদের সাথে সংযোগ করুন, আপনার মুহূর্তগুলো শেয়ার করুন",
+        loginBtn: "লগ ইন",
+        forgot: "পাসওয়ার্ড ভুলে গেছেন?",
+        createAcc: "নতুন অ্যাকাউন্ট তৈরি করুন",
+        regTitle: "অ্যাকাউন্ট তৈরি করুন",
+        signupBtn: "সাইন আপ",
+        haveAcc: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
+        passHint: "🔒 পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে (বড়/ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল ক্যারেক্টারসহ)।",
+        forgotWarning: "⚠️ গুরুত্বপূর্ণ সতর্কবার্তা: অ্যাকাউন্ট সুরক্ষার জন্য অবশ্যই 2FA (Google Authenticator) চালু রাখুন।",
+        mProfile: "👤 আমার প্রোফাইল",
+        mCommunity: "🌐 কমিউনিটি চ্যাট",
+        mMessages: "💬 প্রাইভেট মেসেজ",
+        mSettings: "⚙️ সেটিংস ও সিকিউরিটি",
+        mLanguage: "🌍 ভাষা",
+        mLogout: "⎋ লগ আউট"
+    }
+};
 
 function changeLanguage(lang) {
+    currentLang = lang;
     localStorage.setItem("searchbook_lang", lang);
-    alert("✅ Language preference saved!");
+    document.getElementById("auth-lang-select").value = lang;
+    document.getElementById("main-lang-select").value = lang;
+    
+    const t = translations[lang];
+    document.getElementById("txt-subtitle").textContent = t.subtitle;
+    document.getElementById("btn-login-text").textContent = t.loginBtn;
+    document.getElementById("txt-forgot").textContent = t.forgot;
+    document.getElementById("btn-create-acc").textContent = t.createAcc;
+    document.getElementById("txt-reg-title").textContent = t.regTitle;
+    document.getElementById("btn-signup-text").textContent = t.signupBtn;
+    document.getElementById("txt-have-acc").textContent = t.haveAcc;
+    document.getElementById("txt-pass-hint").innerHTML = t.passHint;
+    document.getElementById("txt-forgot-warning").innerHTML = t.forgotWarning;
+
+    document.getElementById("m-profile").textContent = t.mProfile;
+    document.getElementById("m-community").textContent = t.mCommunity;
+    document.getElementById("m-messages").textContent = t.mMessages;
+    document.getElementById("m-settings").textContent = t.mSettings;
+    document.getElementById("m-language").textContent = t.mLanguage;
+    document.getElementById("m-logout").textContent = t.mLogout;
 }
 
-function isStrongPassword(pass) {
-    const minLength = pass.length >= 8;
-    const hasUpper = /[A-Z]/.test(pass);
-    const hasLower = /[a-z]/.test(pass);
-    const hasNumber = /[0-9]/.test(pass);
-    const hasSpecial = /[!@#$%^&*(),.?":{}|<>]/.test(pass);
-    return minLength && hasUpper && hasLower && hasNumber && hasSpecial;
-}
+function toggleMenuDropdown() { document.getElementById("menu-dropdown").classList.toggle("show"); }
 
 function handleLogoClick() {
     logoClicks++;
@@ -338,17 +442,62 @@ async function verifyAdminLogin() {
         if (data.success) {
             document.getElementById("admin-login-form").style.display = "none";
             document.getElementById("admin-content-area").style.display = "block";
+            loadAdminReports();
             loadAdminUsers();
         } else alert("❌ Invalid credentials");
     } catch(e) { alert("❌ Error"); }
+}
+
+async function loadAdminReports() {
+    const res = await fetch(BACKEND_URL + "/api/admin/reports");
+    const data = await res.json();
+    if (data.success) {
+        const list = document.getElementById("admin-reports-list");
+        if (!data.reports.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending reports.</p>"; return; }
+        list.innerHTML = data.reports.map(r => `
+            <div style="padding:10px; background:#fff0f0; border-radius:8px; margin-bottom:8px; border:1px solid #ffcccc;">
+                <b>Reported User:</b> ${r.author} <br>
+                <b>Reported By:</b> ${r.reporter} | <b>Reason:</b> ${r.reason} <br>
+                <div style="margin-top:6px;">
+                    <button class="btn btn-sm btn-red" onclick="applyStrike('${r.author}', '${r.reportId}')">⚠️ Issue Strike</button>
+                    <button class="btn btn-sm" onclick="dismissReport('${r.reportId}')">Dismiss</button>
+                </div>
+            </div>
+        `).join("");
+    }
+}
+
+async function applyStrike(username, reportId) {
+    const res = await fetch(BACKEND_URL + "/api/admin/issue-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, reportId }) });
+    const data = await res.json();
+    if (data.success) {
+        alert("✅ Strike issued to " + username);
+        loadAdminReports();
+        loadAdminUsers();
+    }
+}
+
+async function dismissReport(reportId) {
+    await fetch(BACKEND_URL + "/api/admin/dismiss-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reportId }) });
+    loadAdminReports();
 }
 
 async function loadAdminUsers() {
     const res = await fetch(BACKEND_URL + "/api/admin/users");
     const data = await res.json();
     if (data.success) {
-        document.getElementById("admin-user-list").innerHTML = data.users.map(u => '<div style="padding:10px; background:#f8f9fe; margin-bottom:8px;"><b>' + u.username + '</b> (' + u.email + ')</div>').join("");
+        document.getElementById("admin-user-list").innerHTML = data.users.map(u => `
+            <div style="padding:10px; background:#f8f9fe; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span><b>${u.username}</b> (${u.email}) - Strikes: <b>${u.strikes || 0}</b> ${u.isPermanentBanned ? '<span style="color:red;">[PERM BANNED]</span>' : ''}</span>
+                <button class="btn btn-sm btn-green" onclick="resetUserStrike('${u.username}')">Reset Strikes</button>
+            </div>
+        `).join("");
     }
+}
+
+async function resetUserStrike(username) {
+    await fetch(BACKEND_URL + "/api/admin/reset-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username }) });
+    loadAdminUsers();
 }
 
 function togglePassword(id, btn) {
@@ -358,6 +507,7 @@ function togglePassword(id, btn) {
 }
 
 document.addEventListener("DOMContentLoaded", function() {
+    changeLanguage(currentLang);
     if (currentUser) {
         document.getElementById("auth-app").style.display = "none";
         document.getElementById("main-app").classList.add("active");
@@ -365,8 +515,34 @@ document.addEventListener("DOMContentLoaded", function() {
         switchMainView("feed-view");
         loadProfileData();
         loadFriendsList();
+        loadActiveUsers();
+        setInterval(updateActivity, 15000);
     }
 });
+
+async function updateActivity() {
+    if (!currentUser) return;
+    await fetch(BACKEND_URL + "/api/ping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
+    loadActiveUsers();
+}
+
+async function loadActiveUsers() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/active-users");
+        const data = await res.json();
+        const list = document.getElementById("active-users-list");
+        if (data.success && data.users.length > 0) {
+            list.innerHTML = data.users.map(u => `
+                <div class="active-user-item">
+                    <span class="online-dot"></span>
+                    <span style="cursor:pointer;" onclick="viewUserProfile('${u}')">${u}</span>
+                </div>
+            `).join('');
+        } else {
+            list.innerHTML = '<p style="font-size:12px; color:var(--muted);">No active users online</p>';
+        }
+    } catch(e) {}
+}
 
 function switchPanel(id) {
     document.querySelectorAll("#auth-app .card").forEach(p => p.classList.remove("active"));
@@ -388,6 +564,10 @@ async function handleLogin() {
     try {
         const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
         const data = await res.json();
+        if (data.banned) {
+            alert("❌ " + data.message);
+            return;
+        }
         if (data.requires2FA) {
             window.temp2FAEmail = email;
             switchPanel("twofa-login-panel");
@@ -399,6 +579,8 @@ async function handleLogin() {
             document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
             switchMainView("feed-view");
             loadFriendsList();
+            loadActiveUsers();
+            setInterval(updateActivity, 15000);
         } else alert("❌ " + data.message);
     } catch(e) { alert("❌ Login Failed"); }
 }
@@ -408,6 +590,7 @@ async function submit2FALogin() {
     try {
         const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: window.temp2FAEmail, password: "", twoFACode: code }) });
         const data = await res.json();
+        if (data.banned) { alert("❌ " + data.message); return; }
         if (data.success) {
             currentUser = { username: data.username, email: data.email, fullName: data.fullName };
             localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
@@ -416,6 +599,8 @@ async function submit2FALogin() {
             document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
             switchMainView("feed-view");
             loadFriendsList();
+            loadActiveUsers();
+            setInterval(updateActivity, 15000);
         } else alert("❌ " + data.message);
     } catch(e) { alert("❌ Error"); }
 }
@@ -425,11 +610,6 @@ async function handleSignup() {
     const username = document.getElementById("reg-username").value.trim();
     const email = document.getElementById("reg-email").value.trim();
     const password = document.getElementById("reg-password").value;
-
-    if (!isStrongPassword(password)) {
-        alert("⚠️ পাসওয়ার্ড শক্তিশালী হতে হবে! অন্তত ৮টি অক্ষর, ১টি বড় হাতের অক্ষর, ১টি ছোট হাতের অক্ষর, ১টি সংখ্যা এবং ১টি বিশেষ চিহ্ন থাকতে হবে।");
-        return;
-    }
 
     try {
         const res = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fullName, username, email, password }) });
@@ -442,7 +622,7 @@ async function handleSignup() {
 function resetPassword() {
     const email = document.getElementById("reset-email").value.trim();
     if (!email) { alert("Please enter your email"); return; }
-    alert("✅ Password reset link has been sent to your email. (Ensure 2FA is enabled for safety)");
+    alert("✅ Password reset link has been sent to your email.");
     switchPanel("login-panel");
 }
 
@@ -461,10 +641,17 @@ async function loadPosts() {
         list.innerHTML = posts.map(p => `
             <div class="post-item">
                 <div class="post-header">
-                    <div class="avatar" onclick="viewUserProfile('${p.username}')">${p.username[0].toUpperCase()}</div>
-                    <div>
-                        <b onclick="viewUserProfile('${p.username}')" style="cursor:pointer;">${p.username}</b>
-                        <div style="font-size:12px; color:var(--muted);">${new Date(p.createdAt).toLocaleTimeString()}</div>
+                    <div class="post-user-info">
+                        <div class="avatar" onclick="viewUserProfile('${p.username}')">${p.username[0].toUpperCase()}</div>
+                        <div>
+                            <b onclick="viewUserProfile('${p.username}')" style="cursor:pointer;">${p.username}</b>
+                            <div style="font-size:12px; color:var(--muted);">${new Date(p.createdAt).toLocaleTimeString()}</div>
+                        </div>
+                    </div>
+                    <button class="post-options-btn" onclick="togglePostDropdown('${p._id}')">⋮</button>
+                    <div class="post-dropdown-menu" id="post-menu-${p._id}">
+                        <div class="post-dropdown-item" onclick="copyPostLink('${p._id}')">🔗 Copy Link</div>
+                        <div class="post-dropdown-item" onclick="openReportModal('${p._id}')" style="color:var(--danger);">⚠️ Report</div>
                     </div>
                 </div>
                 <div>${p.content}</div>
@@ -473,11 +660,11 @@ async function loadPosts() {
                     <button class="action-btn" onclick="reactPost('${p._id}', 'like')">👍 ${p.likes ? p.likes.length : 0}</button>
                     <button class="action-btn" onclick="reactPost('${p._id}', 'love')">❤️ ${p.loves ? p.loves.length : 0}</button>
                     <button class="action-btn" onclick="reactPost('${p._id}', 'fire')">🔥 ${p.fires ? p.fires.length : 0}</button>
-                    <button class="action-btn" onclick="sharePost('${p._id}')">🔁 Share</button>
+                    <a class="action-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent('Check out this post on Searchbook: ' + p.content)}" target="_blank">🟢 WhatsApp</a>
                 </div>
                 <div class="comment-section">
                     <div id="comments-${p._id}">
-                        ${(p.comments || []).map(c => `<div class="comment-item"><b>${c.username}:</b>${c.text}</div>`).join('')}
+                        ${(p.comments || []).map(c => `<div class="comment-item"><b>${c.username}:</b> ${c.text}</div>`).join('')}
                     </div>
                     <div style="display:flex; gap:6px; margin-top:8px;">
                         <input type="text" id="input-comment-${p._id}" placeholder="Write a comment..." style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-size:12px;">
@@ -487,6 +674,34 @@ async function loadPosts() {
             </div>
         `).join("");
     } catch(e) {}
+}
+
+function togglePostDropdown(id) {
+    document.querySelectorAll('.post-dropdown-menu').forEach(m => { if(m.id !== 'post-menu-' + id) m.classList.remove('show'); });
+    document.getElementById('post-menu-' + id).classList.toggle('show');
+}
+
+function copyPostLink(id) {
+    const url = window.location.href.split('#')[0] + '#post-' + id;
+    navigator.clipboard.writeText(url);
+    alert("✅ Post link copied to clipboard!");
+    document.getElementById('post-menu-' + id).classList.remove('show');
+}
+
+function openReportModal(id) {
+    currentReportingPostId = id;
+    document.getElementById('report-modal').style.display = 'flex';
+    document.getElementById('post-menu-' + id).classList.remove('show');
+}
+
+async function submitReport() {
+    const reason = document.getElementById('report-reason').value;
+    const res = await fetch(BACKEND_URL + "/api/report-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: currentReportingPostId, reporter: currentUser.username, reason }) });
+    const data = await res.json();
+    if (data.success) {
+        alert("✅ Report submitted to Admin.");
+        document.getElementById('report-modal').style.display = 'none';
+    }
 }
 
 async function createPost() {
@@ -536,12 +751,6 @@ async function addComment(postId) {
     const data = await res.json();
     if (!data.success) { alert("❌ " + data.message); return; }
     input.value = "";
-    loadPosts();
-}
-
-async function sharePost(postId) {
-    await fetch(BACKEND_URL + `/api/posts/${postId}/share`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
-    alert("✅ Post shared on your profile!");
     loadPosts();
 }
 
@@ -720,12 +929,6 @@ async function verifyAndEnable2FA() {
 async function changePassword() {
     const oldPassword = document.getElementById("old-pass").value;
     const newPassword = document.getElementById("new-pass").value;
-
-    if (!isStrongPassword(newPassword)) {
-        alert("⚠️ নতুন পাসওয়ার্ডটি শক্তিশালী হতে হবে! অন্তত ৮টি অক্ষর, ১টি বড় হাতের অক্ষর, ১টি ছোট হাতের অক্ষর, ১টি সংখ্যা এবং ১টি বিশেষ চিহ্ন ব্যবহার করুন।");
-        return;
-    }
-
     const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
     const data = await res.json();
     if (data.success) alert("✅ Password updated!");
