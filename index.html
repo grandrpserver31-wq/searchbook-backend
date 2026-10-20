@@ -1,939 +1,530 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title id="app-title">Searchbook - Global Social Network</title>
-<style>
-:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.95); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
-* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
-body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
-
-#auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; flex-direction: column; }
-.auth-box { background: var(--white); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); position: relative; }
-.auth-top-bar { position: absolute; top: 15px; right: 20px; }
-.auth-top-bar select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; outline: none; }
-.auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
-.card { display: none; }
-.card.active { display: block; }
-
-.input-group { margin-bottom: 16px; }
-.input-group input, .input-group textarea, .input-group select { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; background: rgba(250, 251, 255, 0.8); color: var(--text); }
-.password-wrapper { position: relative; }
-.password-wrapper input { padding-right: 48px; }
-.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 4px; }
-.btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); }
-.btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
-.btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
-.btn-sm { padding: 8px 14px; font-size: 13px; width: auto; margin-top: 0; }
-.link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 600; }
-.divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
-
-.pass-hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; background: rgba(108, 92, 231, 0.08); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary); }
-.alert-warning-box { background: rgba(253, 203, 110, 0.25); border-left: 4px solid #f39c12; color: #d35400; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; line-height: 1.4; font-weight: 600; }
-.developer-tag { text-align: center; margin-top: 15px; font-size: 13px; color: var(--muted); font-weight: 600; }
-.github-download-link { text-align: center; margin-top: 8px; font-size: 13px; }
-.github-download-link a { color: var(--primary); text-decoration: none; font-weight: 700; }
-
-#main-app { display: none; }
-#main-app.active { display: block; }
-.top-bar { background: var(--white); backdrop-filter: blur(16px); padding: 12px 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
-.top-logo { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; user-select: none; }
-.top-icons { display: flex; gap: 8px; align-items: center; position: relative; }
-.top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(244,246,251,0.8); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
-
-.menu-dropdown { position: absolute; top: 52px; right: 0; background: var(--white); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-lg); width: 220px; display: none; flex-direction: column; padding: 8px; z-index: 150; }
-.menu-dropdown.show { display: flex; }
-.menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); }
-.menu-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
-.menu-item.logout { color: var(--danger); margin-top: 4px; border-top: 1px solid var(--border); }
-
-.layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
-.main-content { flex: 1; max-width: 650px; margin: 0 auto; }
-.sidebar-right { width: 260px; background: var(--white); backdrop-filter: blur(16px); padding: 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); height: fit-content; position: sticky; top: 80px; }
-.main-view { display: none; }
-.main-view.active { display: block; }
-
-.post-box, .card-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
-.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; }
-.post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
-.post-user-info { display: flex; align-items: center; gap: 12px; }
-.avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; }
-
-.post-options-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 50%; }
-.post-options-btn:hover { background: rgba(0,0,0,0.05); }
-.post-dropdown-menu { position: absolute; right: 20px; top: 45px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); display: none; flex-direction: column; width: 140px; z-index: 10; padding: 6px; }
-.post-dropdown-menu.show { display: flex; }
-.post-dropdown-item { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; }
-.post-dropdown-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
-
-.post-creator-container { display: flex; gap: 12px; align-items: flex-start; }
-.post-creator-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; flex-shrink: 0; }
-.post-creator-inputs { flex: 1; }
-
-.post-actions { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
-.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); }
-.action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
-.comment-section { margin-top: 12px; padding-top: 10px; border-top: 1px dashed var(--border); }
-.comment-item { font-size: 13px; background: rgba(245,247,250,0.9); padding: 8px 12px; border-radius: 10px; margin-bottom: 6px; }
-
-.active-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; background: rgba(240,242,245,0.6); font-size: 13px; font-weight: 600; }
-.online-dot { width: 10px; height: 10px; background: #00b894; border-radius: 50%; display: inline-block; }
-
-#admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
-#admin-panel.active { display: flex; }
-.admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
-
-#report-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2500; display:none; justify-content:center; align-items:center; }
-.report-box { background:var(--white); padding:25px; border-radius:16px; width:90%; max-width:400px; }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Searchbook - Global Social Network</title>
+    <style>
+        :root { --primary: #1877f2; --bg: #f0f2f5; --card: #ffffff; --text: #050505; --text-sec: #65676b; }
+        body.dark { --bg: #18191a; --card: #242526; --text: #e4e6eb; --text-sec: #b0b3b8; }
+        body { font-family: Arial, sans-serif; background: var(--bg); color: var(--text); margin: 0; padding: 0; transition: background 0.3s; }
+        header { background: var(--card); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); position: sticky; top: 0; z-index: 1000; }
+        .logo { font-size: 24px; font-weight: bold; color: var(--primary); cursor: pointer; }
+        .container { display: flex; max-width: 1200px; margin: 20px auto; gap: 20px; padding: 0 10px; }
+        .sidebar { width: 250px; background: var(--card); padding: 15px; border-radius: 8px; height: fit-content; box-shadow: 0 1px 2px rgba(0,0,0,0.1); }
+        .main-content { flex: 1; max-width: 650px; }
+        .card { background: var(--card); padding: 15px; border-radius: 8px; margin-bottom: 15px; box-shadow: 0 1px 2px rgba(0,0,0,0.1); position: relative; }
+        input, textarea, select { width: 100%; padding: 10px; margin: 8px 0; border: 1px solid #ccc; border-radius: 6px; box-sizing: border-box; background: var(--card); color: var(--text); }
+        button { background: var(--primary); color: white; border: none; padding: 10px 15px; border-radius: 6px; cursor: pointer; font-weight: bold; width: 100%; }
+        button:hover { opacity: 0.9; }
+        .hidden { display: none !important; }
+        .modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.6); display: flex; justify-content: center; align-items: center; z-index: 2000; }
+        .modal-content { background: var(--card); padding: 25px; border-radius: 8px; width: 90%; max-width: 500px; position: relative; max-height: 90vh; overflow-y: auto; }
+        .close-btn { position: absolute; top: 10px; right: 15px; font-size: 20px; cursor: pointer; }
+        .post-actions { display: flex; justify-content: space-around; border-top: 1px solid #ddd; border-bottom: 1px solid #ddd; padding: 8px 0; margin: 10px 0; cursor: pointer; }
+        .menu-dots { position: absolute; top: 15px; right: 15px; cursor: pointer; font-weight: bold; font-size: 18px; }
+        .dropdown-menu { position: absolute; top: 40px; right: 15px; background: var(--card); border: 1px solid #ccc; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.2); z-index: 10; display: none; }
+        .dropdown-menu div { padding: 8px 15px; cursor: pointer; font-size: 14px; }
+        .dropdown-menu div:hover { background: #eee; }
+        .footer-branding { text-align: center; margin-top: 20px; font-size: 12px; color: var(--text-sec); }
+    </style>
 </head>
 <body>
 
-<div id="auth-app">
-    <div class="auth-box">
-        <div class="auth-top-bar">
-            <select id="auth-lang-select" onchange="changeLanguage(this.value)">
+    <!-- Header -->
+    <header>
+        <div class="logo" id="logoBtn">Searchbook</div>
+        <div style="display: flex; gap: 10px; align-items: center;">
+            <select id="langSelect" onchange="changeLanguage()" style="width: auto; padding: 5px;">
                 <option value="en">English</option>
                 <option value="bn">বাংলা</option>
             </select>
+            <span id="navUsername" class="hidden"></span>
+            <button id="logoutBtn" class="hidden" onclick="logout()" style="width: auto; padding: 5px 10px; background: #e41e3f;">Logout</button>
         </div>
-        <h1 class="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
-        <p id="txt-subtitle" style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;">Connect with friends, share your moments</p>
+    </header>
 
-        <div id="login-panel" class="card active">
-            <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
-            <div class="input-group">
-                <div class="password-wrapper">
-                    <input type="password" id="login-password" placeholder="Password">
-                    <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
-                </div>
+    <!-- Auth / Login View -->
+    <div id="authView" class="container" style="justify-content: center; margin-top: 50px;">
+        <div class="card" style="width: 400px; text-align: center;">
+            <h2 id="loginTitle">Login to Searchbook</h2>
+            <div id="loginForm">
+                <input type="email" id="loginEmail" placeholder="Email">
+                <input type="password" id="loginPassword" placeholder="Password">
+                <input type="text" id="twoFACodeInput" placeholder="Google Authenticator 2FA Code (if enabled)" class="hidden">
+                <button onclick="login()">Log In</button>
+                <p style="margin-top: 15px;"><a href="#" onclick="toggleAuth(true)" id="toSignupText">Create New Account</a></p>
+                <p style="margin-top: 10px;"><a href="#" onclick="openComplaintModal()">Complaint Box / Support</a></p>
             </div>
-            <button class="btn" id="btn-login-text" onclick="handleLogin()">Log In</button>
-            <span class="link" id="txt-forgot" onclick="switchPanel('forgot-panel')">Forgot password?</span>
-            <div class="divider"></div>
-            <button class="btn btn-green" id="btn-create-acc" onclick="switchPanel('register-panel')">Create New Account</button>
-        </div>
-
-        <div id="register-panel" class="card">
-            <h2 id="txt-reg-title" style="text-align:center; margin-bottom:15px;">Create Account</h2>
-            <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
-            <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
-            <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
-            <div class="input-group">
-                <div class="password-wrapper">
-                    <input type="password" id="reg-password" placeholder="Password">
-                    <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
-                </div>
-                <div class="pass-hint" id="txt-pass-hint">
-                    🔒 Password must be at least 8 chars with upper, lower, number & special char.
-                </div>
+            <div id="signupForm" class="hidden">
+                <input type="text" id="signupUsername" placeholder="Username">
+                <input type="email" id="signupEmail" placeholder="Email">
+                <input type="text" id="signupFullName" placeholder="Full Name">
+                <input type="password" id="signupPassword" placeholder="Password (Strong: A-Z, a-z, 0-9, special)">
+                <button onclick="signup()">Sign Up</button>
+                <p style="margin-top: 15px;"><a href="#" onclick="toggleAuth(false)" id="toLoginText">Already have an account? Login</a></p>
             </div>
-            <button class="btn btn-green" id="btn-signup-text" onclick="handleSignup()">Sign Up</button>
-            <span class="link" id="txt-have-acc" onclick="switchPanel('login-panel')">Already have account?</span>
-        </div>
-
-        <div id="forgot-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset</h2>
-            <div class="alert-warning-box" id="txt-forgot-warning">
-                ⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.
-            </div>
-            <div class="input-group"><input type="email" id="reset-email" placeholder="Enter registered email"></div>
-            <button class="btn" onclick="resetPassword()">Send Reset Link</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
-        </div>
-
-        <div id="twofa-login-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Code Required</h2>
-            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; font-weight:700;"></div>
-            <button class="btn" onclick="submit2FALogin()">Submit</button>
-            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
-        </div>
-
-        <div class="developer-tag">Developed by Riyad Ahmed</div>
-        <div class="github-download-link">
-            <a href="https://github.com/grandrpserver31-wq/searchbook-backend/releases" target="_blank">📥 Download Searchbook App (GitHub)</a>
-        </div>
-    </div>
-</div>
-
-<div id="main-app">
-    <div class="top-bar">
-        <div class="top-logo" onclick="handleLogoClick()">Searchbook</div>
-        <div class="top-icons">
-            <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
-            <button class="top-icon-btn" onclick="switchMainView('community-view')" title="Community Chat">🌐</button>
-            <button class="top-icon-btn" onclick="switchMainView('messages-view')" title="Messages">💬</button>
-            <button class="top-icon-btn" onclick="toggleMenuDropdown()" title="Menu">⋮</button>
-            
-            <div class="menu-dropdown" id="menu-dropdown">
-                <div class="menu-item" onclick="openMyProfile(); toggleMenuDropdown();" id="m-profile">👤 My Profile</div>
-                <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();" id="m-community">🌐 Community Chat</div>
-                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();" id="m-messages">💬 Private Messages</div>
-                <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();" id="m-settings">⚙️ Settings & Security</div>
-                <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();" id="m-language">🌍 Language</div>
-                <div class="menu-item logout" onclick="handleLogout()" id="m-logout">⎋ Log Out</div>
+            <div class="footer-branding">
+                Developed by Riyad Ahmed<br>
+                <a href="https://github.com/grandrpset31-wq/searchbook-backend/releases" target="_blank">Download Searchbook App (GitHub)</a>
             </div>
         </div>
     </div>
 
-    <div class="layout">
-        <div class="main-content">
-            <!-- NEWSFEED -->
-            <div id="feed-view" class="main-view active">
-                <div class="post-box">
-                    <div class="post-creator-container">
-                        <div class="post-creator-avatar" id="creator-avatar" onclick="openMyProfile()">U</div>
-                        <div class="post-creator-inputs">
-                            <textarea id="post-content" placeholder="What's on your mind?"></textarea>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                                <label style="cursor: pointer; font-size: 14px; color: var(--primary); font-weight: 600;">
-                                    📷 Upload Photo <input type="file" id="post-image-file" accept="image/*" style="display: none;">
-                                </label>
-                                <button class="btn btn-sm" onclick="createPost()">Share Post</button>
-                            </div>
+    <!-- Main App View -->
+    <div id="appView" class="container hidden">
+        <div class="sidebar">
+            <h3 id="welcomeUser">Profile</h3>
+            <button onclick="openProfileView()" style="margin-bottom: 10px;">My Profile & Posts</button>
+            <button onclick="openSettingsView()" style="margin-bottom: 10px;">Settings & Security</button>
+            <hr>
+            <h4>Active Friends</h4>
+            <div id="activeFriendsList" style="max-height: 200px; overflow-y: auto;"></div>
+        </div>
+
+        <div class="main-content" id="mainContentArea">
+            <div class="card" id="postCreationCard">
+                <textarea id="postContent" placeholder="What's on your mind?"></textarea>
+                <input type="text" id="postImageUrl" placeholder="Image URL (optional)">
+                <button onclick="createPost()">Post</button>
+            </div>
+            <div id="feedContainer"></div>
+        </div>
+
+        <div class="sidebar" style="width: 300px;">
+            <h3>Community Chat</h3>
+            <div id="communityChatBox" style="height: 300px; overflow-y: auto; border: 1px solid #ddd; padding: 5px; margin-bottom: 8px; font-size: 13px;"></div>
+            <input type="text" id="communityMsgInput" placeholder="Type public message...">
+            <button onclick="sendCommunityMessage()">Send</button>
+        </div>
+    </div>
+
+    <!-- Settings & Security Modal -->
+    <div id="settingsModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeSettingsModal()">&times;</span>
+            <h3>Settings & Security</h3>
+            <h4>Change Password</h4>
+            <input type="password" id="oldPassword" placeholder="Current Password">
+            <input type="password" id="newPassword" placeholder="New Password">
+            <button onclick="changePassword()">Update Password</button>
+            <hr>
+            <h4>Delete Account</h4>
+            <input type="password" id="deleteAccountPassword" placeholder="Enter Password to Confirm">
+            <button onclick="deleteAccount()" style="background: #e41e3f;">Delete My Account Permanently</button>
+        </div>
+    </div>
+
+    <!-- Complaint Modal -->
+    <div id="complaintModal" class="modal hidden">
+        <div class="modal-content">
+            <span class="close-btn" onclick="closeComplaintModal()">&times;</span>
+            <h3>Complaint & Support Box</h3>
+            <p style="font-size: 13px; color: gray;">To submit a complaint (e.g. 2FA reset or password issue), please verify with your credentials.</p>
+            <input type="text" id="compUsername" placeholder="Your Username">
+            <input type="password" id="compPassword" placeholder="Your Password">
+            <textarea id="compMessage" placeholder="Describe your problem..."></textarea>
+            <button onclick="submitComplaint()">Submit Complaint</button>
+        </div>
+    </div>
+
+    <!-- Secret Admin Modal -->
+    <div id="adminModal" class="modal hidden">
+        <div class="modal-content" style="max-width: 800px;">
+            <span class="close-btn" onclick="closeAdminModal()">&times;</span>
+            <h2>🔐 Admin Control</h2>
+            <div id="adminLoginForm">
+                <input type="text" id="adminUser" placeholder="Admin Username">
+                <input type="password" id="adminPass" placeholder="Admin Password">
+                <button onclick="adminLogin()">Login as Admin</button>
+            </div>
+            <div id="adminDashboard" class="hidden">
+                <h3>Support Complaints & Requests</h3>
+                <div id="adminComplaintsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+                <h3>Reports & Escalation Analyst</h3>
+                <div id="adminReportsList" style="max-height: 200px; overflow-y: auto; margin-bottom: 15px;"></div>
+                <h3>Registered Users & Strike Management</h3>
+                <div id="adminUsersList" style="max-height: 300px; overflow-y: auto;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_URL = "";
+        let currentUser = null;
+        let logoClicks = 0;
+
+        document.getElementById('logoBtn').addEventListener('click', () => {
+            logoClicks++;
+            if (logoClicks >= 5) {
+                logoClicks = 0;
+                document.getElementById('adminModal').classList.remove('hidden');
+            }
+        });
+
+        function closeAdminModal() { document.getElementById('adminModal').classList.add('hidden'); }
+        function closeSettingsModal() { document.getElementById('settingsModal').classList.add('hidden'); }
+        function closeComplaintModal() { document.getElementById('complaintModal').classList.add('hidden'); }
+        function openSettingsView() { document.getElementById('settingsModal').classList.remove('hidden'); }
+        function openComplaintModal() { document.getElementById('complaintModal').classList.remove('hidden'); }
+
+        function toggleAuth(isSignup) {
+            if (isSignup) {
+                document.getElementById('loginForm').classList.add('hidden');
+                document.getElementById('signupForm').classList.remove('hidden');
+            } else {
+                document.getElementById('signupForm').classList.add('hidden');
+                document.getElementById('loginForm').classList.remove('hidden');
+            }
+        }
+
+        async function signup() {
+            const username = document.getElementById('signupUsername').value;
+            const email = document.getElementById('signupEmail').value;
+            const fullName = document.getElementById('signupFullName').value;
+            const password = document.getElementById('signupPassword').value;
+            const res = await fetch(`${API_URL}/api/signup`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, email, fullName, password })
+            });
+            const data = await res.json();
+            if (data.success) { alert('Signup successful! Please login.'); toggleAuth(false); }
+            else { alert(data.message || 'Signup failed'); }
+        }
+
+        async function login() {
+            const email = document.getElementById('loginEmail').value;
+            const password = document.getElementById('loginPassword').value;
+            const twoFACode = document.getElementById('twoFACodeInput').value;
+            const res = await fetch(`${API_URL}/api/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password, twoFACode })
+            });
+            const data = await res.json();
+            if (data.requires2FA) {
+                document.getElementById('twoFACodeInput').classList.remove('hidden');
+                alert('Please enter your Google Authenticator 2FA code.');
+                return;
+            }
+            if (data.banned) { alert(data.message); return; }
+            if (data.success) {
+                currentUser = data.username;
+                localStorage.setItem('searchbook_user', currentUser);
+                localStorage.setItem('searchbook_email', data.email);
+                initApp();
+            } else { alert(data.message || 'Login failed'); }
+        }
+
+        function logout() {
+            localStorage.clear();
+            location.reload();
+        }
+
+        function initApp() {
+            document.getElementById('authView').classList.add('hidden');
+            document.getElementById('appView').classList.remove('hidden');
+            document.getElementById('navUsername').textContent = currentUser;
+            document.getElementById('navUsername').classList.remove('hidden');
+            document.getElementById('logoutBtn').classList.remove('hidden');
+            document.getElementById('welcomeUser').textContent = `Hello, ${currentUser}`;
+            loadFeed();
+            loadCommunityChat();
+            loadActiveFriends();
+            setInterval(pingActive, 15000);
+            setInterval(loadCommunityChat, 5000);
+            setInterval(loadFeed, 10000);
+        }
+
+        async function createPost() {
+            const content = document.getElementById('postContent').value;
+            const imageUrl = document.getElementById('postImageUrl').value;
+            const res = await fetch(`${API_URL}/api/posts`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, content, imageUrl })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('postContent').value = '';
+                document.getElementById('postImageUrl').value = '';
+                loadFeed();
+            } else { alert(data.message); }
+        }
+
+        async function loadFeed() {
+            if (!currentUser) return;
+            const res = await fetch(`${API_URL}/api/feed/${currentUser}`);
+            const posts = await res.json();
+            renderPosts(posts, document.getElementById('feedContainer'));
+        }
+
+        function renderPosts(posts, container) {
+            container.innerHTML = posts.map(p => `
+                <div class="card">
+                    <b>@${p.username}</b> <span style="font-size: 11px; color: gray;">${new Date(p.createdAt).toLocaleString()}</span>
+                    ${p.username === currentUser ? `
+                        <div class="menu-dots" onclick="toggleMenu('${p._id}')">⋮</div>
+                        <div id="menu-${p._id}" class="dropdown-menu">
+                            <div onclick="copyPostText('${encodeURIComponent(p.content || '')}')">Copy Text</div>
+                            <div onclick="deletePost('${p._id}')" style="color: red;">Delete Post</div>
                         </div>
+                    ` : ''}
+                    <p>${p.content || ''}</p>
+                    ${p.imageUrl ? `<img src="${p.imageUrl}" style="max-width: 100%; border-radius: 6px;">` : ''}
+                    <div class="post-actions">
+                        <span onclick="react('${p._id}', 'like')">👍 Like (${p.likes?.length || 0})</span>
+                        <span onclick="react('${p._id}', 'love')">❤️ Love (${p.loves?.length || 0})</span>
+                        <span onclick="react('${p._id}', 'fire')">🔥 Fire (${p.fires?.length || 0})</span>
+                        <span onclick="reportPostModal('${p._id}')">🚩 Report</span>
                     </div>
-                </div>
-                <h3 style="margin-bottom:15px;">🔥 Smart AI Algorithm Newsfeed</h3>
-                <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
-            </div>
-
-            <!-- COMMUNITY CHAT VIEW -->
-            <div id="community-view" class="main-view">
-                <div class="card-box">
-                    <h2>🌐 Global Community Chat</h2>
-                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Open chat room for everyone to chat and share pictures.</p>
-                    <div style="height:320px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="community-chat-box">
-                        <p style="text-align:center; color:var(--muted);">Loading community messages...</p>
-                    </div>
-                    <div style="display:flex; gap:10px; flex-direction:column;">
-                        <input type="text" id="community-msg-text" placeholder="Type a public message..." style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-                        <div style="display:flex; justify-content:space-between; align-items:center;">
-                            <input type="file" id="community-img-file" accept="image/*" style="font-size:12px;">
-                            <button class="btn btn-sm" onclick="sendCommunityMessage()">Send to Community</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- USER / MY PROFILE VIEW -->
-            <div id="profile-view" class="main-view">
-                <div class="card-box">
-                    <div style="text-align:center;">
-                        <div class="avatar" style="width:80px; height:80px; font-size:32px; margin:0 auto;" id="view-profile-avatar">U</div>
-                        <h3 id="view-profile-name" style="margin-top:10px;">User Name</h3>
-                        <p id="view-profile-email" style="color:var(--muted); font-size:14px;"></p>
-                        <div id="profile-action-area" style="margin-top:15px;"></div>
-                    </div>
-                </div>
-                <h3 style="margin-bottom:12px;">User Posts</h3>
-                <div id="user-posts-list"></div>
-            </div>
-
-            <!-- PRIVATE MESSAGES VIEW -->
-            <div id="messages-view" class="main-view">
-                <div class="card-box">
-                    <h2>💬 Secure 1-to-1 Private Chat</h2>
-                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">You can only chat with accepted friends securely.</p>
-                    <div class="input-group">
-                        <select id="friend-select-dropdown" onchange="loadPrivateChat(this.value)" style="padding:10px; border-radius:8px; width:100%;">
-                            <option value="">-- Select an accepted friend --</option>
-                        </select>
-                    </div>
-                    <div style="height:250px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="private-chat-box">
-                        <p style="text-align:center; color:var(--muted);">Select a friend to view secure private conversation</p>
-                    </div>
-                    <div style="display:flex; gap:10px;">
-                        <input type="text" id="private-msg-input" placeholder="Type secure message..." style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);">
-                        <button class="btn btn-sm" onclick="sendPrivateMessage()">Send</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- SETTINGS VIEW -->
-            <div id="settings-view" class="main-view">
-                <div class="card-box">
-                    <h2>⚙️ Settings & Security</h2>
-                    <div class="divider"></div>
-                    <h3>🔐 Change Password</h3>
-                    <div class="input-group" style="margin-top:10px;">
-                        <div class="password-wrapper">
-                            <input type="password" id="old-pass" placeholder="Current Password">
-                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
-                        </div>
-                    </div>
-                    <div class="input-group">
-                        <div class="password-wrapper">
-                            <input type="password" id="new-pass" placeholder="New Password">
-                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
-                        </div>
-                    </div>
-                    <button class="btn btn-green" onclick="changePassword()">Update Password</button>
-
-                    <div class="divider"></div>
-                    <h3>🔒 Google Authenticator (2FA)</h3>
-                    <div id="twofa-status" style="margin:10px 0; font-weight:600;">Status: Disabled</div>
-                    <button class="btn" id="twofa-btn" onclick="setup2FA()">Setup 2FA</button>
-                    <div id="twofa-qr-box" style="text-align:center; margin-top:15px; display:none;">
-                        <img id="twofa-qr" style="max-width:180px; border-radius:8px;">
-                        <div class="input-group" style="margin-top:10px;"><input type="text" id="twofa-code" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:4px;"></div>
-                        <button class="btn btn-green" onclick="verifyAndEnable2FA()">Turn On 2FA</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- LANGUAGE SWITCHER VIEW -->
-            <div id="language-view" class="main-view">
-                <div class="card-box">
-                    <h2>🌍 Language Settings</h2>
-                    <div class="input-group" style="margin-top:15px;">
-                        <select id="main-lang-select" onchange="changeLanguage(this.value)">
-                            <option value="en">English (US)</option>
-                            <option value="bn">বাংলা (Bangla)</option>
-                        </select>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <!-- RIGHT SIDEBAR: ACTIVE USERS -->
-        <div class="sidebar-right">
-            <h4 style="margin-bottom:12px; font-size:15px; display:flex; align-items:center; gap:6px;">🟢 Active Friends</h4>
-            <div id="active-users-list">
-                <p style="font-size:12px; color:var(--muted);">Loading active users...</p>
-            </div>
-        </div>
-    </div>
-</div>
-
-<!-- REPORT MODAL -->
-<div id="report-modal">
-    <div class="report-box">
-        <h3>🚨 Report Post</h3>
-        <p style="font-size:13px; color:var(--muted); margin:10px 0;">Select reason for reporting:</p>
-        <div class="input-group">
-            <select id="report-reason">
-                <option value="Bullying">Bullying or Harassment</option>
-                <option value="Suicide">Suicide or Self-Injury</option>
-                <option value="Hate Speech">Hate Speech</option>
-                <option value="Spam">Spam or Fake News</option>
-                <option value="Adult Content">Explicit / Adult Content</option>
-            </select>
-        </div>
-        <div style="display:flex; gap:10px; justify-content:flex-end;">
-            <button class="btn btn-sm btn-red" onclick="submitReport()">Submit Report</button>
-            <button class="btn btn-sm" onclick="document.getElementById('report-modal').style.display='none'">Cancel</button>
-        </div>
-    </div>
-</div>
-
-<!-- SECURE ADMIN LOGIN MODAL -->
-<div id="admin-panel">
-    <div class="admin-box">
-        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-            <h2 style="color:#e17055; margin:0;">🔐 Admin Control</h2>
-            <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
-        </div>
-        <div id="admin-login-form">
-            <div class="input-group"><input type="text" id="admin-user-input" placeholder="Admin Username"></div>
-            <div class="input-group"><input type="password" id="admin-pass-input" placeholder="Admin Password"></div>
-            <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
-        </div>
-        <div id="admin-content-area" style="display:none;">
-            <h3>🚨 Reports & Escalation Panel</h3>
-            <div id="admin-reports-list" style="margin-bottom:20px;"></div>
-            <div class="divider"></div>
-            <h3>👤 Registered Users</h3>
-            <div id="admin-user-list"></div>
-        </div>
-    </div>
-</div>
-
-<script>
-const BACKEND_URL = "";
-let currentUser = JSON.parse(localStorage.getItem("searchbook_user")) || null;
-let logoClicks = 0;
-let activeChatFriend = "";
-let currentReportingPostId = null;
-let currentLang = localStorage.getItem("searchbook_lang") || "en";
-
-const translations = {
-    en: {
-        subtitle: "Connect with friends, share your moments",
-        loginBtn: "Log In",
-        forgot: "Forgot password?",
-        createAcc: "Create New Account",
-        regTitle: "Create Account",
-        signupBtn: "Sign Up",
-        haveAcc: "Already have account?",
-        passHint: "🔒 Password must be at least 8 chars with upper, lower, number & special char.",
-        forgotWarning: "⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.",
-        mProfile: "👤 My Profile",
-        mCommunity: "🌐 Community Chat",
-        mMessages: "💬 Private Messages",
-        mSettings: "⚙️ Settings & Security",
-        mLanguage: "🌍 Language",
-        mLogout: "⎋ Log Out"
-    },
-    bn: {
-        subtitle: "বন্ধুদের সাথে সংযোগ করুন, আপনার মুহূর্তগুলো শেয়ার করুন",
-        loginBtn: "লগ ইন",
-        forgot: "পাসওয়ার্ড ভুলে গেছেন?",
-        createAcc: "নতুন অ্যাকাউন্ট তৈরি করুন",
-        regTitle: "অ্যাকাউন্ট তৈরি করুন",
-        signupBtn: "সাইন আপ",
-        haveAcc: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
-        passHint: "🔒 পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে (বড়/ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল ক্যারেক্টারসহ)।",
-        forgotWarning: "⚠️ গুরুত্বপূর্ণ সতর্কবার্তা: অ্যাকাউন্ট সুরক্ষার জন্য অবশ্যই 2FA (Google Authenticator) চালু রাখুন।",
-        mProfile: "👤 আমার প্রোফাইল",
-        mCommunity: "🌐 কমিউনিটি চ্যাট",
-        mMessages: "💬 প্রাইভেট মেসেজ",
-        mSettings: "⚙️ সেটিংস ও সিকিউরিটি",
-        mLanguage: "🌍 ভাষা",
-        mLogout: "⎋ লগ আউট"
-    }
-};
-
-function changeLanguage(lang) {
-    currentLang = lang;
-    localStorage.setItem("searchbook_lang", lang);
-    document.getElementById("auth-lang-select").value = lang;
-    document.getElementById("main-lang-select").value = lang;
-    
-    const t = translations[lang];
-    document.getElementById("txt-subtitle").textContent = t.subtitle;
-    document.getElementById("btn-login-text").textContent = t.loginBtn;
-    document.getElementById("txt-forgot").textContent = t.forgot;
-    document.getElementById("btn-create-acc").textContent = t.createAcc;
-    document.getElementById("txt-reg-title").textContent = t.regTitle;
-    document.getElementById("btn-signup-text").textContent = t.signupBtn;
-    document.getElementById("txt-have-acc").textContent = t.haveAcc;
-    document.getElementById("txt-pass-hint").innerHTML = t.passHint;
-    document.getElementById("txt-forgot-warning").innerHTML = t.forgotWarning;
-
-    document.getElementById("m-profile").textContent = t.mProfile;
-    document.getElementById("m-community").textContent = t.mCommunity;
-    document.getElementById("m-messages").textContent = t.mMessages;
-    document.getElementById("m-settings").textContent = t.mSettings;
-    document.getElementById("m-language").textContent = t.mLanguage;
-    document.getElementById("m-logout").textContent = t.mLogout;
-}
-
-function toggleMenuDropdown() { document.getElementById("menu-dropdown").classList.toggle("show"); }
-
-function handleLogoClick() {
-    logoClicks++;
-    if (logoClicks >= 5) {
-        logoClicks = 0;
-        document.getElementById("admin-login-form").style.display = "block";
-        document.getElementById("admin-content-area").style.display = "none";
-        document.getElementById("admin-panel").classList.add("active");
-    }
-    setTimeout(() => { logoClicks = 0; }, 3000);
-}
-
-async function verifyAdminLogin() {
-    const username = document.getElementById("admin-user-input").value.trim();
-    const password = document.getElementById("admin-pass-input").value;
-    try {
-        const res = await fetch(BACKEND_URL + "/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("admin-login-form").style.display = "none";
-            document.getElementById("admin-content-area").style.display = "block";
-            loadAdminReports();
-            loadAdminUsers();
-        } else alert("❌ Invalid credentials");
-    } catch(e) { alert("❌ Error"); }
-}
-
-async function loadAdminReports() {
-    const res = await fetch(BACKEND_URL + "/api/admin/reports");
-    const data = await res.json();
-    if (data.success) {
-        const list = document.getElementById("admin-reports-list");
-        if (!data.reports.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending reports.</p>"; return; }
-        list.innerHTML = data.reports.map(r => `
-            <div style="padding:10px; background:#fff0f0; border-radius:8px; margin-bottom:8px; border:1px solid #ffcccc;">
-                <b>Reported User:</b> ${r.author} <br>
-                <b>Reported By:</b> ${r.reporter} | <b>Reason:</b> ${r.reason} <br>
-                <div style="margin-top:6px;">
-                    <button class="btn btn-sm btn-red" onclick="applyStrike('${r.author}', '${r.reportId}')">⚠️ Issue Strike</button>
-                    <button class="btn btn-sm" onclick="dismissReport('${r.reportId}')">Dismiss</button>
-                </div>
-            </div>
-        `).join("");
-    }
-}
-
-async function applyStrike(username, reportId) {
-    const res = await fetch(BACKEND_URL + "/api/admin/issue-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, reportId }) });
-    const data = await res.json();
-    if (data.success) {
-        alert("✅ Strike issued to " + username);
-        loadAdminReports();
-        loadAdminUsers();
-    }
-}
-
-async function dismissReport(reportId) {
-    await fetch(BACKEND_URL + "/api/admin/dismiss-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reportId }) });
-    loadAdminReports();
-}
-
-async function loadAdminUsers() {
-    const res = await fetch(BACKEND_URL + "/api/admin/users");
-    const data = await res.json();
-    if (data.success) {
-        document.getElementById("admin-user-list").innerHTML = data.users.map(u => `
-            <div style="padding:10px; background:#f8f9fe; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
-                <span><b>${u.username}</b> (${u.email}) - Strikes: <b>${u.strikes || 0}</b> ${u.isPermanentBanned ? '<span style="color:red;">[PERM BANNED]</span>' : ''}</span>
-                <button class="btn btn-sm btn-green" onclick="resetUserStrike('${u.username}')">Reset Strikes</button>
-            </div>
-        `).join("");
-    }
-}
-
-async function resetUserStrike(username) {
-    await fetch(BACKEND_URL + "/api/admin/reset-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username }) });
-    loadAdminUsers();
-}
-
-function togglePassword(id, btn) {
-    const input = document.getElementById(id);
-    if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
-    else { input.type = "password"; btn.textContent = "👁️"; }
-}
-
-document.addEventListener("DOMContentLoaded", function() {
-    changeLanguage(currentLang);
-    if (currentUser) {
-        document.getElementById("auth-app").style.display = "none";
-        document.getElementById("main-app").classList.add("active");
-        document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
-        switchMainView("feed-view");
-        loadProfileData();
-        loadFriendsList();
-        loadActiveUsers();
-        setInterval(updateActivity, 15000);
-    }
-});
-
-async function updateActivity() {
-    if (!currentUser) return;
-    await fetch(BACKEND_URL + "/api/ping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
-    loadActiveUsers();
-}
-
-async function loadActiveUsers() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/active-users");
-        const data = await res.json();
-        const list = document.getElementById("active-users-list");
-        if (data.success && data.users.length > 0) {
-            list.innerHTML = data.users.map(u => `
-                <div class="active-user-item">
-                    <span class="online-dot"></span>
-                    <span style="cursor:pointer;" onclick="viewUserProfile('${u}')">${u}</span>
                 </div>
             `).join('');
-        } else {
-            list.innerHTML = '<p style="font-size:12px; color:var(--muted);">No active users online</p>';
         }
-    } catch(e) {}
-}
 
-function switchPanel(id) {
-    document.querySelectorAll("#auth-app .card").forEach(p => p.classList.remove("active"));
-    document.getElementById(id).classList.add("active");
-}
-
-function switchMainView(viewId) {
-    document.querySelectorAll(".main-view").forEach(v => v.classList.remove("active"));
-    document.getElementById(viewId).classList.add("active");
-    if (viewId === "feed-view") loadPosts();
-    if (viewId === "community-view") loadCommunityChat();
-    if (viewId === "messages-view") loadFriendsList();
-    if (viewId === "settings-view") loadProfileData();
-}
-
-async function handleLogin() {
-    const email = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
-    try {
-        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
-        const data = await res.json();
-        if (data.banned) {
-            alert("❌ " + data.message);
-            return;
+        function toggleMenu(postId) {
+            const menu = document.getElementById(`menu-${postId}`);
+            menu.style.display = menu.style.display === 'block' ? 'none' : 'block';
         }
-        if (data.requires2FA) {
-            window.temp2FAEmail = email;
-            switchPanel("twofa-login-panel");
-        } else if (data.success) {
-            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
-            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
-            document.getElementById("auth-app").style.display = "none";
-            document.getElementById("main-app").classList.add("active");
-            document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
-            switchMainView("feed-view");
-            loadFriendsList();
-            loadActiveUsers();
-            setInterval(updateActivity, 15000);
-        } else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Login Failed"); }
-}
 
-async function submit2FALogin() {
-    const code = document.getElementById("login-2fa-code").value.trim();
-    try {
-        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: window.temp2FAEmail, password: "", twoFACode: code }) });
-        const data = await res.json();
-        if (data.banned) { alert("❌ " + data.message); return; }
-        if (data.success) {
-            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
-            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
-            document.getElementById("auth-app").style.display = "none";
-            document.getElementById("main-app").classList.add("active");
-            document.getElementById("creator-avatar").textContent = (currentUser.username[0] || "U").toUpperCase();
-            switchMainView("feed-view");
-            loadFriendsList();
-            loadActiveUsers();
-            setInterval(updateActivity, 15000);
-        } else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Error"); }
-}
+        function copyPostText(text) {
+            navigator.clipboard.writeText(decodeURIComponent(text));
+            alert('Post text copied to clipboard!');
+        }
 
-async function handleSignup() {
-    const fullName = document.getElementById("reg-name").value.trim();
-    const username = document.getElementById("reg-username").value.trim();
-    const email = document.getElementById("reg-email").value.trim();
-    const password = document.getElementById("reg-password").value;
+        async function deletePost(postId) {
+            if (!confirm('Are you sure you want to delete this post?')) return;
+            const res = await fetch(`${API_URL}/api/posts/${postId}`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser })
+            });
+            const data = await res.json();
+            if (data.success) { loadFeed(); }
+            else { alert(data.message); }
+        }
 
-    try {
-        const res = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ fullName, username, email, password }) });
-        const data = await res.json();
-        if (data.success) { alert("✅ Account Created! Please log in."); switchPanel("login-panel"); }
-        else alert("❌ " + data.message);
-    } catch(e) { alert("❌ Error"); }
-}
+        async function reportPostModal(postId) {
+            const reason = prompt("Reason for reporting this post:");
+            if (!reason) return;
+            await fetch(`${API_URL}/api/report-post`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ postId, reporter: currentUser, reason })
+            });
+            alert('Report submitted to admin analyst successfully.');
+        }
 
-function resetPassword() {
-    const email = document.getElementById("reset-email").value.trim();
-    if (!email) { alert("Please enter your email"); return; }
-    alert("✅ Password reset link has been sent to your email.");
-    switchPanel("login-panel");
-}
-
-function handleLogout() {
-    localStorage.removeItem("searchbook_user");
-    currentUser = null;
-    location.reload();
-}
-
-async function loadPosts() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/feed/" + (currentUser ? currentUser.username : "guest"));
-        const posts = await res.json();
-        const list = document.getElementById("posts-list");
-        if (!posts.length) { list.innerHTML = '<p style="text-align:center;">No posts found</p>'; return; }
-        list.innerHTML = posts.map(p => `
-            <div class="post-item">
-                <div class="post-header">
-                    <div class="post-user-info">
-                        <div class="avatar" onclick="viewUserProfile('${p.username}')">${p.username[0].toUpperCase()}</div>
-                        <div>
-                            <b onclick="viewUserProfile('${p.username}')" style="cursor:pointer;">${p.username}</b>
-                            <div style="font-size:12px; color:var(--muted);">${new Date(p.createdAt).toLocaleTimeString()}</div>
-                        </div>
-                    </div>
-                    <button class="post-options-btn" onclick="togglePostDropdown('${p._id}')">⋮</button>
-                    <div class="post-dropdown-menu" id="post-menu-${p._id}">
-                        <div class="post-dropdown-item" onclick="copyPostLink('${p._id}')">🔗 Copy Link</div>
-                        <div class="post-dropdown-item" onclick="openReportModal('${p._id}')" style="color:var(--danger);">⚠️ Report</div>
-                    </div>
+        async function openProfileView() {
+            const res = await fetch(`${API_URL}/api/user-posts/${currentUser}`);
+            const posts = await res.json();
+            const container = document.getElementById('mainContentArea');
+            container.innerHTML = `
+                <div class="card" style="text-align: center;">
+                    <h2>@${currentUser}</h2>
+                    <p>Your Profile & Posts</p>
+                    <button onclick="initApp()">Back to Feed</button>
                 </div>
-                <div>${p.content}</div>
-                ${p.imageUrl ? `<div style="margin-top:10px;"><img src="${p.imageUrl}" style="max-width:100%; border-radius:12px;"></div>` : ''}
-                <div class="post-actions">
-                    <button class="action-btn" onclick="reactPost('${p._id}', 'like')">👍 ${p.likes ? p.likes.length : 0}</button>
-                    <button class="action-btn" onclick="reactPost('${p._id}', 'love')">❤️ ${p.loves ? p.loves.length : 0}</button>
-                    <button class="action-btn" onclick="reactPost('${p._id}', 'fire')">🔥 ${p.fires ? p.fires.length : 0}</button>
-                    <a class="action-btn" href="https://api.whatsapp.com/send?text=${encodeURIComponent('Check out this post on Searchbook: ' + p.content)}" target="_blank">🟢 WhatsApp</a>
-                </div>
-                <div class="comment-section">
-                    <div id="comments-${p._id}">
-                        ${(p.comments || []).map(c => `<div class="comment-item"><b>${c.username}:</b> ${c.text}</div>`).join('')}
+                <div id="userProfilePosts"></div>
+            `;
+            renderPosts(posts, document.getElementById('userProfilePosts'));
+        }
+
+        async function changePassword() {
+            const oldPassword = document.getElementById('oldPassword').value;
+            const newPassword = document.getElementById('newPassword').value;
+            const email = localStorage.getItem('searchbook_email');
+            const res = await fetch(`${API_URL}/api/user/change-password`, {
+                method: 'PUT',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, oldPassword, newPassword })
+            });
+            const data = await res.json();
+            if (data.success) { alert('Password changed successfully!'); closeSettingsModal(); }
+            else { alert(data.message); }
+        }
+
+        async function deleteAccount() {
+            const password = document.getElementById('deleteAccountPassword').value;
+            const email = localStorage.getItem('searchbook_email');
+            if (!password) return alert('Enter password to confirm deletion.');
+            const res = await fetch(`${API_URL}/api/user/delete`, {
+                method: 'DELETE',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ email, password })
+            });
+            const data = await res.json();
+            if (data.success) { alert('Account deleted.'); logout(); }
+            else { alert(data.message); }
+        }
+
+        async function submitComplaint() {
+            const username = document.getElementById('compUsername').value;
+            const password = document.getElementById('compPassword').value;
+            const message = document.getElementById('compMessage').value;
+            const res = await fetch(`${API_URL}/api/complaints`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password, message })
+            });
+            const data = await res.json();
+            if (data.success) { alert('Complaint submitted successfully!'); closeComplaintModal(); }
+            else { alert(data.message); }
+        }
+
+        async function sendCommunityMessage() {
+            const text = document.getElementById('communityMsgInput').value;
+            if (!text) return;
+            const res = await fetch(`${API_URL}/api/community-messages`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser, text })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('communityMsgInput').value = '';
+                loadCommunityChat();
+            } else { alert(data.message); }
+        }
+
+        async function loadCommunityChat() {
+            const res = await fetch(`${API_URL}/api/community-messages`);
+            const data = await res.json();
+            if (data.success) {
+                const box = document.getElementById('communityChatBox');
+                box.innerHTML = data.messages.map(m => `<div><b>@${m.username}:</b> ${m.text}</div>`).join('');
+                box.scrollTop = box.scrollHeight;
+            }
+        }
+
+        async function pingActive() {
+            if (currentUser) {
+                await fetch(`${API_URL}/api/ping`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username: currentUser })
+                });
+                loadActiveFriends();
+            }
+        }
+
+        async function loadActiveFriends() {
+            const res = await fetch(`${API_URL}/api/active-users`);
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('activeFriendsList').innerHTML = data.users.map(u => `<div>🟢 ${u}</div>`).join('');
+            }
+        }
+
+        async function adminLogin() {
+            const username = document.getElementById('adminUser').value;
+            const password = document.getElementById('adminPass').value;
+            const res = await fetch(`${API_URL}/api/admin/login`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+            const data = await res.json();
+            if (data.success) {
+                document.getElementById('adminLoginForm').classList.add('hidden');
+                document.getElementById('adminDashboard').classList.remove('hidden');
+                loadAdminData();
+            } else { alert(data.message); }
+        }
+
+        async function loadAdminData() {
+            const resComp = await fetch(`${API_URL}/api/admin/complaints`);
+            const dataComp = await resComp.json();
+            if (dataComp.success) {
+                document.getElementById('adminComplaintsList').innerHTML = dataComp.complaints.map(c => `
+                    <div style="border-bottom: 1px solid #ddd; padding: 5px;">
+                        <b>@${c.username}</b>: ${c.message} <button onclick="resolveComplaint('${c._id}')" style="width: auto; padding: 2px 5px;">Resolve</button>
                     </div>
-                    <div style="display:flex; gap:6px; margin-top:8px;">
-                        <input type="text" id="input-comment-${p._id}" placeholder="Write a comment..." style="flex:1; padding:6px 10px; border-radius:8px; border:1px solid var(--border); font-size:12px;">
-                        <button class="btn btn-sm" onclick="addComment('${p._id}')">Post</button>
+                `).join('') || 'No complaints.';
+            }
+
+            const resReports = await fetch(`${API_URL}/api/admin/reports`);
+            const dataReports = await resReports.json();
+            if (dataReports.success) {
+                document.getElementById('adminReportsList').innerHTML = dataReports.reports.map(r => `
+                    <div style="border-bottom: 1px solid #ddd; padding: 5px;">
+                        Reporter: <b>@${r.reporter}</b> reported <b>@${r.author}</b><br>
+                        Reason: <i>${r.reason}</i><br>
+                        <button onclick="issueStrike('${r.author}', '${r.reportId}')" style="width: auto; padding: 2px 5px; background: #e41e3f;">Issue Strike</button>
+                        <button onclick="dismissReport('${r.reportId}')" style="width: auto; padding: 2px 5px; background: gray;">Dismiss</button>
                     </div>
-                </div>
-            </div>
-        `).join("");
-    } catch(e) {}
-}
+                `).join('') || 'No pending reports.';
+            }
 
-function togglePostDropdown(id) {
-    document.querySelectorAll('.post-dropdown-menu').forEach(m => { if(m.id !== 'post-menu-' + id) m.classList.remove('show'); });
-    document.getElementById('post-menu-' + id).classList.toggle('show');
-}
+            const resUsers = await fetch(`${API_URL}/api/admin/users`);
+            const dataUsers = await resUsers.json();
+            if (dataUsers.success) {
+                document.getElementById('adminUsersList').innerHTML = dataUsers.users.map(u => `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px; border-bottom: 1px solid #ddd; padding-bottom: 5px;">
+                        <span><b>${u.username}</b> (Strikes: ${u.strikes || 0}) ${u.isPermanentBanned ? '[BANNED]' : ''}</span>
+                        <button onclick="resetStrike('${u.username}')" style="width: auto; padding: 5px;">Reset Strikes</button>
+                    </div>
+                `).join('');
+            }
+        }
 
-function copyPostLink(id) {
-    const url = window.location.href.split('#')[0] + '#post-' + id;
-    navigator.clipboard.writeText(url);
-    alert("✅ Post link copied to clipboard!");
-    document.getElementById('post-menu-' + id).classList.remove('show');
-}
+        async function resolveComplaint(complaintId) {
+            await fetch(`${API_URL}/api/admin/resolve-complaint`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ complaintId })
+            });
+            loadAdminData();
+        }
 
-function openReportModal(id) {
-    currentReportingPostId = id;
-    document.getElementById('report-modal').style.display = 'flex';
-    document.getElementById('post-menu-' + id).classList.remove('show');
-}
+        async function issueStrike(username, reportId) {
+            await fetch(`${API_URL}/api/admin/issue-strike`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, reportId })
+            });
+            loadAdminData();
+        }
 
-async function submitReport() {
-    const reason = document.getElementById('report-reason').value;
-    const res = await fetch(BACKEND_URL + "/api/report-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: currentReportingPostId, reporter: currentUser.username, reason }) });
-    const data = await res.json();
-    if (data.success) {
-        alert("✅ Report submitted to Admin.");
-        document.getElementById('report-modal').style.display = 'none';
-    }
-}
+        async function dismissReport(reportId) {
+            await fetch(`${API_URL}/api/admin/dismiss-report`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ reportId })
+            });
+            loadAdminData();
+        }
 
-async function createPost() {
-    const content = document.getElementById("post-content").value.trim();
-    const fileInput = document.getElementById("post-image-file");
-    if (!content && fileInput.files.length === 0) return;
+        async function resetStrike(username) {
+            await fetch(`${API_URL}/api/admin/reset-strike`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username })
+            });
+            loadAdminData();
+        }
 
-    if (fileInput.files.length > 0) {
-        const reader = new FileReader();
-        reader.readAsDataURL(fileInput.files[0]);
-        reader.onload = async function() {
-            await sendPostData(content, reader.result);
+        function changeLanguage() {
+            const lang = document.getElementById('langSelect').value;
+            if (lang === 'bn') {
+                document.getElementById('loginTitle').textContent = 'সার্চবুকে লগইন করুন';
+                document.getElementById('toSignupText').textContent = 'নতুন অ্যাকাউন্ট তৈরি করুন';
+                document.getElementById('toLoginText').textContent = 'ইতিমধ্যে অ্যাকাউন্ট আছে? লগইন করুন';
+            } else {
+                document.getElementById('loginTitle').textContent = 'Login to Searchbook';
+                document.getElementById('toSignupText').textContent = 'Create New Account';
+                document.getElementById('toLoginText').textContent = "Already have an account? Login";
+            }
+        }
+
+        window.onload = () => {
+            const savedUser = localStorage.getItem('searchbook_user');
+            if (savedUser) {
+                currentUser = savedUser;
+                initApp();
+            }
         };
-    } else {
-        await sendPostData(content, "");
-    }
-}
-
-async function sendPostData(content, imageUrl) {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/posts", { 
-            method: "POST", 
-            headers: { "Content-Type": "application/json" }, 
-            body: JSON.stringify({ username: currentUser.username, content, imageUrl }) 
-        });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("post-content").value = "";
-            document.getElementById("post-image-file").value = "";
-            loadPosts();
-        } else {
-            alert("❌ " + data.message);
-        }
-    } catch(e) { alert("❌ Error posting"); }
-}
-
-async function reactPost(postId, type) {
-    await fetch(BACKEND_URL + `/api/posts/${postId}/react`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, type }) });
-    loadPosts();
-}
-
-async function addComment(postId) {
-    const input = document.getElementById(`input-comment-${postId}`);
-    const text = input.value.trim();
-    if (!text) return;
-    const res = await fetch(BACKEND_URL + `/api/posts/${postId}/comment`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, text }) });
-    const data = await res.json();
-    if (!data.success) { alert("❌ " + data.message); return; }
-    input.value = "";
-    loadPosts();
-}
-
-function openMyProfile() {
-    viewUserProfile(currentUser.username);
-}
-
-async function viewUserProfile(username) {
-    switchMainView("profile-view");
-    document.getElementById("view-profile-name").textContent = username;
-    document.getElementById("view-profile-avatar").textContent = username[0].toUpperCase();
-    
-    const actionArea = document.getElementById("profile-action-area");
-    if (username === currentUser.username) {
-        actionArea.innerHTML = `<span style="font-size:13px; color:var(--muted);">This is your profile</span>`;
-    } else {
-        const res = await fetch(BACKEND_URL + `/api/friend-status?user1=${currentUser.username}&user2=${username}`);
-        const data = await res.json();
-        if (data.status === "friends") {
-            actionArea.innerHTML = `<span style="color:var(--accent); font-weight:700;">✅ Friends</span>`;
-        } else if (data.status === "pending_sent") {
-            actionArea.innerHTML = `<span style="color:var(--muted); font-weight:600;">⏳ Friend Request Sent</span>`;
-        } else if (data.status === "pending_received") {
-            actionArea.innerHTML = `<button class="btn btn-sm btn-green" onclick="acceptFriend('${username}')">✔ Accept Request</button>`;
-        } else {
-            actionArea.innerHTML = `<button class="btn btn-sm btn-green" onclick="sendFriendRequest('${username}')">➕ Send Friend Request</button>`;
-        }
-    }
-
-    const resPosts = await fetch(BACKEND_URL + `/api/user-posts/${username}`);
-    const posts = await resPosts.json();
-    document.getElementById("user-posts-list").innerHTML = posts.map(p => `
-        <div class="post-item"><b>${p.username}</b>: ${p.content} ${p.imageUrl ? `<br><img src="${p.imageUrl}" style="max-width:100%; border-radius:10px; margin-top:8px;">` : ''}</div>
-    `).join("");
-}
-
-async function sendFriendRequest(targetUser) {
-    const res = await fetch(BACKEND_URL + "/api/friend-request", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: currentUser.username, receiver: targetUser }) });
-    const data = await res.json();
-    if (data.success) { alert("✅ Friend request sent!"); viewUserProfile(targetUser); }
-}
-
-async function acceptFriend(requester) {
-    const res = await fetch(BACKEND_URL + "/api/friend-accept", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ user: currentUser.username, friend: requester }) });
-    const data = await res.json();
-    if (data.success) { alert("✅ Friend request accepted! You can now chat securely 1-to-1."); viewUserProfile(requester); loadFriendsList(); }
-}
-
-async function loadFriendsList() {
-    try {
-        const res = await fetch(BACKEND_URL + `/api/friends/${currentUser.username}`);
-        const data = await res.json();
-        const select = document.getElementById("friend-select-dropdown");
-        if (data.success && data.friends.length > 0) {
-            select.innerHTML = '<option value="">-- Select an accepted friend --</option>' + data.friends.map(f => `<option value="${f}">${f}</option>`).join('');
-        } else {
-            select.innerHTML = '<option value="">No accepted friends yet</option>';
-        }
-    } catch(e) {}
-}
-
-async function loadPrivateChat(friendUsername) {
-    if (!friendUsername) return;
-    activeChatFriend = friendUsername;
-    const res = await fetch(BACKEND_URL + `/api/private-messages?user1=${currentUser.username}&user2=${friendUsername}`);
-    const data = await res.json();
-    const box = document.getElementById("private-chat-box");
-    if (data.success) {
-        box.innerHTML = data.messages.map(m => `
-            <div style="margin-bottom:8px; text-align:${m.sender === currentUser.username ? 'right' : 'left'};">
-                <span style="background:${m.sender === currentUser.username ? '#6c5ce7' : '#fff'}; color:${m.sender === currentUser.username ? '#fff' : '#000'}; padding:8px 12px; border-radius:12px; display:inline-block; max-width:75%; word-break:break-word;">
-                    <b>${m.sender}:</b> ${m.text}
-                </span>
-            </div>
-        `).join('') || '<p style="text-align:center; color:var(--muted);">No messages yet. Start conversation securely!</p>';
-        box.scrollTop = box.scrollHeight;
-    }
-}
-
-async function sendPrivateMessage() {
-    if (!activeChatFriend) { alert("Please select an accepted friend first!"); return; }
-    const text = document.getElementById("private-msg-input").value.trim();
-    if (!text) return;
-    const res = await fetch(BACKEND_URL + "/api/private-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: currentUser.username, receiver: activeChatFriend, text }) });
-    const data = await res.json();
-    if (data.success) {
-        document.getElementById("private-msg-input").value = "";
-        loadPrivateChat(activeChatFriend);
-    } else {
-        alert("❌ " + data.message);
-    }
-}
-
-async function loadCommunityChat() {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/community-messages");
-        const data = await res.json();
-        const box = document.getElementById("community-chat-box");
-        if (data.success) {
-            box.innerHTML = data.messages.map(m => `
-                <div style="margin-bottom:10px;">
-                    <b>${m.username}:</b> ${m.text}
-                    ${m.imageUrl ? `<br><img src="${m.imageUrl}" style="max-width:150px; border-radius:8px; margin-top:5px;">` : ''}
-                </div>
-            `).join('') || '<p style="text-align:center; color:var(--muted);">No community messages yet.</p>';
-            box.scrollTop = box.scrollHeight;
-        }
-    } catch(e) {}
-}
-
-async function sendCommunityMessage() {
-    const text = document.getElementById("community-msg-text").value.trim();
-    const fileInput = document.getElementById("community-img-file");
-    if (!text && fileInput.files.length === 0) return;
-
-    if (fileInput.files.length > 0) {
-        const reader = new FileReader();
-        reader.readAsDataURL(fileInput.files[0]);
-        reader.onload = async function() {
-            await sendCommunityData(text, reader.result);
-        };
-    } else {
-        await sendCommunityData(text, "");
-    }
-}
-
-async function sendCommunityData(text, imageUrl) {
-    try {
-        const res = await fetch(BACKEND_URL + "/api/community-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, text, imageUrl }) });
-        const data = await res.json();
-        if (data.success) {
-            document.getElementById("community-msg-text").value = "";
-            document.getElementById("community-img-file").value = "";
-            loadCommunityChat();
-        } else {
-            alert("❌ " + data.message);
-        }
-    } catch(e) { alert("❌ Error"); }
-}
-
-async function loadProfileData() {
-    if (!currentUser) return;
-    const res = await fetch(BACKEND_URL + "/api/user/" + currentUser.email);
-    const data = await res.json();
-    if (data.success) {
-        const twofaStatus = document.getElementById("twofa-status");
-        const twofaBtn = document.getElementById("twofa-btn");
-        if (data.user.twoFAEnabled) {
-            twofaStatus.textContent = "Status: Enabled 🟢";
-            twofaBtn.textContent = "Disable 2FA";
-            twofaBtn.className = "btn btn-red";
-        } else {
-            twofaStatus.textContent = "Status: Disabled 🔴";
-            twofaBtn.textContent = "Setup 2FA";
-            twofaBtn.className = "btn";
-        }
-    }
-}
-
-async function setup2FA() {
-    const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email }) });
-    const data = await res.json();
-    if (data.success) {
-        document.getElementById("twofa-qr").src = data.qrCode;
-        document.getElementById("twofa-qr-box").style.display = "block";
-    }
-}
-
-async function verifyAndEnable2FA() {
-    const code = document.getElementById("twofa-code").value.trim();
-    const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, code }) });
-    const data = await res.json();
-    if (data.success) { alert("✅ 2FA Enabled!"); loadProfileData(); }
-}
-
-async function changePassword() {
-    const oldPassword = document.getElementById("old-pass").value;
-    const newPassword = document.getElementById("new-pass").value;
-    const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
-    const data = await res.json();
-    if (data.success) alert("✅ Password updated!");
-    else alert("❌ " + data.message);
-}
-</script>
+    </script>
 </body>
 </html>
