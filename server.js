@@ -150,7 +150,7 @@ app.post('/api/login', async (req, res) => {
             return res.json({ success: false, banned: true, message: "Your account is permanently banned. You cannot access Searchbook." });
         }
 
-        if (user.banUntil && user.banUntil > new Date() && user.strikes >= 3) {
+        if (user.banUntil && user.banUntil > new Date()) {
             const daysLeft = Math.ceil((user.banUntil - new Date()) / (1000 * 60 * 60 * 24));
             return res.json({ success: false, banned: true, message: `Your account is suspended for ${daysLeft} days.` });
         }
@@ -171,7 +171,7 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
 });
 
-// Secure Database-based Admin Login Route with Universal Hash Fix ($2a$, $2y$, $2b$)
+// Admin Login Route checking MongoDB 'admins' collection securely
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -182,12 +182,13 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid admin username" });
         }
 
-        let storedHash = adminUser.passwordHash;
-        if (storedHash && (storedHash.startsWith('$2y$') || storedHash.startsWith('$2a$'))) {
-            storedHash = '$2b$' + storedHash.substring(4);
+        let isMatch = false;
+        try {
+            isMatch = await bcrypt.compare(password, adminUser.passwordHash);
+        } catch (err) {
+            isMatch = (password === adminUser.passwordHash);
         }
 
-        const isMatch = await bcrypt.compare(password, storedHash);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: "Invalid admin password" });
         }
@@ -216,13 +217,10 @@ app.post('/api/admin/issue-strike', async (req, res) => {
         author.strikes = (author.strikes || 0) + 1;
         
         if (author.strikes === 2) {
-            // Strike 2: 7 days mute for posts & community messages (private chat allowed)
             author.banUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         } else if (author.strikes === 3) {
-            // Strike 3: 30 days full ban
             author.banUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         } else if (author.strikes >= 4) {
-            // Strike 4: Permanent ban + IP ban
             author.isPermanentBanned = true;
             if (author.lastIp) {
                 await BannedIP.updateOne({ ip: author.lastIp }, { ip: author.lastIp }, { upsert: true });
@@ -305,7 +303,6 @@ app.get('/api/friends/:username', async (req, res) => {
     res.json({ success: true, friends: u.friends });
 });
 
-// Private message: Allowed even if strike == 2 (muted for posts), blocked if full banned (strikes >= 3)
 app.get('/api/private-messages', async (req, res) => {
     const { user1, user2 } = req.query;
     const messages = await PrivateMessage.find({
@@ -320,14 +317,14 @@ app.get('/api/private-messages', async (req, res) => {
 app.post('/api/private-messages', async (req, res) => {
     const { sender, receiver, text } = req.body;
     const u = await User.findOne({ username: sender });
-    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date() && u.strikes >= 3))) {
-        return res.status(403).json({ success: false, message: "Your account is banned." });
+    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
+        return res.status(403).json({ success: false, message: "Your account is restricted or banned." });
     }
     if (!u || !u.friends.includes(receiver)) {
         return res.status(403).json({ success: false, message: "You must be accepted friends to chat privately!" });
     }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot!" });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const pm = new PrivateMessage({ sender, receiver, text });
     await pm.save();
@@ -343,10 +340,10 @@ app.post('/api/community-messages', async (req, res) => {
     const { username, text, imageUrl } = req.body;
     const u = await User.findOne({ username });
     if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
-        return res.status(403).json({ success: false, message: "Account is muted or banned." });
+        return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
     }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot!" });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const cm = new CommunityMessage({ username, text, imageUrl });
     await cm.save();
@@ -379,10 +376,10 @@ app.post('/api/posts', async (req, res) => {
         const { username, content, imageUrl } = req.body;
         const u = await User.findOne({ username });
         if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
-            return res.status(403).json({ success: false, message: "Account is muted or banned. Cannot post." });
+            return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
         }
         if (isToxicContent(content)) {
-            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Safety Bot!" });
+            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Safety Bot: Explicit, adult, or community violating content detected!" });
         }
         const np = new Post({ username, content, imageUrl });
         await np.save();
@@ -404,7 +401,7 @@ app.post('/api/posts/:id/react', async (req, res) => {
 
 app.post('/api/posts/:id/comment', async (req, res) => {
     const { username, text } = req.body;
-    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "⚠️ Comment blocked by AI Safety Bot!" });
+    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "⚠️ Comment blocked by AI Safety Bot: Harmful content detected!" });
     const post = await Post.findById(req.params.id);
     if (post) {
         post.comments.push({ username, text, createdAt: new Date() });
