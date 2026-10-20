@@ -21,6 +21,7 @@ try {
 
 mongoose.connect(MONGO_URI).then(() => console.log("✅ DB Connected")).catch(e => console.error(e));
 
+// Extended AI Safety & Adult Content Filter Keywords List
 const toxicKeywords = [
     "badword1", "badword2", "terrorist", "hackingscript", "spamattack", "abuse",
     "sex", "fuck", "porn", "nude", "naked", "xxx", "adult", "violence", "suicide",
@@ -90,7 +91,8 @@ const ReportSchema = new mongoose.Schema({
 const Report = mongoose.model('Report', ReportSchema);
 
 const ComplaintSchema = new mongoose.Schema({
-    username: { type: String, required: true },
+    username: { type: String, default: "" },
+    email: { type: String, default: "" },
     message: { type: String, required: true },
     status: { type: String, default: "pending" },
     createdAt: { type: Date, default: Date.now }
@@ -113,27 +115,9 @@ const PrivateMessageSchema = new mongoose.Schema({
 });
 const PrivateMessage = mongoose.model('PrivateMessage', PrivateMessageSchema);
 
-// Auto-check expiration of ban/mute
-async function checkUserStatus(user) {
-    if (user.banUntil && user.banUntil <= new Date()) {
-        user.banUntil = null;
-        if (user.strikes === 2 || user.strikes === 3) {
-            user.strikes = 0; // Reset strikes after period completion
-        }
-        await user.save();
-    }
-}
-
 app.post('/api/ping', async (req, res) => {
     const { username } = req.body;
-    if (username) {
-        const u = await User.findOne({ username });
-        if (u) {
-            await checkUserStatus(u);
-            u.lastActive = new Date();
-            await u.save();
-        }
-    }
+    if (username) await User.findOneAndUpdate({ username }, { lastActive: new Date() });
     res.json({ success: true });
 });
 
@@ -171,13 +155,11 @@ app.post('/api/login', async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User not found" });
 
-        await checkUserStatus(user);
-
         if (user.isPermanentBanned) {
             return res.json({ success: false, banned: true, message: "Your account is permanently banned. You cannot access Searchbook." });
         }
 
-        if (user.banUntil && user.banUntil > new Date() && user.strikes >= 3) {
+        if (user.banUntil && user.banUntil > new Date()) {
             const daysLeft = Math.ceil((user.banUntil - new Date()) / (1000 * 60 * 60 * 24));
             return res.json({ success: false, banned: true, message: `Your account is suspended for ${daysLeft} days.` });
         }
@@ -198,7 +180,42 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
 });
 
-// Admin Login Route
+// User Complaint Submission Route (Supports Username or Email)
+app.post('/api/complaints', async (req, res) => {
+    try {
+        const { email, username, password, message } = req.body;
+        const identifier = email || username;
+        if (!identifier || !password || !message) {
+            return res.status(400).json({ success: false, message: "All fields are required" });
+        }
+
+        const user = await User.findOne({
+            $or: [{ email: identifier }, { username: identifier }]
+        });
+
+        if (!user) {
+            return res.status(400).json({ success: false, message: "Account not found with this details" });
+        }
+
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) {
+            return res.status(400).json({ success: false, message: "Invalid password" });
+        }
+
+        const complaint = new Complaint({
+            username: user.username,
+            email: user.email,
+            message: message
+        });
+        await complaint.save();
+
+        res.json({ success: true, message: "Complaint submitted successfully" });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+// Admin Login Route checking MongoDB 'admins' collection
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -209,12 +226,13 @@ app.post('/api/admin/login', async (req, res) => {
             return res.status(401).json({ success: false, message: "Invalid admin username" });
         }
 
-        let storedHash = adminUser.passwordHash;
-        if (storedHash && (storedHash.startsWith('$2y$') || storedHash.startsWith('$2a$'))) {
-            storedHash = '$2b$' + storedHash.substring(4);
+        let isMatch = false;
+        try {
+            isMatch = await bcrypt.compare(password, adminUser.passwordHash);
+        } catch (err) {
+            isMatch = (password === adminUser.passwordHash);
         }
 
-        const isMatch = await bcrypt.compare(password, storedHash);
         if (!isMatch) {
             return res.status(401).json({ success: false, message: "Invalid admin password" });
         }
@@ -226,25 +244,33 @@ app.post('/api/admin/login', async (req, res) => {
     }
 });
 
+app.get('/api/admin/complaints', async (req, res) => {
+    try {
+        const complaints = await Complaint.find({ status: "pending" }).sort({ createdAt: -1 });
+        res.json({ success: true, complaints });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+app.post('/api/admin/resolve-complaint', async (req, res) => {
+    try {
+        const { complaintId } = req.body;
+        await Complaint.findByIdAndUpdate(complaintId, { status: "resolved" });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 app.get('/api/admin/users', async (req, res) => {
-    const users = await User.find().select('username email twoFAEnabled strikes banUntil isPermanentBanned createdAt');
+    const users = await User.find().select('username email twoFAEnabled strikes isPermanentBanned createdAt');
     res.json({ success: true, users });
 });
 
 app.get('/api/admin/reports', async (req, res) => {
     const reports = await Report.find({ status: "pending" }).sort({ createdAt: -1 });
     res.json({ success: true, reports: reports.map(r => ({ reportId: r._id, postId: r.postId, author: r.author, reporter: r.reporter, reason: r.reason })) });
-});
-
-app.get('/api/admin/complaints', async (req, res) => {
-    const complaints = await Complaint.find({ status: "pending" }).sort({ createdAt: -1 });
-    res.json({ success: true, complaints });
-});
-
-app.post('/api/admin/resolve-complaint', async (req, res) => {
-    const { complaintId } = req.body;
-    await Complaint.findByIdAndUpdate(complaintId, { status: "resolved" });
-    res.json({ success: true });
 });
 
 app.post('/api/admin/issue-strike', async (req, res) => {
@@ -254,9 +280,9 @@ app.post('/api/admin/issue-strike', async (req, res) => {
         author.strikes = (author.strikes || 0) + 1;
         
         if (author.strikes === 2) {
-            author.banUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000); // 7 days mute for posts/community
+            author.banUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
         } else if (author.strikes === 3) {
-            author.banUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000); // 30 days full ban
+            author.banUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
         } else if (author.strikes >= 4) {
             author.isPermanentBanned = true;
             if (author.lastIp) {
@@ -271,6 +297,45 @@ app.post('/api/admin/issue-strike', async (req, res) => {
     res.json({ success: true });
 });
 
+app.post('/api/admin/set-strike-direct', async (req, res) => {
+    try {
+        const { username, strikeNum } = req.body;
+        const author = await User.findOne({ username });
+        if (author) {
+            author.strikes = strikeNum;
+            if (strikeNum === 1) {
+                author.banUntil = null;
+                author.isPermanentBanned = false;
+            } else if (strikeNum === 2) {
+                author.banUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+                author.isPermanentBanned = false;
+            } else if (strikeNum === 3) {
+                author.banUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+                author.isPermanentBanned = false;
+            } else if (strikeNum >= 4) {
+                author.isPermanentBanned = true;
+                if (author.lastIp) {
+                    await BannedIP.updateOne({ ip: author.lastIp }, { ip: author.lastIp }, { upsert: true });
+                }
+            }
+            await author.save();
+        }
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
+app.post('/api/admin/toggle-2fa', async (req, res) => {
+    try {
+        const { username, enable } = req.body;
+        await User.findOneAndUpdate({ username }, { twoFAEnabled: enable });
+        res.json({ success: true });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
+});
+
 app.post('/api/admin/dismiss-report', async (req, res) => {
     const { reportId } = req.body;
     await Report.findByIdAndUpdate(reportId, { status: "dismissed" });
@@ -283,31 +348,6 @@ app.post('/api/admin/reset-strike', async (req, res) => {
     if (u && u.lastIp) {
         await BannedIP.deleteOne({ ip: u.lastIp });
     }
-    res.json({ success: true });
-});
-
-// User account deletion
-app.delete('/api/user/delete', async (req, res) => {
-    const { email, password } = req.body;
-    const u = await User.findOne({ email });
-    if (!u) return res.status(404).json({ success: false, message: "User not found" });
-    const isMatch = await bcrypt.compare(password, u.passwordHash);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Incorrect password" });
-    await User.deleteOne({ email });
-    await Post.deleteMany({ username: u.username });
-    res.json({ success: true });
-});
-
-// Complaints submission with username & password verification
-app.post('/api/complaints', async (req, res) => {
-    const { username, password, message } = req.body;
-    const u = await User.findOne({ username });
-    if (!u) return res.status(400).json({ success: false, message: "Invalid username" });
-    const isMatch = await bcrypt.compare(password, u.passwordHash);
-    if (!isMatch) return res.status(400).json({ success: false, message: "Invalid password" });
-
-    const comp = new Complaint({ username, message });
-    await comp.save();
     res.json({ success: true });
 });
 
@@ -379,15 +419,14 @@ app.get('/api/private-messages', async (req, res) => {
 app.post('/api/private-messages', async (req, res) => {
     const { sender, receiver, text } = req.body;
     const u = await User.findOne({ username: sender });
-    if (u) await checkUserStatus(u);
-    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date() && u.strikes >= 3))) {
-        return res.status(403).json({ success: false, message: "Your account is banned." });
+    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
+        return res.status(403).json({ success: false, message: "Your account is restricted or banned." });
     }
     if (!u || !u.friends.includes(receiver)) {
         return res.status(403).json({ success: false, message: "You must be accepted friends to chat privately!" });
     }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot!" });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const pm = new PrivateMessage({ sender, receiver, text });
     await pm.save();
@@ -402,12 +441,11 @@ app.get('/api/community-messages', async (req, res) => {
 app.post('/api/community-messages', async (req, res) => {
     const { username, text, imageUrl } = req.body;
     const u = await User.findOne({ username });
-    if (u) await checkUserStatus(u);
     if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
-        return res.status(403).json({ success: false, message: "Account is muted or banned." });
+        return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
     }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot!" });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const cm = new CommunityMessage({ username, text, imageUrl });
     await cm.save();
@@ -439,12 +477,11 @@ app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, imageUrl } = req.body;
         const u = await User.findOne({ username });
-        if (u) await checkUserStatus(u);
         if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
-            return res.status(403).json({ success: false, message: "Account is muted or banned. Cannot post." });
+            return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
         }
         if (isToxicContent(content)) {
-            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Safety Bot!" });
+            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Safety Bot: Explicit, adult, or community violating content detected!" });
         }
         const np = new Post({ username, content, imageUrl });
         await np.save();
@@ -457,10 +494,14 @@ app.delete('/api/posts/:id', async (req, res) => {
         const { username } = req.body;
         const post = await Post.findById(req.params.id);
         if (!post) return res.status(404).json({ success: false, message: "Post not found" });
-        if (post.username !== username) return res.status(403).json({ success: false, message: "Unauthorized" });
+        if (post.username !== username) {
+            return res.status(403).json({ success: false, message: "Unauthorized to delete this post" });
+        }
         await Post.findByIdAndDelete(req.params.id);
         res.json({ success: true });
-    } catch (e) { res.status(500).json({ success: false, message: e.message }); }
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 app.post('/api/posts/:id/react', async (req, res) => {
@@ -477,7 +518,7 @@ app.post('/api/posts/:id/react', async (req, res) => {
 
 app.post('/api/posts/:id/comment', async (req, res) => {
     const { username, text } = req.body;
-    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "⚠️ Comment blocked by AI Safety Bot!" });
+    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "⚠️ Comment blocked by AI Safety Bot: Harmful content detected!" });
     const post = await Post.findById(req.params.id);
     if (post) {
         post.comments.push({ username, text, createdAt: new Date() });
@@ -528,6 +569,26 @@ app.put('/api/user/change-password', async (req, res) => {
     u.passwordHash = await bcrypt.hash(newPassword, salt);
     await u.save();
     res.json({ success: true });
+});
+
+app.delete('/api/user/delete', async (req, res) => {
+    try {
+        const { email, password } = req.body;
+        const user = await User.findOne({ email });
+        if (!user) return res.status(404).json({ success: false, message: "User not found" });
+
+        const isMatch = await bcrypt.compare(password, user.passwordHash);
+        if (!isMatch) return res.status(400).json({ success: false, message: "Invalid password" });
+
+        await User.findOneAndDelete({ email });
+        await Post.deleteMany({ username: user.username });
+        await CommunityMessage.deleteMany({ username: user.username });
+        await PrivateMessage.deleteMany({ $or: [{ sender: user.username }, { receiver: user.username }] });
+
+        res.json({ success: true, message: "Account deleted successfully" });
+    } catch (e) {
+        res.status(500).json({ success: false, message: e.message });
+    }
 });
 
 app.use((req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
