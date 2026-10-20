@@ -180,7 +180,6 @@ app.post('/api/login', async (req, res) => {
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
 });
 
-// User Complaint Submission Route (Supports Username or Email)
 app.post('/api/complaints', async (req, res) => {
     try {
         const { email, username, password, message } = req.body;
@@ -215,7 +214,6 @@ app.post('/api/complaints', async (req, res) => {
     }
 });
 
-// Admin Login Route checking MongoDB 'admins' collection
 app.post('/api/admin/login', async (req, res) => {
     try {
         const { username, password } = req.body;
@@ -591,6 +589,9 @@ app.delete('/api/user/delete', async (req, res) => {
     }
 });
 
-app.use((req, res) => { res.sendFile(path.join(__dirname, 'index.html')); });
+// Shob /api/... route-er ekdom sheshe ei catch-all route-ti dite hobe
+app.use((req, res) => { 
+    res.sendFile(path.join(__dirname, 'index.html')); 
+});
 
 app.listen(PORT, () => console.log(`Server running on ${PORT}`));
