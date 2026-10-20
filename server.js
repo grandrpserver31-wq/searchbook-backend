@@ -21,15 +21,19 @@ try {
 
 mongoose.connect(MONGO_URI).then(() => console.log("✅ DB Connected")).catch(e => console.error(e));
 
-// AI Security Bot / Toxicity Filter Words List
-const toxicKeywords = ["badword1", "badword2", "terrorist", "hackingscript", "spamattack", "abuse"];
+// Extended AI Safety & Adult Content Filter Keywords List
+const toxicKeywords = [
+    "badword1", "badword2", "terrorist", "hackingscript", "spamattack", "abuse",
+    "sex", "fuck", "porn", "nude", "naked", "xxx", "adult", "violence", "suicide",
+    "kill", "murder", "blood", "rape", "hate", "scam"
+];
+
 function isToxicContent(text) {
     if (!text) return false;
     const lower = text.toLowerCase();
     return toxicKeywords.some(word => lower.includes(word));
 }
 
-// Strong Password Validation Helper
 function isStrongPassword(pass) {
     if (!pass) return false;
     const minLength = pass.length >= 8;
@@ -49,9 +53,20 @@ const UserSchema = new mongoose.Schema({
     friendRequestsSent: { type: [String], default: [] },
     friendRequestsReceived: { type: [String], default: [] },
     twoFAEnabled: { type: Boolean, default: false },
-    twoFASecret: { type: String, default: "" }
+    twoFASecret: { type: String, default: "" },
+    lastActive: { type: Date, default: Date.now },
+    strikes: { type: Number, default: 0 },
+    banUntil: { type: Date, default: null },
+    isPermanentBanned: { type: Boolean, default: false },
+    lastIp: { type: String, default: "" }
 });
 const User = mongoose.model('User', UserSchema);
+
+const BannedIPSchema = new mongoose.Schema({
+    ip: { type: String, required: true, unique: true },
+    createdAt: { type: Date, default: Date.now }
+});
+const BannedIP = mongoose.model('BannedIP', BannedIPSchema);
 
 const PostSchema = new mongoose.Schema({
     username: { type: String, required: true },
@@ -64,6 +79,16 @@ const PostSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
 });
 const Post = mongoose.model('Post', PostSchema);
+
+const ReportSchema = new mongoose.Schema({
+    postId: { type: String, required: true },
+    author: { type: String, required: true },
+    reporter: { type: String, required: true },
+    reason: { type: String, required: true },
+    status: { type: String, default: "pending" },
+    createdAt: { type: Date, default: Date.now }
+});
+const Report = mongoose.model('Report', ReportSchema);
 
 const CommunityMessageSchema = new mongoose.Schema({
     username: { type: String, required: true },
@@ -81,15 +106,35 @@ const PrivateMessageSchema = new mongoose.Schema({
 });
 const PrivateMessage = mongoose.model('PrivateMessage', PrivateMessageSchema);
 
+app.post('/api/ping', async (req, res) => {
+    const { username } = req.body;
+    if (username) await User.findOneAndUpdate({ username }, { lastActive: new Date() });
+    res.json({ success: true });
+});
+
+app.get('/api/active-users', async (req, res) => {
+    try {
+        const threshold = new Date(Date.now() - 45000);
+        const activeUsers = await User.find({ lastActive: { $gte: threshold } }).select('username');
+        res.json({ success: true, users: activeUsers.map(u => u.username) });
+    } catch (e) { res.json({ success: false, users: [] }); }
+});
+
 app.post('/api/signup', async (req, res) => {
     try {
+        const clientIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || "unknown";
+        const checkIpBan = await BannedIP.findOne({ ip: clientIp });
+        if (checkIpBan) {
+            return res.status(403).json({ success: false, message: "Registration blocked. Your IP address has been permanently banned." });
+        }
+
         const { username, email, password, fullName } = req.body;
         if (!isStrongPassword(password)) {
-            return res.status(400).json({ success: false, message: "Password must be at least 8 chars long with upper, lower, number, and special chars." });
+            return res.status(400).json({ success: false, message: "Password must be strong." });
         }
         const salt = await bcrypt.genSalt(10);
         const passwordHash = await bcrypt.hash(password, salt);
-        const newUser = new User({ username, email, fullName, passwordHash });
+        const newUser = new User({ username, email, fullName, passwordHash, lastIp: clientIp });
         await newUser.save();
         res.json({ success: true });
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
@@ -101,6 +146,15 @@ app.post('/api/login', async (req, res) => {
         const user = await User.findOne({ email });
         if (!user) return res.status(400).json({ success: false, message: "User not found" });
 
+        if (user.isPermanentBanned) {
+            return res.json({ success: false, banned: true, message: "Your account is permanently banned. You cannot access Searchbook." });
+        }
+
+        if (user.banUntil && user.banUntil > new Date()) {
+            const daysLeft = Math.ceil((user.banUntil - new Date()) / (1000 * 60 * 60 * 24));
+            return res.json({ success: false, banned: true, message: `Your account is suspended for ${daysLeft} days.` });
+        }
+
         if (user.twoFAEnabled) {
             if (!twoFACode) return res.json({ success: false, requires2FA: true });
             const verified = speakeasy.totp.verify({ secret: user.twoFASecret, encoding: 'base32', token: twoFACode, window: 1 });
@@ -110,6 +164,9 @@ app.post('/api/login', async (req, res) => {
             if (!isMatch) return res.status(400).json({ success: false, message: "Invalid password" });
         }
 
+        user.lastActive = new Date();
+        user.lastIp = req.headers['x-forwarded-for'] || req.socket.remoteAddress || "";
+        await user.save();
         res.json({ success: true, username: user.username, email: user.email, fullName: user.fullName });
     } catch (e) { res.status(400).json({ success: false, message: e.message }); }
 });
@@ -123,11 +180,64 @@ app.post('/api/admin/login', (req, res) => {
 });
 
 app.get('/api/admin/users', async (req, res) => {
-    const users = await User.find().select('username email twoFAEnabled createdAt');
+    const users = await User.find().select('username email twoFAEnabled strikes isPermanentBanned createdAt');
     res.json({ success: true, users });
 });
 
-// Friend Request & Acceptance System
+app.get('/api/admin/reports', async (req, res) => {
+    const reports = await Report.find({ status: "pending" }).sort({ createdAt: -1 });
+    res.json({ success: true, reports: reports.map(r => ({ reportId: r._id, postId: r.postId, author: r.author, reporter: r.reporter, reason: r.reason })) });
+});
+
+app.post('/api/admin/issue-strike', async (req, res) => {
+    const { username, reportId } = req.body;
+    const author = await User.findOne({ username });
+    if (author) {
+        author.strikes = (author.strikes || 0) + 1;
+        
+        if (author.strikes === 2) {
+            author.banUntil = new Date(Date.now() + 7 * 24 * 60 * 60 * 1000);
+        } else if (author.strikes === 3) {
+            author.banUntil = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+        } else if (author.strikes >= 4) {
+            author.isPermanentBanned = true;
+            if (author.lastIp) {
+                await BannedIP.updateOne({ ip: author.lastIp }, { ip: author.lastIp }, { upsert: true });
+            }
+        }
+        await author.save();
+    }
+    if (reportId) {
+        await Report.findByIdAndUpdate(reportId, { status: "resolved" });
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/admin/dismiss-report', async (req, res) => {
+    const { reportId } = req.body;
+    await Report.findByIdAndUpdate(reportId, { status: "dismissed" });
+    res.json({ success: true });
+});
+
+app.post('/api/admin/reset-strike', async (req, res) => {
+    const { username } = req.body;
+    const u = await User.findOneAndUpdate({ username }, { strikes: 0, banUntil: null, isPermanentBanned: false });
+    if (u && u.lastIp) {
+        await BannedIP.deleteOne({ ip: u.lastIp });
+    }
+    res.json({ success: true });
+});
+
+app.post('/api/report-post', async (req, res) => {
+    const { postId, reporter, reason } = req.body;
+    const post = await Post.findById(postId);
+    if (post) {
+        const newReport = new Report({ postId, author: post.username, reporter, reason });
+        await newReport.save();
+    }
+    res.json({ success: true });
+});
+
 app.get('/api/friend-status', async (req, res) => {
     const { user1, user2 } = req.query;
     const u1 = await User.findOne({ username: user1 });
@@ -172,7 +282,6 @@ app.get('/api/friends/:username', async (req, res) => {
     res.json({ success: true, friends: u.friends });
 });
 
-// 1-to-1 Secure Private Chat (Only sender and receiver can view)
 app.get('/api/private-messages', async (req, res) => {
     const { user1, user2 } = req.query;
     const messages = await PrivateMessage.find({
@@ -187,18 +296,20 @@ app.get('/api/private-messages', async (req, res) => {
 app.post('/api/private-messages', async (req, res) => {
     const { sender, receiver, text } = req.body;
     const u = await User.findOne({ username: sender });
+    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
+        return res.status(403).json({ success: false, message: "Your account is restricted or banned." });
+    }
     if (!u || !u.friends.includes(receiver)) {
         return res.status(403).json({ success: false, message: "You must be accepted friends to chat privately!" });
     }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "Message blocked by AI Security Bot." });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const pm = new PrivateMessage({ sender, receiver, text });
     await pm.save();
     res.json({ success: true });
 });
 
-// Community Chatroom API
 app.get('/api/community-messages', async (req, res) => {
     const messages = await CommunityMessage.find().sort({ createdAt: 1 }).limit(100);
     res.json({ success: true, messages });
@@ -206,15 +317,18 @@ app.get('/api/community-messages', async (req, res) => {
 
 app.post('/api/community-messages', async (req, res) => {
     const { username, text, imageUrl } = req.body;
+    const u = await User.findOne({ username });
+    if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
+        return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
+    }
     if (isToxicContent(text)) {
-        return res.status(400).json({ success: false, message: "Community message blocked by AI Security Bot." });
+        return res.status(400).json({ success: false, message: "⚠️ Message blocked by AI Safety Bot: Explicit or harmful content detected!" });
     }
     const cm = new CommunityMessage({ username, text, imageUrl });
     await cm.save();
     res.json({ success: true });
 });
 
-// AI Algorithm Feed
 app.get('/api/feed/:username', async (req, res) => {
     try {
         const username = req.params.username;
@@ -239,8 +353,12 @@ app.get('/api/feed/:username', async (req, res) => {
 app.post('/api/posts', async (req, res) => {
     try {
         const { username, content, imageUrl } = req.body;
+        const u = await User.findOne({ username });
+        if (u && (u.isPermanentBanned || (u.banUntil && u.banUntil > new Date()))) {
+            return res.status(403).json({ success: false, message: "Your account is banned or restricted." });
+        }
         if (isToxicContent(content)) {
-            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Security Bot: Contains toxic or prohibited content!" });
+            return res.status(400).json({ success: false, message: "⚠️ Post rejected by AI Safety Bot: Explicit, adult, or community violating content detected!" });
         }
         const np = new Post({ username, content, imageUrl });
         await np.save();
@@ -262,21 +380,11 @@ app.post('/api/posts/:id/react', async (req, res) => {
 
 app.post('/api/posts/:id/comment', async (req, res) => {
     const { username, text } = req.body;
-    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "Comment blocked by AI Filter." });
+    if (isToxicContent(text)) return res.status(400).json({ success: false, message: "⚠️ Comment blocked by AI Safety Bot: Harmful content detected!" });
     const post = await Post.findById(req.params.id);
     if (post) {
         post.comments.push({ username, text, createdAt: new Date() });
         await post.save();
-    }
-    res.json({ success: true });
-});
-
-app.post('/api/posts/:id/share', async (req, res) => {
-    const { username } = req.body;
-    const post = await Post.findById(req.params.id);
-    if (post) {
-        const sharedPost = new Post({ username, content: `🔁 Shared from @${post.username}: "${post.content}"`, imageUrl: post.imageUrl });
-        await sharedPost.save();
     }
     res.json({ success: true });
 });
