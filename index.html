@@ -1,460 +1,940 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Searchbook - Global Social Network</title>
-    <style>
-        :root {
-            --primary: #7c5cfc;
-            --primary-btn: #583cd6;
-            --green-btn: #00b894;
-            --bg: #eef2f5;
-            --card: #ffffff;
-            --text: #2d3436;
-            --text-sec: #636e72;
-            --border: #dfe6e9;
-        }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-        body { background: var(--bg); color: var(--text); min-height: 100vh; }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title id="app-title">Searchbook - Global Social Network</title>
+<style>
+:root { --primary: #6c5ce7; --primary-dark: #5b4bcf; --accent: #00b894; --danger: #e17055; --bg: #f4f6fb; --white: rgba(255, 255, 255, 0.95); --text: #2d3436; --muted: #636e72; --border: rgba(223, 230, 233, 0.8); --shadow-sm: 0 8px 32px 0 rgba(31, 38, 135, 0.07); --shadow-lg: 0 8px 32px 0 rgba(31, 38, 135, 0.15); --radius: 18px; --radius-sm: 12px; }
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', 'Segoe UI', Arial, sans-serif; }
 
-        header {
-            background: var(--card);
-            padding: 12px 30px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
-        }
-        .logo { font-size: 22px; font-weight: 700; color: var(--primary); cursor: pointer; }
-        .nav-right { display: flex; align-items: center; gap: 18px; position: relative; }
-        .nav-icon { font-size: 18px; cursor: pointer; color: var(--primary); }
-        
-        .dropdown-menu {
-            position: absolute;
-            right: 0;
-            top: 40px;
-            background: var(--card);
-            border-radius: 12px;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.1);
-            width: 220px;
-            display: none;
-            z-index: 200;
-            padding: 8px 0;
-        }
-        .dropdown-menu div {
-            padding: 10px 18px;
-            font-size: 13px;
-            font-weight: 600;
-            cursor: pointer;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-            color: #4a5568;
-        }
-        .dropdown-menu div:hover { background: #f7fafc; color: var(--primary); }
+body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var(--text); min-height: 100vh; }
 
-        .container { max-width: 950px; margin: 30px auto; padding: 0 15px; display: flex; gap: 20px; }
-        .main-feed { flex: 1; }
-        .sidebar-right { width: 250px; }
+#auth-app { min-height: 100vh; display: flex; justify-content: center; align-items: center; padding: 20px; flex-direction: column; }
+.auth-box { background: var(--white); backdrop-filter: blur(16px); padding: 40px 35px; border-radius: 24px; box-shadow: var(--shadow-lg); width: 100%; max-width: 420px; border: 1px solid rgba(255,255,255,0.4); position: relative; }
+.auth-top-bar { position: absolute; top: 15px; right: 20px; }
+.auth-top-bar select { padding: 4px 8px; border-radius: 6px; border: 1px solid var(--border); font-size: 12px; outline: none; }
+.auth-logo { font-size: 38px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; margin-bottom: 8px; cursor: pointer; user-select: none; }
+.card { display: none; }
+.card.active { display: block; }
 
-        .card {
-            background: var(--card);
-            border-radius: 16px;
-            padding: 20px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 10px rgba(0,0,0,0.02);
-            position: relative;
-        }
+.input-group { margin-bottom: 16px; }
+.input-group input, .input-group textarea, .input-group select { width: 100%; padding: 14px 16px; font-size: 15px; border: 2px solid var(--border); border-radius: var(--radius-sm); outline: none; background: rgba(250, 251, 255, 0.8); color: var(--text); }
+.password-wrapper { position: relative; }
+.password-wrapper input { padding-right: 48px; }
+.password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: transparent; border: none; font-size: 20px; cursor: pointer; padding: 4px; }
+.btn { width: 100%; background: linear-gradient(135deg, var(--primary), var(--primary-dark)); color: white; border: none; padding: 14px; font-size: 16px; font-weight: 700; border-radius: var(--radius-sm); cursor: pointer; margin-top: 8px; box-shadow: 0 4px 15px rgba(108,92,231,0.3); }
+.btn-green { background: linear-gradient(135deg, #00b894, #00cec9); }
+.btn-red { background: linear-gradient(135deg, #e17055, #d63031); }
+.btn-sm { padding: 8px 14px; font-size: 13px; width: auto; margin-top: 0; }
+.link { color: var(--primary); font-size: 14px; text-align: center; display: block; margin-top: 14px; cursor: pointer; font-weight: 600; }
+.divider { border-bottom: 1px solid var(--border); margin: 20px 0; }
 
-        input, textarea, select {
-            width: 100%;
-            padding: 12px 15px;
-            border: 1px solid #e2e8f0;
-            border-radius: 8px;
-            margin-top: 6px;
-            margin-bottom: 12px;
-            font-size: 13px;
-            outline: none;
-            background: #f8fafc;
-        }
-        
-        .btn-purple { background: var(--primary-btn); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; }
-        .btn-green { background: var(--green-btn); color: white; border: none; padding: 12px; border-radius: 8px; font-weight: 600; font-size: 14px; cursor: pointer; width: 100%; }
+.pass-hint { font-size: 12px; color: var(--muted); margin-top: 4px; line-height: 1.4; background: rgba(108, 92, 231, 0.08); padding: 8px 12px; border-radius: 8px; border-left: 3px solid var(--primary); }
+.alert-warning-box { background: rgba(253, 203, 110, 0.25); border-left: 4px solid #f39c12; color: #d35400; padding: 12px; border-radius: 10px; font-size: 13px; margin-bottom: 15px; line-height: 1.4; font-weight: 600; }
+.developer-tag { text-align: center; margin-top: 15px; font-size: 13px; color: var(--muted); font-weight: 600; }
+.github-download-link { text-align: center; margin-top: 8px; font-size: 13px; }
+.github-download-link a { color: var(--primary); text-decoration: none; font-weight: 700; }
 
-        .post-avatar { width: 38px; height: 38px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; }
-        .post-dots { position: absolute; right: 20px; top: 20px; cursor: pointer; color: var(--text-sec); font-weight: bold; }
-        .post-menu { position: absolute; right: 20px; top: 40px; background: #fff; border: 1px solid var(--border); border-radius: 8px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.08); z-index: 10; }
-        .post-menu div { padding: 8px 15px; font-size: 12px; cursor: pointer; }
-        .post-menu div:hover { background: #f1f5f9; }
+#main-app { display: none; }
+#main-app.active { display: block; }
+.top-bar { background: var(--white); backdrop-filter: blur(16px); padding: 12px 20px; box-shadow: var(--shadow-sm); position: sticky; top: 0; z-index: 100; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid var(--border); }
+.top-logo { font-size: 22px; font-weight: 900; background: linear-gradient(135deg, #6c5ce7, #a29bfe); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; user-select: none; }
+.top-icons { display: flex; gap: 8px; align-items: center; position: relative; }
+.top-icon-btn { width: 42px; height: 42px; border-radius: 12px; background: rgba(244,246,251,0.8); border: none; font-size: 18px; cursor: pointer; display: flex; align-items: center; justify-content: center; }
 
-        .reactions { display: flex; gap: 15px; margin-top: 12px; font-size: 13px; color: var(--text-sec); font-weight: 600; }
-        .reactions span { cursor: pointer; }
+.menu-dropdown { position: absolute; top: 52px; right: 0; background: var(--white); backdrop-filter: blur(16px); border: 1px solid var(--border); border-radius: 16px; box-shadow: var(--shadow-lg); width: 220px; display: none; flex-direction: column; padding: 8px; z-index: 150; }
+.menu-dropdown.show { display: flex; }
+.menu-item { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 10px; cursor: pointer; font-weight: 600; font-size: 14px; color: var(--text); }
+.menu-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
+.menu-item.logout { color: var(--danger); margin-top: 4px; border-top: 1px solid var(--border); }
 
-        .hidden { display: none !important; }
-        .modal { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.4); display: flex; align-items: center; justify-content: center; z-index: 1000; }
-        .modal-card { background: #fff; border-radius: 16px; width: 100%; max-width: 450px; padding: 25px; position: relative; }
-        .close-modal { position: absolute; right: 20px; top: 20px; cursor: pointer; font-size: 18px; color: var(--text-sec); }
-    </style>
+.layout { display: flex; max-width: 1200px; margin: 0 auto; gap: 20px; padding: 20px; }
+.main-content { flex: 1; max-width: 650px; margin: 0 auto; }
+.sidebar-right { width: 260px; background: var(--white); backdrop-filter: blur(16px); padding: 15px; border-radius: var(--radius); box-shadow: var(--shadow-sm); border: 1px solid var(--border); height: fit-content; position: sticky; top: 80px; }
+.main-view { display: none; }
+.main-view.active { display: block; }
+
+.post-box, .card-box { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 20px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); }
+.post-item { background: var(--white); padding: 20px; border-radius: var(--radius); margin-bottom: 16px; box-shadow: var(--shadow-sm); border: 1px solid var(--border); position: relative; }
+.post-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.post-user-info { display: flex; align-items: center; gap: 12px; }
+.avatar { width: 44px; height: 44px; border-radius: 50%; background: linear-gradient(135deg, #6c5ce7, #a29bfe); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; }
+
+.post-options-btn { background: transparent; border: none; font-size: 18px; cursor: pointer; color: var(--muted); padding: 4px 8px; border-radius: 50%; }
+.post-options-btn:hover { background: rgba(0,0,0,0.05); }
+.post-dropdown-menu { position: absolute; right: 20px; top: 45px; background: var(--white); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow-lg); display: none; flex-direction: column; width: 140px; z-index: 10; padding: 6px; }
+.post-dropdown-menu.show { display: flex; }
+.post-dropdown-item { padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; border-radius: 6px; }
+.post-dropdown-item:hover { background: rgba(108,92,231,0.1); color: var(--primary); }
+
+.post-creator-container { display: flex; gap: 12px; align-items: flex-start; }
+.post-creator-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; flex-shrink: 0; }
+.post-creator-inputs { flex: 1; }
+
+.post-actions { display: flex; gap: 10px; margin-top: 15px; border-top: 1px solid var(--border); padding-top: 10px; }
+.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); }
+.action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
+
+#admin-panel { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.85); z-index: 2000; display: none; justify-content: center; align-items: center; padding: 20px; }
+#admin-panel.active { display: flex; }
+.admin-box { background: var(--white); border-radius: 24px; padding: 30px; width: 100%; max-width: 800px; max-height: 90vh; overflow-y: auto; }
+
+#report-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2500; display:none; justify-content:center; align-items:center; }
+.report-box { background:var(--white); padding:25px; border-radius:16px; width:90%; max-width:400px; }
+</style>
 </head>
 <body>
 
-    <header>
-        <div class="logo" id="logoBtn">Searchbook</div>
-        <div class="nav-right" id="navIcons" class="hidden">
-            <span class="nav-icon" onclick="showFeed()">🏠</span>
-            <span class="nav-icon" onclick="openDropdown()">🌐</span>
-            <span class="nav-icon" onclick="openDropdown()">💬</span>
-            <span class="nav-icon" onclick="openDropdown()">⋮</span>
-            
-            <div class="dropdown-menu" id="dropdownMenu">
-                <div onclick="openProfile()">👤 My Profile</div>
-                <div onclick="openCommunityChat()">🌐 Community Chat</div>
-                <div onclick="openPrivateMessages()">💬 Private Messages</div>
-                <div onclick="openSettings()">⚙️ Settings & Security</div>
-                <div onclick="openLanguage()">🌐 Language</div>
-                <div onclick="logout()" style="color: #d63031;">🚪 Log Out</div>
-            </div>
+<div id="auth-app">
+    <div class="auth-box">
+        <div class="auth-top-bar">
+            <select id="auth-lang-select" onchange="changeLanguage(this.value)">
+                <option value="en">English</option>
+                <option value="bn">বাংলা</option>
+            </select>
         </div>
-    </header>
+        <h1 class="auth-logo" onclick="handleLogoClick()">Searchbook</h1>
+        <p id="txt-subtitle" style="text-align:center; color:var(--muted); font-size:14px; margin-bottom:20px;">Connect with friends, share your moments</p>
 
-    <div id="authView" class="container" style="justify-content: center; margin-top: 40px;">
-        <div class="card" style="width: 400px; text-align: center; padding: 35px 25px;">
-            <div style="float: right; font-size: 12px; color: var(--text-sec);">
-                <select id="langSelect" style="width: auto; padding: 2px 5px; margin: 0;">
-                    <option value="en">English</option>
-                    <option value="bn">বাংলা</option>
-                </select>
+        <div id="login-panel" class="card active">
+            <div class="input-group"><input type="email" id="login-email" placeholder="Email address"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="login-password" placeholder="Password">
+                    <button type="button" class="password-toggle" onclick="togglePassword('login-password', this)">👁️</button>
+                </div>
             </div>
-            <h1 style="color: var(--primary); font-size: 32px; margin-top: 10px; margin-bottom: 4px;">Searchbook</h1>
-            <p style="font-size: 13px; color: var(--text-sec); margin-bottom: 25px;">Connect with friends, share your moments</p>
+            <button class="btn" id="btn-login-text" onclick="handleLogin()">Log In</button>
+            <span class="link" id="txt-forgot" onclick="switchPanel('forgot-panel')">Forgot password?</span>
+            <div style="margin-top: 10px; font-size: 13px; text-align: center;">
+                <a href="#" onclick="switchPanel('complaint-panel')" style="color:var(--primary); text-decoration:none; font-weight:600;">Complaint Box / Support</a>
+            </div>
+            <div class="divider"></div>
+            <button class="btn btn-green" id="btn-create-acc" onclick="switchPanel('register-panel')">Create New Account</button>
+        </div>
+
+        <div id="register-panel" class="card">
+            <h2 id="txt-reg-title" style="text-align:center; margin-bottom:15px;">Create Account</h2>
+            <div class="input-group"><input type="text" id="reg-name" placeholder="Full Name"></div>
+            <div class="input-group"><input type="text" id="reg-username" placeholder="Username"></div>
+            <div class="input-group"><input type="email" id="reg-email" placeholder="Email"></div>
+            <div class="input-group">
+                <div class="password-wrapper">
+                    <input type="password" id="reg-password" placeholder="Password">
+                    <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)">👁️</button>
+                </div>
+                <div class="pass-hint" id="txt-pass-hint">
+                    🔒 Password must be at least 8 chars with upper, lower, number & special char.
+                </div>
+            </div>
+            <button class="btn btn-green" id="btn-signup-text" onclick="handleSignup()">Sign Up</button>
+            <span class="link" id="txt-have-acc" onclick="switchPanel('login-panel')">Already have account?</span>
+        </div>
+
+        <div id="forgot-panel" class="card">
+            <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset</h2>
+            <div class="alert-warning-box" id="txt-forgot-warning">
+                ⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.
+            </div>
+            <div class="input-group"><input type="email" id="reset-email" placeholder="Enter registered email"></div>
+            <button class="btn" onclick="resetPassword()">Send Reset Link</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="complaint-panel" class="card">
+            <h2 style="text-align:center; margin-bottom:15px;">📩 Complaint & Support Box</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:12px; text-align:center;">Enter your account details to securely send a complaint or support ticket.</p>
+            <div class="input-group"><input type="text" id="comp-username" placeholder="Your Username"></div>
+            <div class="input-group"><input type="password" id="comp-password" placeholder="Your Password"></div>
+            <div class="input-group"><textarea id="comp-message" placeholder="Describe your issue (e.g., 2FA reset, password help)..." rows="3"></textarea></div>
+            <button class="btn" onclick="submitComplaintTicket()">Submit Complaint</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="twofa-login-panel" class="card">
+            <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Code Required</h2>
+            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; font-weight:700;"></div>
+            <button class="btn" onclick="submit2FALogin()">Submit</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
+        </div>
+
+        <div class="developer-tag">Developed by Riyad Ahmed</div>
+        <div class="github-download-link">
+            <a href="https://github.com/grandrpserver31-wq/searchbook-backend/releases" target="_blank">📥 Download Searchbook App (GitHub)</a>
+        </div>
+    </div>
+</div>
+
+<div id="main-app">
+    <div class="top-bar">
+        <div class="top-logo" onclick="handleLogoClick()">Searchbook</div>
+        <div class="top-icons">
+            <button class="top-icon-btn" onclick="switchMainView('feed-view')" title="Home">🏠</button>
+            <button class="top-icon-btn" onclick="switchMainView('community-view')" title="Community Chat">🌐</button>
+            <button class="top-icon-btn" onclick="switchMainView('messages-view')" title="Messages">💬</button>
+            <button class="top-icon-btn" onclick="toggleMenuDropdown()" title="Menu">⋮</button>
             
-            <div id="loginBlock">
-                <input type="email" id="loginEmail" placeholder="Email address">
-                <input type="password" id="loginPassword" placeholder="Password">
-                <input type="text" id="twoFACode" placeholder="2FA Code (if enabled)" class="hidden">
-                <button class="btn-purple" onclick="login()">Log In</button>
-                <div style="margin-top: 12px; font-size: 13px;">
-                    <a href="#" style="color: #6c5ce7; text-decoration: none;" onclick="openComplaint()">Complaint Box / Support</a>
-                </div>
-                <div style="margin-top: 15px;">
-                    <button class="btn-green" onclick="toggleAuth(true)">Create New Account</button>
-                </div>
+            <div class="menu-dropdown" id="menu-dropdown">
+                <div class="menu-item" onclick="openMyProfile(); toggleMenuDropdown();" id="m-profile">👤 My Profile</div>
+                <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();" id="m-community">🌐 Community Chat</div>
+                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();" id="m-messages">💬 Private Messages</div>
+                <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();" id="m-settings">⚙️ Settings & Security</div>
+                <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();" id="m-language">🌍 Language</div>
+                <div class="menu-item logout" onclick="handleLogout()" id="m-logout">⎋ Log Out</div>
             </div>
-
-            <div id="signupBlock" class="hidden">
-                <input type="text" id="signupUser" placeholder="Username">
-                <input type="email" id="signupEmail" placeholder="Email">
-                <input type="text" id="signupName" placeholder="Full Name">
-                <input type="password" id="signupPass" placeholder="Password">
-                <button class="btn-green" onclick="signup()">Create New Account</button>
-                <div style="margin-top: 15px;">
-                    <button class="btn-purple" onclick="toggleAuth(false)">Back to Login</button>
-                </div>
-            </div>
-
-            <p style="font-size: 11px; color: var(--text-sec); margin-top: 25px;">
-                Developed by Riyad Ahmed<br>
-                <a href="https://github.com/grandrpset31-wq/searchbook-backend/releases" target="_blank" style="color: #6c5ce7;">📱 Download Searchbook App (GitHub)</a>
-            </p>
         </div>
     </div>
 
-    <div id="appView" class="container hidden">
-        <div class="main-feed" id="mainArea">
-            <div class="card" id="createPostCard">
-                <div style="display: flex; gap: 12px; align-items: flex-start;">
-                    <div class="post-avatar" id="userAvatar">D</div>
-                    <textarea id="postText" placeholder="What's on your mind?" rows="2" style="margin: 0;"></textarea>
+    <div class="layout">
+        <div class="main-content">
+            <!-- NEWSFEED -->
+            <div id="feed-view" class="main-view active">
+                <div class="post-box">
+                    <div class="post-creator-container">
+                        <div class="post-creator-avatar" id="creator-avatar" onclick="openMyProfile()">U</div>
+                        <div class="post-creator-inputs">
+                            <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <label style="cursor: pointer; font-size: 14px; color: var(--primary); font-weight: 600;">
+                                    📷 Upload Photo <input type="file" id="post-image-file" accept="image/*" style="display: none;">
+                                </label>
+                                <button class="btn btn-sm" onclick="createPost()">Share Post</button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 12px;">
-                    <input type="text" id="postImg" placeholder="Photo URL (optional)" style="margin: 0; width: 70%;">
-                    <button class="btn-purple" onclick="createPost()" style="width: 25%; padding: 8px;">Share Post</button>
+                <h3 style="margin-bottom:15px;">🔥 Smart AI Algorithm Newsfeed</h3>
+                <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
+            </div>
+
+            <!-- COMMUNITY CHAT VIEW -->
+            <div id="community-view" class="main-view">
+                <div class="card-box">
+                    <h2>🌐 Global Community Chat</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Open chat room for everyone to chat and share pictures.</p>
+                    <div style="height:320px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="community-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Loading community messages...</p>
+                    </div>
+                    <div style="display:flex; gap:10px; flex-direction:column;">
+                        <input type="text" id="community-msg-text" placeholder="Type a public message..." style="padding:12px; border-radius:10px; border:1px solid var(--border);">
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <input type="file" id="community-img-file" accept="image/*" style="font-size:12px;">
+                            <button class="btn btn-sm" onclick="sendCommunityMessage()">Send to Community</button>
+                        </div>
+                    </div>
                 </div>
             </div>
 
-            <h4 style="margin-bottom: 12px; color: var(--text-sec); font-size: 14px;">🔥 Smart AI Algorithm Newsfeed</h4>
-            <div id="feedPosts"></div>
+            <!-- USER / MY PROFILE VIEW -->
+            <div id="profile-view" class="main-view">
+                <div class="card-box">
+                    <div style="text-align:center;">
+                        <div class="avatar" style="width:80px; height:80px; font-size:32px; margin:0 auto;" id="view-profile-avatar">U</div>
+                        <h3 id="view-profile-name" style="margin-top:10px;">User Name</h3>
+                        <p id="view-profile-email" style="color:var(--muted); font-size:14px;"></p>
+                        <div id="profile-action-area" style="margin-top:15px;"></div>
+                    </div>
+                </div>
+                <h3 style="margin-bottom:12px;">User Posts</h3>
+                <div id="user-posts-list"></div>
+            </div>
+
+            <!-- PRIVATE MESSAGES VIEW -->
+            <div id="messages-view" class="main-view">
+                <div class="card-box">
+                    <h2>💬 Secure 1-to-1 Private Chat</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">You can only chat with accepted friends securely.</p>
+                    <div class="input-group">
+                        <select id="friend-select-dropdown" onchange="loadPrivateChat(this.value)" style="padding:10px; border-radius:8px; width:100%;">
+                            <option value="">-- Select an accepted friend --</option>
+                        </select>
+                    </div>
+                    <div style="height:250px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="private-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Select a friend to view secure private conversation</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="private-msg-input" placeholder="Type secure message..." style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);">
+                        <button class="btn btn-sm" onclick="sendPrivateMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div id="settings-view" class="main-view">
+                <div class="card-box">
+                    <h2>⚙️ Settings & Security</h2>
+                    <div class="divider"></div>
+                    <h3>🔐 Change Password</h3>
+                    <div class="input-group" style="margin-top:10px;">
+                        <div class="password-wrapper">
+                            <input type="password" id="old-pass" placeholder="Current Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-pass" placeholder="New Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-green" onclick="changePassword()">Update Password</button>
+
+                    <div class="divider"></div>
+                    <h3>🔒 Google Authenticator (2FA)</h3>
+                    <div id="twofa-status" style="margin:10px 0; font-weight:600;">Status: Disabled</div>
+                    <button class="btn" id="twofa-btn" onclick="setup2FA()">Setup 2FA</button>
+                    <div id="twofa-qr-box" style="text-align:center; margin-top:15px; display:none;">
+                        <img id="twofa-qr" style="max-width:180px; border-radius:8px;">
+                        <div class="input-group" style="margin-top:10px;"><input type="text" id="twofa-code" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:4px;"></div>
+                        <button class="btn btn-green" onclick="verifyAndEnable2FA()">Turn On 2FA</button>
+                    </div>
+
+                    <div class="divider"></div>
+                    <h3 style="color:var(--danger);">⚠️ Danger Zone: Delete Account</h3>
+                    <p style="font-size:13px; color:var(--muted); margin:8px 0;">Once you delete your account, there is no going back. Please be certain.</p>
+                    <div class="input-group"><input type="password" id="delete-acc-pass" placeholder="Enter password to confirm"></div>
+                    <button class="btn btn-red" onclick="deleteMyAccount()">Delete Account Permanently</button>
+                </div>
+            </div>
+
+            <!-- LANGUAGE SWITCHER VIEW -->
+            <div id="language-view" class="main-view">
+                <div class="card-box">
+                    <h2>🌍 Language Settings</h2>
+                    <div class="input-group" style="margin-top:15px;">
+                        <select id="main-lang-select" onchange="changeLanguage(this.value)">
+                            <option value="en">English (US)</option>
+                            <option value="bn">বাংলা (Bangla)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- RIGHT SIDEBAR: ACTIVE USERS -->
         <div class="sidebar-right">
-            <div class="card">
-                <h4 style="font-size: 14px; margin-bottom: 10px;">🟢 Active Friends</h4>
-                <div id="activeList" style="font-size: 13px; color: var(--text-sec);">darkzone</div>
+            <h4 style="margin-bottom:12px; font-size:15px; display:flex; align-items:center; gap:6px;">🟢 Active Friends</h4>
+            <div id="active-users-list">
+                <p style="font-size:12px; color:var(--muted);">Loading active users...</p>
             </div>
         </div>
     </div>
+</div>
 
-    <div id="settingsModal" class="modal hidden">
-        <div class="modal-card">
-            <span class="close-modal" onclick="closeModal('settingsModal')">✕</span>
-            <h3 style="margin-bottom: 15px;">⚙️ Settings & Security</h3>
-            <h4 style="font-size: 13px; color: var(--text-sec);">Change Password</h4>
-            <input type="password" id="oldPass" placeholder="Current Password">
-            <input type="password" id="newPass" placeholder="New Password">
-            <button class="btn-green" onclick="changePassword()">Update Password</button>
-            <hr style="margin: 20px 0; border: none; border-top: 1px solid var(--border);">
-            <h4 style="font-size: 13px; color: #d63031;">Delete Account</h4>
-            <input type="password" id="delPass" placeholder="Enter Password to Confirm">
-            <button class="btn-purple" onclick="deleteAccount()" style="background: #d63031;">Delete Account Permanently</button>
+<!-- REPORT MODAL -->
+<div id="report-modal">
+    <div class="report-box">
+        <h3>🚨 Report Post</h3>
+        <p style="font-size:13px; color:var(--muted); margin:10px 0;">Select reason for reporting:</p>
+        <div class="input-group">
+            <select id="report-reason">
+                <option value="Bullying">Bullying or Harassment</option>
+                <option value="Suicide">Suicide or Self-Injury</option>
+                <option value="Hate Speech">Hate Speech</option>
+                <option value="Spam">Spam or Fake News</option>
+                <option value="Adult Content">Explicit / Adult Content</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn btn-sm btn-red" onclick="submitReport()">Submit Report</button>
+            <button class="btn btn-sm" onclick="document.getElementById('report-modal').style.display='none'">Cancel</button>
         </div>
     </div>
+</div>
 
-    <div id="complaintModal" class="modal hidden">
-        <div class="modal-card">
-            <span class="close-modal" onclick="closeModal('complaintModal')">✕</span>
-            <h3>📩 Support & Complaint Box</h3>
-            <p style="font-size: 12px; color: var(--text-sec); margin: 6px 0 12px;">Verify with your account details to submit a support request.</p>
-            <input type="text" id="compUser" placeholder="Username">
-            <input type="password" id="compPass" placeholder="Password">
-            <textarea id="compText" placeholder="Describe your issue..." rows="3"></textarea>
-            <button class="btn-purple" onclick="sendComplaint()">Submit Request</button>
+<!-- SECURE ADMIN LOGIN MODAL -->
+<div id="admin-panel">
+    <div class="admin-box">
+        <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+            <h2 style="color:#e17055; margin:0;">🔐 Admin Control</h2>
+            <button onclick="document.getElementById('admin-panel').classList.remove('active')" style="background:#e17055; color:white; border:none; width:35px; height:35px; border-radius:50%; font-size:18px; cursor:pointer;">✕</button>
+        </div>
+        <div id="admin-login-form">
+            <div class="input-group"><input type="text" id="admin-user-input" placeholder="Admin Username"></div>
+            <div class="input-group"><input type="password" id="admin-pass-input" placeholder="Admin Password"></div>
+            <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
+        </div>
+        <div id="admin-content-area" style="display:none;">
+            <h3>📩 Support & Complaint Tickets</h3>
+            <div id="admin-complaints-list" style="margin-bottom:20px;"></div>
+            <div class="divider"></div>
+            <h3>🚨 Reports & Escalation Analyst</h3>
+            <div id="admin-reports-list" style="margin-bottom:20px;"></div>
+            <div class="divider"></div>
+            <h3>👤 Registered Users</h3>
+            <div id="admin-user-list"></div>
         </div>
     </div>
+</div>
 
-    <div id="adminModal" class="modal hidden">
-        <div class="modal-card" style="max-width: 600px;">
-            <span class="close-modal" onclick="closeModal('adminModal')">✕</span>
-            <h3>🔐 Admin Control Panel</h3>
-            <div id="adminAuth">
-                <input type="text" id="admUser" placeholder="Admin Username">
-                <input type="password" id="admPass" placeholder="Admin Password">
-                <button class="btn-purple" onclick="adminLogin()">Login</button>
+<script>
+const BACKEND_URL = "";
+let currentUser = JSON.parse(localStorage.getItem("searchbook_user")) || null;
+let logoClicks = 0;
+let activeChatFriend = "";
+let currentReportingPostId = null;
+let currentLang = localStorage.getItem("searchbook_lang") || "en";
+
+const translations = {
+    en: {
+        subtitle: "Connect with friends, share your moments",
+        loginBtn: "Log In",
+        forgot: "Forgot password?",
+        createAcc: "Create New Account",
+        regTitle: "Create Account",
+        signupBtn: "Sign Up",
+        haveAcc: "Already have account?",
+        passHint: "🔒 Password must be at least 8 chars with upper, lower, number & special char.",
+        forgotWarning: "⚠️ Important Warning: For recovery and security, you must keep 2FA (Google Authenticator) enabled.",
+        mProfile: "👤 My Profile",
+        mCommunity: "🌐 Community Chat",
+        mMessages: "💬 Private Messages",
+        mSettings: "⚙️ Settings & Security",
+        mLanguage: "🌍 Language",
+        mLogout: "⎋ Log Out"
+    },
+    bn: {
+        subtitle: "বন্ধুদের সাথে সংযোগ করুন, আপনার মুহূর্তগুলো শেয়ার করুন",
+        loginBtn: "লগ ইন",
+        forgot: "পাসওয়ার্ড ভুলে গেছেন?",
+        createAcc: "নতুন অ্যাকাউন্ট তৈরি করুন",
+        regTitle: "অ্যাকাউন্ট তৈরি করুন",
+        signupBtn: "সাইন আপ",
+        haveAcc: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
+        passHint: "🔒 পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে (বড়/ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল ক্যারেক্টারসহ)।",
+        forgotWarning: "⚠️ গুরুত্বপূর্ণ সতর্কবার্তা: অ্যাকাউন্ট সুরক্ষার জন্য অবশ্যই 2FA (Google Authenticator) চালু রাখুন।",
+        mProfile: "👤 আমার প্রোফাইল",
+        mCommunity: "🌐 কমিউনিটি চ্যাট",
+        mMessages: "💬 প্রাইভেট মেসেজ",
+        mSettings: "⚙️ সেটিংস ও সিকিউরিটি",
+        mLanguage: "🌍 ভাষা",
+        mLogout: "⎋ লগ আউট"
+    }
+};
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem("searchbook_lang", lang);
+    document.getElementById("auth-lang-select").value = lang;
+    document.getElementById("main-lang-select").value = lang;
+    
+    const t = translations[lang];
+    document.getElementById("txt-subtitle").textContent = t.subtitle;
+    document.getElementById("btn-login-text").textContent = t.loginBtn;
+    document.getElementById("txt-forgot").textContent = t.forgot;
+    document.getElementById("btn-create-acc").textContent = t.createAcc;
+    document.getElementById("txt-reg-title").textContent = t.regTitle;
+    document.getElementById("btn-signup-text").textContent = t.signupBtn;
+    document.getElementById("txt-have-acc").textContent = t.haveAcc;
+    document.getElementById("txt-pass-hint").innerHTML = t.passHint;
+    document.getElementById("txt-forgot-warning").innerHTML = t.forgotWarning;
+
+    document.getElementById("m-profile").textContent = t.mProfile;
+    document.getElementById("m-community").textContent = t.mCommunity;
+    document.getElementById("m-messages").textContent = t.mMessages;
+    document.getElementById("m-settings").textContent = t.mSettings;
+    document.getElementById("m-language").textContent = t.mLanguage;
+    document.getElementById("m-logout").textContent = t.mLogout;
+}
+
+function switchPanel(panelId) {
+    document.querySelectorAll(".auth-box .card").forEach(c => c.classList.remove("active"));
+    document.getElementById(panelId).classList.add("active");
+}
+
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+    }
+}
+
+function toggleMenuDropdown() { document.getElementById("menu-dropdown").classList.toggle("show"); }
+
+function handleLogoClick() {
+    logoClicks++;
+    if (logoClicks >= 5) {
+        logoClicks = 0;
+        document.getElementById("admin-login-form").style.display = "block";
+        document.getElementById("admin-content-area").style.display = "none";
+        document.getElementById("admin-panel").classList.add("active");
+    }
+    setTimeout(() => { logoClicks = 0; }, 3000);
+}
+
+async function verifyAdminLogin() {
+    const username = document.getElementById("admin-user-input").value.trim();
+    const password = document.getElementById("admin-pass-input").value;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/admin/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("admin-login-form").style.display = "none";
+            document.getElementById("admin-content-area").style.display = "block";
+            loadAdminComplaints();
+            loadAdminReports();
+            loadAdminUsers();
+        } else alert("❌ Invalid credentials");
+    } catch(e) { alert("❌ Error"); }
+}
+
+async function loadAdminComplaints() {
+    const res = await fetch(BACKEND_URL + "/api/admin/complaints");
+    const data = await res.json();
+    if (data.success) {
+        const list = document.getElementById("admin-complaints-list");
+        if (!data.complaints.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending complaints.</p>"; return; }
+        list.innerHTML = data.complaints.map(c => `
+            <div style="padding:10px; background:#fff9db; border-radius:8px; margin-bottom:8px; border:1px solid #ffe066;">
+                <b>User:</b> @${c.username} <br>
+                <b>Message:</b> ${c.message} <br>
+                <div style="margin-top:6px;">
+                    <button class="btn btn-sm btn-green" onclick="resolveComplaint('${c._id}')">Resolve / Mark Done</button>
+                </div>
             </div>
-            <div id="adminDash" class="hidden">
-                <h4 style="margin-top: 10px; font-size: 13px;">📩 Complaints Notification Box</h4>
-                <div id="complaintsBox" style="max-height: 100px; overflow-y: auto; font-size: 12px; margin-bottom: 10px;"></div>
-                <h4 style="font-size: 13px;">🚩 Reports & Escalation Analyst</h4>
-                <div id="reportsBox" style="max-height: 100px; overflow-y: auto; font-size: 12px; margin-bottom: 10px;"></div>
-                <h4 style="font-size: 13px;">👤 Users & Strike System</h4>
-                <div id="usersBox" style="max-height: 150px; overflow-y: auto; font-size: 12px;"></div>
+        `).join("");
+    }
+}
+
+async function resolveComplaint(id) {
+    await fetch(BACKEND_URL + "/api/admin/resolve-complaint", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ complaintId: id }) });
+    loadAdminComplaints();
+}
+
+async function loadAdminReports() {
+    const res = await fetch(BACKEND_URL + "/api/admin/reports");
+    const data = await res.json();
+    if (data.success) {
+        const list = document.getElementById("admin-reports-list");
+        if (!data.reports.length) { list.innerHTML = "<p style='font-size:12px; color:var(--muted);'>No pending reports.</p>"; return; }
+        list.innerHTML = data.reports.map(r => `
+            <div style="padding:10px; background:#fff0f0; border-radius:8px; margin-bottom:8px; border:1px solid #ffcccc;">
+                <b>Reported User:</b> ${r.author} <br>
+                <b>Reported By:</b> ${r.reporter} | <b>Reason:</b> ${r.reason} <br>
+                <div style="margin-top:6px;">
+                    <button class="btn btn-sm btn-red" onclick="applyStrike('${r.author}', '${r.reportId}')">⚠️ Issue Strike</button>
+                    <button class="btn btn-sm" onclick="dismissReport('${r.reportId}')">Dismiss</button>
+                </div>
             </div>
-        </div>
-    </div>
+        `).join("");
+    }
+}
 
-    <script>
-        const API = "";
-        let currentUser = localStorage.getItem('sb_user') || null;
-        let logoCount = 0;
+async function applyStrike(username, reportId) {
+    const res = await fetch(BACKEND_URL + "/api/admin/issue-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, reportId }) });
+    const data = await res.json();
+    if (data.success) {
+        alert("✅ Strike issued to " + username);
+        loadAdminReports();
+        loadAdminUsers();
+    }
+}
 
-        document.getElementById('logoBtn').onclick = () => {
-            logoCount++;
-            if (logoCount >= 5) { logoCount = 0; openModal('adminModal'); }
-        };
+async function dismissReport(reportId) {
+    await fetch(BACKEND_URL + "/api/admin/dismiss-report", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ reportId }) });
+    loadAdminReports();
+}
 
-        function openDropdown() {
-            const m = document.getElementById('dropdownMenu');
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        }
+async function loadAdminUsers() {
+    const res = await fetch(BACKEND_URL + "/api/admin/users");
+    const data = await res.json();
+    if (data.success) {
+        document.getElementById("admin-user-list").innerHTML = data.users.map(u => `
+            <div style="padding:10px; background:#f8f9fe; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                <span><b>${u.username}</b> (${u.email}) - Strikes: <b>${u.strikes || 0}</b> ${u.isPermanentBanned ? '<span style="color:red;">[PERM BANNED]</span>' : ''}</span>
+                <button class="btn btn-sm btn-green" onclick="resetUserStrike('${u.username}')">Reset Strikes</button>
+            </div>
+        `).join("");
+    }
+}
 
-        function openModal(id) { document.getElementById(id).classList.remove('hidden'); }
-        function closeModal(id) { document.getElementById(id).classList.add('hidden'); }
+async function resetUserStrike(username) {
+    await fetch(BACKEND_URL + "/api/admin/reset-strike", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username }) });
+    loadAdminUsers();
+}
 
-        function toggleAuth(isSignup) {
-            document.getElementById('loginBlock').classList.toggle('hidden', isSignup);
-            document.getElementById('signupBlock').classList.toggle('hidden', !isSignup);
-        }
+async function submitComplaintTicket() {
+    const username = document.getElementById("comp-username").value.trim();
+    const password = document.getElementById("comp-password").value;
+    const message = document.getElementById("comp-message").value.trim();
+    if (!username || !password || !message) { alert("Please fill all fields!"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/complaints", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, password, message }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Complaint submitted successfully to Admin!");
+            switchPanel("login-panel");
+        } else { alert("❌ " + (data.message || "Failed to submit complaint")); }
+    } catch(e) { alert("❌ Error connecting to server"); }
+}
 
-        async function login() {
-            const email = document.getElementById('loginEmail').value;
-            const password = document.getElementById('loginPassword').value;
-            const twoFACode = document.getElementById('twoFACode').value;
-            const res = await fetch(`${API}/api/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password, twoFACode })
-            });
-            const d = await res.json();
-            if (d.requires2FA) { document.getElementById('twoFACode').classList.remove('hidden'); return alert('Enter 2FA Code'); }
-            if (d.banned) return alert(d.message);
-            if (d.success) {
-                currentUser = d.username;
-                localStorage.setItem('sb_user', currentUser);
-                localStorage.setItem('sb_email', d.email);
-                init();
-            } else { alert(d.message); }
-        }
+async function deleteMyAccount() {
+    const password = document.getElementById("delete-acc-pass").value;
+    if (!password) { alert("Enter password to confirm account deletion!"); return; }
+    if (!confirm("Are you absolutely sure you want to delete your account? This action cannot be undone.")) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/delete", { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, password }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Account deleted successfully.");
+            handleLogout();
+        } else { alert("❌ " + (data.message || "Failed to delete account")); }
+    } catch(e) { alert("❌ Error connecting to server"); }
+}
 
-        async function signup() {
-            const username = document.getElementById('signupUser').value;
-            const email = document.getElementById('signupEmail').value;
-            const fullName = document.getElementById('signupName').value;
-            const password = document.getElementById('signupPass').value;
-            const res = await fetch(`${API}/api/signup`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, email, fullName, password })
-            });
-            const d = await res.json();
-            if (d.success) { alert('Account created!'); toggleAuth(false); }
-            else { alert(d.message); }
-        }
+function togglePostMenu(postId, event) {
+    event.stopPropagation();
+    document.querySelectorAll(".post-dropdown-menu").forEach(m => {
+        if (m.id !== `menu-${postId}`) m.classList.remove("show");
+    });
+    document.getElementById(`menu-${postId}`).classList.toggle("show");
+}
 
-        function logout() { localStorage.clear(); location.reload(); }
+window.addEventListener("click", () => {
+    document.querySelectorAll(".post-dropdown-menu").forEach(m => m.classList.remove("show"));
+});
 
-        function init() {
-            document.getElementById('authView').classList.add('hidden');
-            document.getElementById('appView').classList.remove('hidden');
-            document.getElementById('userAvatar').textContent = currentUser[0].toUpperCase();
+function copyPostText(content) {
+    navigator.clipboard.writeText(content);
+    alert("✅ Post text copied to clipboard!");
+}
+
+async function deletePost(postId) {
+    if (!confirm("Are you sure you want to delete this post?")) return;
+    try {
+        const res = await fetch(BACKEND_URL + `/api/posts/${postId}`, { method: "DELETE", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
+        const data = await res.json();
+        if (data.success) {
             loadFeed();
-        }
+        } else { alert("❌ " + (data.message || "Failed to delete")); }
+    } catch(e) { alert("❌ Error"); }
+}
 
-        async function createPost() {
-            const content = document.getElementById('postText').value;
-            const imageUrl = document.getElementById('postImg').value;
-            const res = await fetch(`${API}/api/posts`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, content, imageUrl })
-            });
-            const d = await res.json();
-            if (d.success) { document.getElementById('postText').value = ''; loadFeed(); }
-            else { alert(d.message); }
-        }
+async function handleLogin() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, password }) });
+        const data = await res.json();
+        if (data.requires2FA) {
+            window.tempLoginEmail = email;
+            switchPanel("twofa-login-panel");
+        } else if (data.banned) {
+            alert("❌ " + data.message);
+        } else if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
+            bootApp();
+        } else { alert("❌ " + (data.message || "Login failed")); }
+    } catch(e) { alert("❌ Error connecting to server"); }
+}
 
-        async function loadFeed() {
-            const res = await fetch(`${API}/api/feed/${currentUser}`);
-            const posts = await res.json();
-            renderPosts(posts, document.getElementById('feedPosts'));
-        }
+async function submit2FALogin() {
+    const twoFACode = document.getElementById("login-2fa-code").value.trim();
+    const email = window.tempLoginEmail;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/login", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email, twoFACode }) });
+        const data = await res.json();
+        if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
+            bootApp();
+        } else { alert("❌ Invalid 2FA code"); }
+    } catch(e) { alert("❌ Error"); }
+}
 
-        function renderPosts(posts, container) {
-            container.innerHTML = posts.map(p => `
-                <div class="card">
-                    <div style="display: flex; gap: 10px; align-items: center; margin-bottom: 10px;">
-                        <div class="post-avatar">${p.username[0].toUpperCase()}</div>
+async function handleSignup() {
+    const fullName = document.getElementById("reg-name").value.trim();
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/signup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username, email, fullName, password }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Account created successfully! Please log in.");
+            switchPanel("login-panel");
+        } else { alert("❌ " + (data.message || "Signup failed")); }
+    } catch(e) { alert("❌ Error"); }
+}
+
+function handleLogout() {
+    localStorage.removeItem("searchbook_user");
+    location.reload();
+}
+
+function bootApp() {
+    document.getElementById("auth-app").style.display = "none";
+    document.getElementById("main-app").classList.add("active");
+    document.getElementById("creator-avatar").textContent = currentUser.username[0].toUpperCase();
+    loadFeed();
+    loadActiveUsers();
+    loadAcceptedFriendsDropdown();
+    setInterval(pingActiveUser, 15000);
+    setInterval(loadFeed, 10000);
+}
+
+function switchMainView(viewId) {
+    document.querySelectorAll(".main-view").forEach(v => v.classList.remove("active"));
+    document.getElementById(viewId).classList.add("active");
+    if (viewId === 'community-view') loadCommunityMessages();
+}
+
+async function createPost() {
+    const content = document.getElementById("post-content").value.trim();
+    const fileInput = document.getElementById("post-image-file");
+    let imageUrl = "";
+    if (fileInput.files && fileInput.files[0]) {
+        imageUrl = await toBase64(fileInput.files[0]);
+    }
+    if (!content && !imageUrl) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/posts", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, content, imageUrl }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("post-content").value = "";
+            fileInput.value = "";
+            loadFeed();
+        } else { alert("❌ " + (data.message || "Cannot post. Account may be muted/banned.")); }
+    } catch(e) { alert("❌ Error"); }
+}
+
+async function loadFeed() {
+    if (!currentUser) return;
+    try {
+        const res = await fetch(BACKEND_URL + `/api/feed/${currentUser.username}`);
+        const posts = await res.json();
+        const list = document.getElementById("posts-list");
+        if (!posts.length) { list.innerHTML = "<p style='text-align:center; color:var(--muted);'>No posts yet.</p>"; return; }
+        list.innerHTML = posts.map(p => `
+            <div class="post-item">
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <div class="avatar">${p.username[0].toUpperCase()}</div>
                         <div>
-                            <b>${p.username}</b><br>
-                            <span style="font-size: 11px; color: var(--text-sec);">${new Date(p.createdAt).toLocaleTimeString()}</span>
+                            <b>${p.username}</b>
+                            <div style="font-size:11px; color:var(--muted);">${new Date(p.createdAt).toLocaleTimeString()}</div>
                         </div>
                     </div>
-                    ${p.username === currentUser ? `
-                        <div class="post-dots" onclick="togglePostMenu('${p._id}')">⋮</div>
-                        <div class="post-menu" id="pm-${p._id}">
-                            <div onclick="copyText('${encodeURIComponent(p.content)}')">Copy Text</div>
-                            <div onclick="delPost('${p._id}')" style="color:red;">Delete Post</div>
+                    <div>
+                        <button class="post-options-btn" onclick="togglePostMenu('${p._id}', event)">⋮</button>
+                        <div class="post-dropdown-menu" id="menu-${p._id}">
+                            <div class="post-dropdown-item" onclick="copyPostText('${encodeURIComponent(p.content || '')}')">📋 Copy Text</div>
+                            ${p.username === currentUser.username ? `<div class="post-dropdown-item" style="color:var(--danger);" onclick="deletePost('${p._id}')">🗑️ Delete Post</div>` : ''}
                         </div>
-                    ` : ''}
-                    <p style="margin-top: 5px;">${p.content || ''}</p>
-                    ${p.imageUrl ? `<img src="${p.imageUrl}" style="max-width:100%; border-radius:8px; margin-top:8px;">` : ''}
-                    <div class="reactions">
-                        <span onclick="react('${p._id}','like')">🔥 ${p.likes?.length || 0}</span>
-                        <span onclick="react('${p._id}','love')">❤️ ${p.loves?.length || 0}</span>
-                        <span onclick="report('${p._id}')">🚩 Report</span>
                     </div>
                 </div>
-            `).join('');
-        }
-
-        function togglePostMenu(id) {
-            const m = document.getElementById(`pm-${id}`);
-            m.style.display = m.style.display === 'block' ? 'none' : 'block';
-        }
-
-        function copyText(t) { navigator.clipboard.writeText(decodeURIComponent(t)); alert('Copied text!'); }
-
-        async function delPost(id) {
-            const res = await fetch(`${API}/api/posts/${id}`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser })
-            });
-            if ((await res.json()).success) loadFeed();
-        }
-
-        async function react(id, type) {
-            await fetch(`${API}/api/posts/${id}/react`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username: currentUser, type })
-            });
-            loadFeed();
-        }
-
-        async function report(id) {
-            const reason = prompt('Reason for report:');
-            if (reason) {
-                await fetch(`${API}/api/report-post`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ postId: id, reporter: currentUser, reason })
-                });
-                alert('Report sent');
-            }
-        }
-
-        async function openProfile() {
-            const res = await fetch(`${API}/api/user-posts/${currentUser}`);
-            const posts = await res.json();
-            document.getElementById('mainArea').innerHTML = `
-                <div class="card" style="text-align:center;">
-                    <div class="post-avatar" style="width:50px; height:50px; margin:0 auto 10px; font-size:20px;">${currentUser[0].toUpperCase()}</div>
-                    <h2>${currentUser}</h2>
-                    <p style="font-size:12px; color:var(--text-sec);">This is your profile</p>
-                    <button class="btn-purple" onclick="location.reload()" style="margin-top:10px; width:auto;">Back to Feed</button>
+                ${p.content ? `<p style="margin-bottom:10px; font-size:15px; line-height:1.5;">${p.content}</p>` : ''}
+                ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; border-radius:12px; margin-top:8px; max-height:400px; object-fit:cover;">` : ''}
+                <div class="post-actions">
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'like')">🔥 ${p.likes?.length || 0}</button>
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'love')">❤️ ${p.loves?.length || 0}</button>
+                    <button class="action-btn" onclick="openReportModal('${p._id}')">🚨 Report</button>
                 </div>
-                <div id="profPosts"></div>
-            `;
-            renderPosts(posts, document.getElementById('profPosts'));
+            </div>
+        `).join("");
+    } catch(e) {}
+}
+
+async function reactPost(postId, type) {
+    await fetch(BACKEND_URL + `/api/posts/${postId}/react`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, type }) });
+    loadFeed();
+}
+
+function openReportModal(postId) {
+    currentReportingPostId = postId;
+    document.getElementById("report-modal").style.display = "flex";
+}
+
+async function submitReport() {
+    const reason = document.getElementById("report-reason").value;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/report-post", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ postId: currentReportingPostId, reporter: currentUser.username, reason }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Report submitted to Admin Analyst.");
+            document.getElementById("report-modal").style.display = "none";
         }
+    } catch(e) {}
+}
 
-        function showFeed() { location.reload(); }
-        function openSettings() { openModal('settingsModal'); }
-        function openComplaint() { openModal('complaintModal'); }
+async function sendCommunityMessage() {
+    const text = document.getElementById("community-msg-text").value.trim();
+    const fileInput = document.getElementById("community-img-file");
+    let imageUrl = "";
+    if (fileInput.files && fileInput.files[0]) {
+        imageUrl = await toBase64(fileInput.files[0]);
+    }
+    if (!text && !imageUrl) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/community-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username, text, imageUrl }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("community-msg-text").value = "";
+            fileInput.value = "";
+            loadCommunityMessages();
+        } else { alert("❌ " + (data.message || "Muted or Banned")); }
+    } catch(e) {}
+}
 
-        async function changePassword() {
-            const oldPassword = document.getElementById('oldPass').value;
-            const newPassword = document.getElementById('newPass').value;
-            const email = localStorage.getItem('sb_email');
-            const res = await fetch(`${API}/api/user/change-password`, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, oldPassword, newPassword })
-            });
-            if ((await res.json()).success) { alert('Password updated'); closeModal('settingsModal'); }
+async function loadCommunityMessages() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/community-messages");
+        const data = await res.json();
+        if (data.success) {
+            const box = document.getElementById("community-chat-box");
+            box.innerHTML = data.messages.map(m => `
+                <div style="margin-bottom:8px; font-size:13px; background:white; padding:8px 12px; border-radius:8px;">
+                    <b>@${m.username}:</b> ${m.text || ''}
+                    ${m.imageUrl ? `<br><img src="${m.imageUrl}" style="max-width:150px; border-radius:6px; margin-top:4px;">` : ''}
+                </div>
+            `).join("");
+            box.scrollTop = box.scrollHeight;
         }
+    } catch(e) {}
+}
 
-        async function deleteAccount() {
-            const password = document.getElementById('delPass').value;
-            const email = localStorage.getItem('sb_email');
-            const res = await fetch(`${API}/api/user/delete`, {
-                method: 'DELETE',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ email, password })
-            });
-            if ((await res.json()).success) { alert('Account deleted'); logout(); }
+async function loadAcceptedFriendsDropdown() {
+    try {
+        const res = await fetch(BACKEND_URL + `/api/friends/${currentUser.username}`);
+        const data = await res.json();
+        if (data.success) {
+            const dropdown = document.getElementById("friend-select-dropdown");
+            dropdown.innerHTML = `<option value="">-- Select an accepted friend --</option>` + data.friends.map(f => `<option value="${f}">${f}</option>`).join("");
         }
+    } catch(e) {}
+}
 
-        async function sendComplaint() {
-            const username = document.getElementById('compUser').value;
-            const password = document.getElementById('compPass').value;
-            const message = document.getElementById('compText').value;
-            const res = await fetch(`${API}/api/complaints`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password, message })
-            });
-            if ((await res.json()).success) { alert('Complaint submitted'); closeModal('complaintModal'); }
+async function loadPrivateChat(friendName) {
+    if (!friendName) return;
+    activeChatFriend = friendName;
+    try {
+        const res = await fetch(BACKEND_URL + `/api/private-messages?user1=${currentUser.username}&user2=${friendName}`);
+        const data = await res.json();
+        if (data.success) {
+            const box = document.getElementById("private-chat-box");
+            box.innerHTML = data.messages.map(m => `
+                <div style="margin-bottom:8px; font-size:13px; background:${m.sender === currentUser.username ? '#dcf8c6' : 'white'}; padding:8px 12px; border-radius:8px; text-align:${m.sender === currentUser.username ? 'right' : 'left'}">
+                    <b>@${m.sender}:</b> ${m.text}
+                </div>
+            `).join("");
+            box.scrollTop = box.scrollHeight;
         }
+    } catch(e) {}
+}
 
-        async function adminLogin() {
-            const username = document.getElementById('admUser').value;
-            const password = document.getElementById('admPass').value;
-            const res = await fetch(`${API}/api/admin/login`, {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ username, password })
-            });
-            if ((await res.json()).success) {
-                document.getElementById('adminAuth').classList.add('hidden');
-                document.getElementById('adminDash').classList.remove('hidden');
-            }
+async function sendPrivateMessage() {
+    const text = document.getElementById("private-msg-input").value.trim();
+    if (!text || !activeChatFriend) return;
+    try {
+        const res = await fetch(BACKEND_URL + "/api/private-messages", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ sender: currentUser.username, receiver: activeChatFriend, text }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("private-msg-input").value = "";
+            loadPrivateChat(activeChatFriend);
+        } else { alert("❌ " + (data.message || "Failed to send")); }
+    } catch(e) {}
+}
+
+async function pingActive() {
+    if (!currentUser) return;
+    await fetch(BACKEND_URL + "/api/ping", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ username: currentUser.username }) });
+    loadActiveUsers();
+}
+
+async function loadActiveUsers() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/active-users");
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("active-users-list").innerHTML = data.users.map(u => `
+                <div class="active-user-item">
+                    <span class="online-dot"></span>
+                    <span>${u}</span>
+                </div>
+            `).join("");
         }
+    } catch(e) {}
+}
 
-        window.onload = () => { if (currentUser) init(); };
-    </script>
+async function openMyProfile() {
+    switchMainView('profile-view');
+    document.getElementById("view-profile-name").textContent = "@" + currentUser.username;
+    document.getElementById("view-profile-email").textContent = currentUser.email;
+    document.getElementById("view-profile-avatar").textContent = currentUser.username[0].toUpperCase();
+    try {
+        const res = await fetch(BACKEND_URL + `/api/user-posts/${currentUser.username}`);
+        const posts = await res.json();
+        const list = document.getElementById("user-posts-list");
+        if (!posts.length) { list.innerHTML = "<p style='color:var(--muted); font-size:13px;'>No posts found.</p>"; return; }
+        list.innerHTML = posts.map(p => `
+            <div class="post-item">
+                <p>${p.content || ''}</p>
+                ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; border-radius:8px; margin-top:8px;">` : ''}
+                <div style="margin-top:8px;"><button class="btn btn-sm btn-red" onclick="deletePost('${p._id}')">Delete</button></div>
+            </div>
+        `).join("");
+    } catch(e) {}
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById("old-pass").value;
+    const newPassword = document.getElementById("new-pass").value;
+    if (!oldPassword || !newPassword) { alert("Fill fields!"); return; }
+    try {
+        const res = await fetch(BACKEND_URL + "/api/user/change-password", { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ Password updated successfully!");
+            document.getElementById("old-pass").value = "";
+            document.getElementById("new-pass").value = "";
+        } else { alert("❌ " + (data.message || "Failed")); }
+    } catch(e) {}
+}
+
+async function setup2FA() {
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/setup", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email }) });
+        const data = await res.json();
+        if (data.success) {
+            document.getElementById("twofa-qr").src = data.qrCode;
+            document.getElementById("twofa-qr-box").style.display = "block";
+            document.getElementById("twofa-btn").style.display = "none";
+        }
+    } catch(e) {}
+}
+
+async function verifyAndEnable2FA() {
+    const code = document.getElementById("twofa-code").value.trim();
+    try {
+        const res = await fetch(BACKEND_URL + "/api/2fa/verify", { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ email: currentUser.email, code }) });
+        const data = await res.json();
+        if (data.success) {
+            alert("✅ 2FA Enabled Successfully!");
+            document.getElementById("twofa-status").textContent = "Status: Enabled";
+            document.getElementById("twofa-qr-box").style.display = "none";
+        } else { alert("❌ Invalid code"); }
+    } catch(e) {}
+}
+
+function toBase64(file) {
+    return new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = () => resolve(reader.result);
+        reader.onerror = error => reject(error);
+    });
+}
+
+window.onload = () => {
+    if (currentUser) bootApp();
+    changeLanguage(currentLang);
+};
+</script>
 </body>
 </html>
