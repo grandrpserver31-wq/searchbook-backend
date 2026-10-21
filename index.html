@@ -71,7 +71,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 .post-creator-avatar { width: 45px; height: 45px; border-radius: 50%; background: var(--primary); color: white; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 18px; cursor: pointer; flex-shrink: 0; }
 .post-creator-inputs { flex: 1; }
 
-.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; text-decoration: none; color: var(--text); }
+.action-btn { background: rgba(240,242,245,0.8); border: none; padding: 8px 12px; border-radius: 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 5px; color: var(--text); }
 .action-btn:hover { background: rgba(108,92,231,0.15); color: var(--primary); }
 
 .active-user-item { display: flex; align-items: center; gap: 10px; padding: 8px 10px; border-radius: 8px; margin-bottom: 6px; background: rgba(240,242,245,0.6); font-size: 13px; font-weight: 600; }
@@ -85,17 +85,6 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 #admin-panel.active { display: flex; }
 .admin-box { background: var(--white); border-radius: 24px; padding: 25px; width: 100%; max-width: 850px; max-height: 90vh; overflow-y: auto; }
 
-.notif-box { background: #ffffff; border: 1px solid var(--border); padding: 15px; border-radius: 12px; margin-bottom: 10px; box-shadow: var(--shadow-sm); }
-.notif-box.complaint { border-left: 4px solid var(--primary); }
-
-.user-row { display: flex; justify-content: space-between; align-items: center; background: #f8f9fa; padding: 12px; border-radius: 10px; margin-bottom: 8px; font-size: 13px; flex-wrap: wrap; gap: 8px; }
-.strike-badge { padding: 4px 8px; border-radius: 6px; font-weight: 700; font-size: 11px; }
-.s0 { background: #e3f2fd; color: #1976d2; }
-.s1 { background: #fff3e0; color: #f57c00; }
-.s2 { background: #fbe9e7; color: #d84315; }
-.s3 { background: #ffebee; color: #c62828; }
-.s4 { background: #212121; color: #ffffff; }
-
 #report-modal { position: fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.7); z-index:2500; display:none; justify-content:center; align-items:center; }
 .report-box { background:var(--white); padding:25px; border-radius:16px; width:90%; max-width:400px; }
 </style>
@@ -104,7 +93,7 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
 <div id="loading-overlay">
     <div class="spinner"></div>
-    <div id="loading-text" style="font-weight:700; font-size:16px;">Loading...</div>
+    <div id="loading-text" style="font-weight:700; font-size:16px;">Processing...</div>
 </div>
 
 <div id="auth-app">
@@ -151,31 +140,41 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
             </div>
             <div style="background: rgba(0,184,148,0.1); border: 1px dashed var(--accent); padding: 10px; border-radius: 8px; margin-bottom: 15px; text-align: center; font-size: 13px;">
                 🔑 Secure Key: <span id="reg-dynamic-key" style="font-weight: 700; color: var(--accent);">Generating...</span><br>
-                <span style="font-size: 11px; color: var(--muted);">Expires in <span id="key-countdown">30</span>s</span>
+                <span style="font-size: 11px; color: var(--muted);">Expires in <span id="key-countdown">30</span>s (Auto-refresh)</span>
             </div>
             <button class="btn btn-green" id="btn-signup-text" onclick="handleSignup()">Sign Up</button>
             <span class="link" id="txt-have-acc" onclick="switchPanel('login-panel')">Already have account?</span>
         </div>
 
         <div id="forgot-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset & 2FA</h2>
-            <div class="alert-warning-box" id="txt-forgot-warning">⚠️ Enter your registered email to view your recovery QR code instantly.</div>
+            <h2 style="text-align:center; margin-bottom:15px;">🔑 Password Reset & 2FA Setup</h2>
+            <div class="alert-warning-box" id="txt-forgot-warning">
+                ⚠️ Enter your email to receive recovery instructions and Google Authenticator QR setup options.
+            </div>
             <div class="input-group"><input type="email" id="reset-email" placeholder="Enter registered email"></div>
-            <button class="btn" onclick="sendPasswordResetQR()">Generate 2FA QR Code</button>
+            <button class="btn" onclick="sendPasswordResetQR()">Send Reset & QR Code</button>
             <div id="forgot-qr-container" style="text-align:center; margin-top:15px; display:none;">
                 <img id="forgot-qr-img" style="max-width:160px; border-radius:8px; margin-bottom:10px;">
-                <p style="font-size:12px; color:var(--accent); font-weight:600;">Scan with Google Authenticator.</p>
+                <p style="font-size:12px; color:var(--accent); font-weight:600;">Scan QR Code in Google Authenticator to restore access.</p>
             </div>
             <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
         </div>
 
         <div id="complaint-panel" class="card">
-            <h2 style="text-align:center; margin-bottom:15px;">📩 Complaint & Support</h2>
-            <div class="input-group"><input type="email" id="comp-email" placeholder="Registered Email"></div>
-            <div class="input-group"><input type="password" id="comp-password" placeholder="Password"></div>
+            <h2 style="text-align:center; margin-bottom:15px;">📩 Complaint & Support Box</h2>
+            <p style="font-size:12px; color:var(--muted); margin-bottom:12px; text-align:center;">Enter your account details to securely send a complaint or support ticket.</p>
+            <div class="input-group"><input type="email" id="comp-email" placeholder="Your Registered Email"></div>
+            <div class="input-group"><input type="password" id="comp-password" placeholder="Your Password"></div>
             <div class="input-group"><textarea id="comp-message" placeholder="Describe your issue..." rows="3"></textarea></div>
-            <button class="btn" onclick="submitComplaintTicket()">Submit Ticket</button>
+            <button class="btn" onclick="submitComplaintTicket()">Submit Complaint</button>
             <span class="link" onclick="switchPanel('login-panel')">← Back to Login</span>
+        </div>
+
+        <div id="twofa-login-panel" class="card">
+            <h2 style="text-align:center; margin-bottom:15px;">🔐 2FA Code Required</h2>
+            <div class="input-group"><input type="text" id="login-2fa-code" placeholder="000000" maxlength="6" style="text-align:center; font-size:24px; font-weight:700;"></div>
+            <button class="btn" onclick="submit2FALogin()">Submit</button>
+            <span class="link" onclick="switchPanel('login-panel')">← Back</span>
         </div>
 
         <div class="developer-tag">Developed by Riyad Ahmed</div>
@@ -200,6 +199,9 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
                 <div class="menu-item" onclick="switchMainView('feed-view'); toggleMenuDropdown();">🏠 Home Feed</div>
                 <div class="menu-item" onclick="switchMainView('reels-view'); toggleMenuDropdown();">🎬 Reels Feed</div>
                 <div class="menu-item" onclick="switchMainView('community-view'); toggleMenuDropdown();" id="m-community">🌐 Community Chat</div>
+                <div class="menu-item" onclick="switchMainView('messages-view'); toggleMenuDropdown();" id="m-messages">💬 Private Messages</div>
+                <div class="menu-item" onclick="switchMainView('settings-view'); toggleMenuDropdown();" id="m-settings">⚙️ Settings & Security</div>
+                <div class="menu-item" onclick="switchMainView('language-view'); toggleMenuDropdown();" id="m-language">🌍 Language</div>
                 <div class="menu-item logout" onclick="handleLogout()" id="m-logout">⎋ Log Out</div>
             </div>
         </div>
@@ -207,70 +209,176 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
 
     <div class="layout">
         <div class="main-content">
+            <!-- NEWSFEED -->
             <div id="feed-view" class="main-view active">
-                <div id="mute-warning-banner" style="display:none; background:#ffebee; color:#c62828; padding:12px; border-radius:12px; margin-bottom:15px; font-size:13px; font-weight:700;"></div>
-                <div class="post-box" id="post-creation-box">
+                <div class="post-box">
                     <div class="post-creator-container">
                         <div class="post-creator-avatar" id="creator-avatar" onclick="openMyProfile()">U</div>
                         <div class="post-creator-inputs">
-                            <textarea id="post-content" placeholder="What's on your mind?"></textarea>
+                            <textarea id="post-content" placeholder="What's on your mind? (Supports any size up to 2GB media)"></textarea>
                             <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px; flex-wrap: wrap; gap: 8px;">
                                 <label style="cursor: pointer; font-size: 13px; color: var(--primary); font-weight: 600;">
-                                    📷 Upload Media <input type="file" id="post-media-file" accept="image/*,video/*" style="display: none;">
+                                    📷 Upload Photo/Video <input type="file" id="post-media-file" accept="image/*,video/*" style="display: none;">
                                 </label>
-                                <button class="btn btn-sm" id="btn-share-post" onclick="createPost()">Share Post</button>
+                                <button class="btn btn-sm" onclick="createPost()">Share Post</button>
                             </div>
                         </div>
                     </div>
                 </div>
-                <h3>🔥 Smart AI Algorithm Newsfeed</h3>
+                <h3 style="margin-bottom:15px;">🔥 Smart AI Algorithm Newsfeed</h3>
                 <div id="posts-list"><p style="text-align:center; color:var(--muted);">Loading feed...</p></div>
             </div>
 
+            <!-- REELS VIEW -->
             <div id="reels-view" class="main-view">
                 <div class="card-box" style="text-align:center;">
                     <h2>🎬 Searchbook Reels</h2>
-                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Watch and share reels!</p>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Upload and watch short video reels with automated view counts & reactions!</p>
                     <div style="margin-bottom:15px; background: rgba(108,92,231,0.05); padding: 15px; border-radius: 12px;">
                         <input type="text" id="reel-caption" placeholder="Reel caption..." style="margin-bottom:10px; padding:10px; width:100%; border-radius:8px; border:1px solid var(--border);">
                         <input type="file" id="reel-video-file" accept="video/*" style="margin-bottom:10px; font-size:13px;">
-                        <button class="btn btn-sm btn-green" id="btn-upload-reel" onclick="uploadReelVideo()">Upload Reel</button>
+                        <button class="btn btn-sm btn-green" onclick="uploadReelVideo()">Upload Reel</button>
                     </div>
                 </div>
                 <div id="reels-list"><p style="text-align:center; color:var(--muted);">Loading reels...</p></div>
             </div>
 
+            <!-- COMMUNITY CHAT VIEW -->
             <div id="community-view" class="main-view">
                 <div class="card-box">
                     <h2>🌐 Global Community Chat</h2>
-                    <div style="height:320px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="community-chat-box"></div>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">Open chat room for everyone to chat and share pictures/videos.</p>
+                    <div style="height:320px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="community-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Loading community messages...</p>
+                    </div>
                     <div style="display:flex; gap:10px; flex-direction:column;">
                         <input type="text" id="community-msg-text" placeholder="Type a public message..." style="padding:12px; border-radius:10px; border:1px solid var(--border);">
-                        <button class="btn btn-sm" id="btn-send-comm" onclick="sendCommunityMessage()">Send</button>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <input type="file" id="community-img-file" accept="image/*,video/*" style="font-size:12px;">
+                            <button class="btn btn-sm" onclick="sendCommunityMessage()">Send to Community</button>
+                        </div>
                     </div>
                 </div>
             </div>
 
+            <!-- USER / MY PROFILE VIEW -->
             <div id="profile-view" class="main-view">
                 <div class="card-box">
                     <div style="text-align:center;">
                         <div class="avatar" style="width:80px; height:80px; font-size:32px; margin:0 auto;" id="view-profile-avatar">U</div>
                         <h3 id="view-profile-name" style="margin-top:10px;">User Name</h3>
-                        <div id="user-status-tag" style="margin-top:8px;"></div>
+                        <p id="view-profile-email" style="color:var(--muted); font-size:14px;"></p>
+                        <div id="profile-action-area" style="margin-top:15px;"></div>
                     </div>
                 </div>
                 <h3 style="margin-bottom:12px;">User Posts</h3>
                 <div id="user-posts-list"></div>
             </div>
+
+            <!-- PRIVATE MESSAGES VIEW -->
+            <div id="messages-view" class="main-view">
+                <div class="card-box">
+                    <h2>💬 Secure 1-to-1 Private Chat</h2>
+                    <p style="font-size:13px; color:var(--muted); margin-bottom:15px;">You can only chat with accepted friends securely.</p>
+                    <div class="input-group">
+                        <select id="friend-select-dropdown" onchange="loadPrivateChat(this.value)" style="padding:10px; border-radius:8px; width:100%;">
+                            <option value="">-- Select an accepted friend --</option>
+                        </select>
+                    </div>
+                    <div style="height:250px; overflow-y:auto; background:rgba(240,242,245,0.6); border-radius:12px; padding:15px; margin-bottom:15px;" id="private-chat-box">
+                        <p style="text-align:center; color:var(--muted);">Select a friend to view secure private conversation</p>
+                    </div>
+                    <div style="display:flex; gap:10px;">
+                        <input type="text" id="private-msg-input" placeholder="Type secure message..." style="flex:1; padding:12px; border-radius:10px; border:1px solid var(--border);">
+                        <button class="btn btn-sm" onclick="sendPrivateMessage()">Send</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- SETTINGS VIEW -->
+            <div id="settings-view" class="main-view">
+                <div class="card-box">
+                    <h2>⚙️ Settings & Security</h2>
+                    <div class="divider"></div>
+                    <h3>🔐 Change Password</h3>
+                    <div class="input-group" style="margin-top:10px;">
+                        <div class="password-wrapper">
+                            <input type="password" id="old-pass" placeholder="Current Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('old-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <div class="input-group">
+                        <div class="password-wrapper">
+                            <input type="password" id="new-pass" placeholder="New Password">
+                            <button type="button" class="password-toggle" onclick="togglePassword('new-pass', this)">👁️</button>
+                        </div>
+                    </div>
+                    <button class="btn btn-green" onclick="changePassword()">Update Password</button>
+
+                    <div class="divider"></div>
+                    <h3>🔒 Google Authenticator (2FA)</h3>
+                    <div id="twofa-status" style="margin:10px 0; font-weight:600;">Status: Disabled</div>
+                    <button class="btn" id="twofa-btn" onclick="setup2FA()">Setup 2FA</button>
+                    <div id="twofa-qr-box" style="text-align:center; margin-top:15px; display:none;">
+                        <img id="twofa-qr" style="max-width:180px; border-radius:8px;">
+                        <div class="input-group" style="margin-top:10px;"><input type="text" id="twofa-code" placeholder="Enter 6-digit code" maxlength="6" style="text-align:center; font-size:20px; letter-spacing:4px;"></div>
+                        <button class="btn btn-green" onclick="verifyAndEnable2FA()">Turn On 2FA</button>
+                    </div>
+
+                    <div class="divider"></div>
+                    <h3 style="color:var(--danger);">⚠️ Danger Zone: Delete Account</h3>
+                    <p style="font-size:13px; color:var(--muted); margin:8px 0;">Once you delete your account, there is no going back. Please be certain.</p>
+                    <div class="input-group"><input type="password" id="delete-acc-pass" placeholder="Enter password to confirm"></div>
+                    <button class="btn btn-red" onclick="deleteMyAccount()">Delete Account Permanently</button>
+                </div>
+            </div>
+
+            <!-- LANGUAGE SWITCHER VIEW -->
+            <div id="language-view" class="main-view">
+                <div class="card-box">
+                    <h2>🌍 Language Settings</h2>
+                    <div class="input-group" style="margin-top:15px;">
+                        <select id="main-lang-select" onchange="changeLanguage(this.value)">
+                            <option value="en">English (US)</option>
+                            <option value="bn">বাংলা (Bangla)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
         </div>
 
+        <!-- RIGHT SIDEBAR: ACTIVE USERS -->
         <div class="sidebar-right">
             <h4 style="margin-bottom:12px; font-size:15px; display:flex; align-items:center; gap:6px;">🟢 Active Friends</h4>
-            <div id="active-users-list"><p style="font-size:12px; color:var(--muted);">Loading active users...</p></div>
+            <div id="active-users-list">
+                <p style="font-size:12px; color:var(--muted);">Loading active users...</p>
+            </div>
         </div>
     </div>
 </div>
 
+<!-- REPORT MODAL -->
+<div id="report-modal">
+    <div class="report-box">
+        <h3>🚨 Report Post</h3>
+        <p style="font-size:13px; color:var(--muted); margin:10px 0;">Select reason for reporting:</p>
+        <div class="input-group">
+            <select id="report-reason">
+                <option value="Bullying">Bullying or Harassment</option>
+                <option value="Suicide">Suicide or Self-Injury</option>
+                <option value="Hate Speech">Hate Speech</option>
+                <option value="Spam">Spam or Fake News</option>
+                <option value="Adult Content">Explicit / Adult Content</option>
+            </select>
+        </div>
+        <div style="display:flex; gap:10px; justify-content:flex-end;">
+            <button class="btn btn-sm btn-red" onclick="submitReport()">Submit Report</button>
+            <button class="btn btn-sm" onclick="document.getElementById('report-modal').style.display='none'">Cancel</button>
+        </div>
+    </div>
+</div>
+
+<!-- SECURE ADMIN LOGIN MODAL -->
 <div id="admin-panel">
     <div class="admin-box">
         <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
@@ -280,30 +388,144 @@ body { background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%); color: var
         <div id="admin-login-form">
             <div class="input-group"><input type="text" id="admin-user-input" placeholder="Admin Username"></div>
             <div class="input-group"><input type="password" id="admin-pass-input" placeholder="Admin Password"></div>
-            <button class="btn btn-red" onclick="verifyAdminLogin()">Fast Admin Login</button>
+            <button class="btn btn-red" onclick="verifyAdminLogin()">Login as Admin</button>
         </div>
         <div id="admin-content-area" style="display:none;">
-            <h3>🔔 Separate Notifications Box</h3>
-            <div id="admin-notif-container" style="margin-bottom:20px; max-height: 200px; overflow-y: auto;"></div>
+            <h3>📩 Notification & Support Complaint Box</h3>
+            <div id="admin-complaints-list" style="margin-bottom:20px; max-height: 200px; overflow-y: auto;"></div>
             
             <div class="divider"></div>
-            <h3>👤 Registered Users Management & Moderation</h3>
-            <div id="admin-registered-users-list"></div>
+            <h3>🚨 Reports Analyst Panel</h3>
+            <div id="admin-reports-list" style="margin-bottom:20px; max-height: 200px; overflow-y: auto;"></div>
+            
+            <div class="divider"></div>
+            <h3>👤 Registered Users Management</h3>
+            <div id="admin-user-list"></div>
         </div>
     </div>
 </div>
 
 <script>
+const BACKEND_URL = "https://searchbook-backend.onrender.com";
 let currentUser = JSON.parse(localStorage.getItem("searchbook_user")) || null;
 let logoClicks = 0;
-let userStrikesDB = JSON.parse(localStorage.getItem("searchbook_strikes_db")) || {};
+let activeChatFriend = "";
+let currentReportingPostId = null;
+let currentLang = localStorage.getItem("searchbook_lang") || "en";
+let registrationKeyTimer = null;
 
-function showLoading(text) {
+function initRegistrationKey() {
+    const keySpan = document.getElementById("reg-dynamic-key");
+    const countSpan = document.getElementById("key-countdown");
+    if (!keySpan || !countSpan) return;
+
+    let timeLeft = 30;
+    function generateNewKey() {
+        const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789@#$";
+        let k = "";
+        for (let i = 0; i < 12; i++) k += chars.charAt(Math.floor(Math.random() * chars.length));
+        keySpan.textContent = k;
+    }
+
+    generateNewKey();
+    if (registrationKeyTimer) clearInterval(registrationKeyTimer);
+    registrationKeyTimer = setInterval(() => {
+        timeLeft--;
+        countSpan.textContent = timeLeft;
+        if (timeLeft <= 0) {
+            timeLeft = 30;
+            generateNewKey();
+        }
+    }, 1000);
+}
+
+function showLoading(text = "Processing...") {
     document.getElementById("loading-text").textContent = text;
     document.getElementById("loading-overlay").style.display = "flex";
 }
 function hideLoading() {
     document.getElementById("loading-overlay").style.display = "none";
+}
+
+const translations = {
+    en: {
+        subtitle: "Connect with friends, share your moments",
+        loginBtn: "Log In",
+        forgot: "Forgot password?",
+        createAcc: "Create New Account",
+        regTitle: "Create Account",
+        signupBtn: "Sign Up",
+        haveAcc: "Already have account?",
+        passHint: "🔒 Password must be at least 8 chars with upper, lower, number & special char.",
+        forgotWarning: "⚠️ Enter your email to receive recovery instructions and Google Authenticator QR setup options.",
+        mProfile: "👤 My Profile",
+        mCommunity: "🌐 Community Chat",
+        mMessages: "💬 Private Messages",
+        mSettings: "⚙️ Settings & Security",
+        mLanguage: "🌍 Language",
+        mLogout: "⎋ Log Out"
+    },
+    bn: {
+        subtitle: "বন্ধুদের সাথে সংযোগ করুন, আপনার মুহূর্তগুলো শেয়ার করুন",
+        loginBtn: "লগ ইন",
+        forgot: "পাসওয়ার্ড ভুলে গেছেন?",
+        createAcc: "নতুন অ্যাকাউন্ট তৈরি করুন",
+        regTitle: "অ্যাকাউন্ট তৈরি করুন",
+        signupBtn: "সাইন আপ",
+        haveAcc: "ইতিমধ্যে অ্যাকাউন্ট আছে?",
+        passHint: "🔒 পাসওয়ার্ড অন্তত ৮ অক্ষরের হতে হবে (বড়/ছোট হাতের অক্ষর, সংখ্যা ও স্পেশাল ক্যারেক্টারসহ)।",
+        forgotWarning: "⚠️ রিকভারি এবং গুগল অথেন্টিকেটর কিউআর কোড পেতে আপনার রেজিস্টার্ড ইমেইল দিন।",
+        mProfile: "👤 আমার প্রোফাইল",
+        mCommunity: "🌐 কমিউনিটি চ্যাট",
+        mMessages: "💬 প্রাইভেট মেসেজ",
+        mSettings: "⚙️ সেটিংস ও সিকিউরিটি",
+        mLanguage: "🌍 ভাষা",
+        mLogout: "⎋ লগ আউট"
+    }
+};
+
+function changeLanguage(lang) {
+    currentLang = lang;
+    localStorage.setItem("searchbook_lang", lang);
+    document.getElementById("auth-lang-select").value = lang;
+    document.getElementById("main-lang-select").value = lang;
+    
+    const t = translations[lang];
+    document.getElementById("txt-subtitle").textContent = t.subtitle;
+    document.getElementById("btn-login-text").textContent = t.loginBtn;
+    document.getElementById("txt-forgot").textContent = t.forgot;
+    document.getElementById("btn-create-acc").textContent = t.createAcc;
+    document.getElementById("txt-reg-title").textContent = t.regTitle;
+    document.getElementById("btn-signup-text").textContent = t.signupBtn;
+    document.getElementById("txt-have-acc").textContent = t.haveAcc;
+    document.getElementById("txt-pass-hint").innerHTML = t.passHint;
+    document.getElementById("txt-forgot-warning").innerHTML = t.forgotWarning;
+
+    document.getElementById("m-profile").textContent = t.mProfile;
+    document.getElementById("m-community").textContent = t.mCommunity;
+    document.getElementById("m-messages").textContent = t.mMessages;
+    document.getElementById("m-settings").textContent = t.mSettings;
+    document.getElementById("m-language").textContent = t.mLanguage;
+    document.getElementById("m-logout").textContent = t.mLogout;
+}
+
+function switchPanel(panelId) {
+    document.querySelectorAll(".auth-box .card").forEach(c => c.classList.remove("active"));
+    document.getElementById(panelId).classList.add("active");
+    if(panelId === 'register-panel') {
+        initRegistrationKey();
+    }
+}
+
+function togglePassword(id, btn) {
+    const input = document.getElementById(id);
+    if (input.type === "password") {
+        input.type = "text";
+        btn.textContent = "🙈";
+    } else {
+        input.type = "password";
+        btn.textContent = "👁️";
+    }
 }
 
 function handleLogoClick() {
@@ -314,164 +536,649 @@ function handleLogoClick() {
     }
 }
 
-function togglePassword(id, btn) {
-    const input = document.getElementById(id);
-    if (input.type === "password") { input.type = "text"; btn.textContent = "🙈"; }
-    else { input.type = "password"; btn.textContent = "👁️"; }
-}
-
-function switchPanel(panelId) {
-    document.querySelectorAll(".auth-box .card").forEach(c => c.classList.remove("active"));
-    document.getElementById(panelId).classList.add("active");
-}
-
 function toggleMenuDropdown() {
     document.getElementById("menu-dropdown").classList.toggle("show");
 }
 
-function handleLogin() {
-    const email = document.getElementById("login-email").value.trim();
-    const password = document.getElementById("login-password").value;
-    if(!email || !password) { alert("Enter credentials"); return; }
-
-    const userState = Object.values(userStrikesDB).find(u => u.email === email);
-    if(userState) {
-        const now = Date.now();
-        if(userState.strike === 4) {
-            alert("❌ Permanent Ban (Strike 4): Your account & IP address are permanently blocked from Searchbook.");
-            return;
-        }
-        if(userState.strike === 3 && userState.banUntil > now) {
-            const daysLeft = Math.ceil((userState.banUntil - now) / (1000*60*60*24));
-            alert(`⛔ 30-Days Ban Active (Strike 3)\nReason: ${userState.reason || 'Toxic Behavior'}\nDays Remaining: ${daysLeft} days.`);
-            return;
+window.onclick = function(event) {
+    if (!event.target.matches('.top-icon-btn') && !event.target.closest('.top-icons')) {
+        const dropdown = document.getElementById("menu-dropdown");
+        if (dropdown && dropdown.classList.contains('show')) {
+            dropdown.classList.remove('show');
         }
     }
-
-    showLoading("Logging in...");
-    setTimeout(() => {
-        hideLoading();
-        currentUser = { username: email.split('@')[0], email: email, fullName: email.split('@')[0] };
-        localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
-        bootMainApp();
-    }, 400);
 }
 
-function sendPasswordResetQR() {
+function switchMainView(viewId) {
+    document.querySelectorAll(".main-view").forEach(v => v.classList.remove("active"));
+    document.getElementById(viewId).classList.add("active");
+    if(viewId === 'feed-view') loadFeed();
+    if(viewId === 'reels-view') loadReels();
+    if(viewId === 'community-view') loadCommunityMessages();
+}
+
+async function handleLogin() {
+    const email = document.getElementById("login-email").value.trim();
+    const password = document.getElementById("login-password").value;
+    if(!email || !password) { alert("Please enter email and password"); return; }
+
+    showLoading("Connecting to server & logging in...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+        hideLoading();
+
+        if (data.banned) {
+            alert(data.message);
+            return;
+        }
+        if (data.requires2FA) {
+            window.tempLoginEmail = email;
+            switchPanel('twofa-login-panel');
+            return;
+        }
+        if (data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
+            bootMainApp();
+        } else {
+            alert(data.message || "Login failed");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Error connecting to server. Please check connection.");
+    }
+}
+
+async function submit2FALogin() {
+    const twoFACode = document.getElementById("login-2fa-code").value.trim();
+    const email = window.tempLoginEmail;
+    if(!twoFACode) { alert("Enter 2FA code"); return; }
+
+    showLoading("Verifying 2FA...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/login`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password: "2fa_bypass", twoFACode })
+        });
+        const data = await res.json();
+        hideLoading();
+        if(data.success) {
+            currentUser = { username: data.username, email: data.email, fullName: data.fullName };
+            localStorage.setItem("searchbook_user", JSON.stringify(currentUser));
+            bootMainApp();
+        } else {
+            alert(data.message || "Invalid 2FA code");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Server connection error.");
+    }
+}
+
+async function handleSignup() {
+    const fullName = document.getElementById("reg-name").value.trim();
+    const username = document.getElementById("reg-username").value.trim();
+    const email = document.getElementById("reg-email").value.trim();
+    const password = document.getElementById("reg-password").value;
+
+    if(!fullName || !username || !email || !password) { alert("All fields are required"); return; }
+
+    showLoading("Creating account securely...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/signup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username, email, password, fullName })
+        });
+        const data = await res.json();
+        hideLoading();
+        if(data.success) {
+            alert("Account created successfully! Please log in.");
+            switchPanel('login-panel');
+        } else {
+            alert(data.message || "Signup failed");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Server connection error.");
+    }
+}
+
+async function sendPasswordResetQR() {
     const email = document.getElementById("reset-email").value.trim();
-    if(!email) { alert("Enter email"); return; }
-    showLoading("Generating QR Code...");
-    setTimeout(() => {
+    if(!email) { alert("Enter your registered email"); return; }
+
+    showLoading("Generating 2FA QR code & recovery link...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/2fa/setup`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email })
+        });
+        const data = await res.json();
         hideLoading();
-        document.getElementById("forgot-qr-img").src = `https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=otpauth://totp/Searchbook:${email}?secret=JBSWY3DPEHPK3PXP`;
-        document.getElementById("forgot-qr-container").style.display = "block";
-    }, 400);
+        if(data.success && data.qrCode) {
+            document.getElementById("forgot-qr-img").src = data.qrCode;
+            document.getElementById("forgot-qr-container").style.display = "block";
+            alert("Recovery QR code generated successfully. Scan with Google Authenticator.");
+        } else {
+            alert("Account not found with this email.");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Server error.");
+    }
 }
 
-function submitComplaintTicket() {
+async function submitComplaintTicket() {
     const email = document.getElementById("comp-email").value.trim();
-    const msg = document.getElementById("comp-message").value.trim();
-    if(!email || !msg) { alert("Fill all fields"); return; }
-    
-    let complaints = JSON.parse(localStorage.getItem("searchbook_complaints")) || [];
-    complaints.push({ id: Date.now(), email, message: msg });
-    localStorage.setItem("searchbook_complaints", JSON.stringify(complaints));
-    alert("Ticket submitted successfully!");
-    switchPanel("login-panel");
+    const password = document.getElementById("comp-password").value;
+    const message = document.getElementById("comp-message").value.trim();
+
+    if(!email || !password || !message) { alert("All fields are required"); return; }
+
+    showLoading("Submitting complaint ticket...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/complaints`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, password, message })
+        });
+        const data = await res.json();
+        hideLoading();
+        if(data.success) {
+            alert("Complaint submitted successfully to Admin!");
+            switchPanel('login-panel');
+        } else {
+            alert(data.message || "Failed to submit");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Server error.");
+    }
 }
 
 function bootMainApp() {
     document.getElementById("auth-app").style.display = "none";
     document.getElementById("main-app").classList.add("active");
-}
-
-function verifyAdminLogin() {
-    const u = document.getElementById("admin-user-input").value.trim();
-    const p = document.getElementById("admin-pass-input").value.trim();
-    if(u === "admin" && p === "admin123") {
-        document.getElementById("admin-login-form").style.display = "none";
-        document.getElementById("admin-content-area").style.display = "block";
-        renderAdminPanelData();
-    } else {
-        alert("Invalid credentials! Use admin / admin123");
-    }
-}
-
-function renderAdminPanelData() {
-    const complaints = JSON.parse(localStorage.getItem("searchbook_complaints")) || [];
-    const notifContainer = document.getElementById("admin-notif-container");
-    
-    if(complaints.length === 0) {
-        notifContainer.innerHTML = `<p style="font-size:12px; color:var(--muted);">No new notifications.</p>`;
-    } else {
-        notifContainer.innerHTML = complaints.map(c => `
-            <div class="notif-box complaint">
-                <strong>📩 Ticket from:</strong> ${c.email}<br>
-                <strong>Message:</strong> ${c.message}<br>
-                <button class="btn btn-sm btn-green" onclick="deleteNotif(${c.id})" style="margin-top:6px;">Mark Resolved</button>
-            </div>
-        `).join('');
-    }
-
-    const regUsers = [
-        { name: "Riyad Ahmed", email: "darkzone123.bd@gmail.com" },
-        { name: "Sukriya", email: "sukriya@gmail.com" }
-    ];
-
-    const usersList = document.getElementById("admin-registered-users-list");
-    usersList.innerHTML = regUsers.map(u => {
-        const state = userStrikesDB[u.email] || { strike: 0 };
-        return `
-            <div class="user-row">
-                <div>
-                    <strong>${u.name}</strong> (${u.email})<br>
-                    <span class="strike-badge s${state.strike}">Status: Strike ${state.strike} ${getStrikeTitle(state.strike)}</span>
-                </div>
-                <div style="display:flex; gap:4px; flex-wrap:wrap;">
-                    <button class="btn btn-sm" onclick="setStrike('${u.email}', 0)">Clean</button>
-                    <button class="btn btn-sm" onclick="setStrike('${u.email}', 1)">Strike 1</button>
-                    <button class="btn btn-sm" onclick="setStrike('${u.email}', 2)">Strike 2</button>
-                    <button class="btn btn-sm btn-red" onclick="setStrike('${u.email}', 3)">Strike 3</button>
-                    <button class="btn btn-sm btn-red" style="background:#000;" onclick="setStrike('${u.email}', 4)">Strike 4</button>
-                </div>
-            </div>
-        `;
-    }).join('');
-}
-
-function getStrikeTitle(s) {
-    if(s === 1) return "(Warning)";
-    if(s === 2) return "(7d Mute)";
-    if(s === 3) return "(30d Ban)";
-    if(s === 4) return "(Permanent)";
-    return "(Active)";
-}
-
-function setStrike(email, level) {
-    let reason = "";
-    if(level === 3) reason = prompt("Enter ban reason:", "Toxic Behavior");
-    
-    userStrikesDB[email] = {
-        email,
-        strike: level,
-        muteUntil: level === 2 ? Date.now() + (7*24*60*60*1000) : 0,
-        banUntil: level === 3 ? Date.now() + (30*24*60*60*1000) : 0,
-        reason: reason
-    };
-    localStorage.setItem("searchbook_strikes_db", JSON.stringify(userStrikesDB));
-    renderAdminPanelData();
-}
-
-function deleteNotif(id) {
-    let complaints = JSON.parse(localStorage.getItem("searchbook_complaints")) || [];
-    complaints = complaints.filter(c => c.id !== id);
-    localStorage.setItem("searchbook_complaints", JSON.stringify(complaints));
-    renderAdminPanelData();
+    const initialAvatar = currentUser.username.charAt(0).toUpperCase();
+    document.getElementById("creator-avatar").textContent = initialAvatar;
+    loadFeed();
+    loadActiveUsers();
+    loadFriendsList();
+    setInterval(pingActive, 30000);
 }
 
 function handleLogout() {
     localStorage.removeItem("searchbook_user");
     window.location.reload();
+}
+
+async function pingActive() {
+    if(!currentUser) return;
+    try {
+        await fetch(`${BACKEND_URL}/api/ping`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username })
+        });
+    } catch(e) {}
+}
+
+async function loadActiveUsers() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/active-users`);
+        const data = await res.json();
+        const listDiv = document.getElementById("active-users-list");
+        if(data.success && data.users.length > 0) {
+            listDiv.innerHTML = data.users.map(u => `
+                <div class="active-user-item" onclick="openUserProfile('${u}')" style="cursor:pointer;">
+                    <span class="online-dot"></span>
+                    <span>${u}</span>
+                </div>
+            `).join('');
+        } else {
+            listDiv.innerHTML = `<p style="font-size:12px; color:var(--muted);">No active users</p>`;
+        }
+    } catch(e) {}
+}
+
+async function createPost() {
+    const content = document.getElementById("post-content").value.trim();
+    const fileInput = document.getElementById("post-media-file");
+    let imageUrl = "";
+
+    if(!content && fileInput.files.length === 0) { alert("Write something or attach media"); return; }
+
+    showLoading("Optimizing and uploading media (Supporting large files)...");
+
+    if(fileInput.files.length > 0) {
+        const file = fileInput.files[0];
+        const reader = new FileReader();
+        reader.readAsDataURL(file);
+        reader.onload = async function() {
+            imageUrl = reader.result;
+            await sendPostData(content, imageUrl);
+        };
+    } else {
+        await sendPostData(content, "");
+    }
+}
+
+async function sendPostData(content, imageUrl) {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/posts`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username, content, imageUrl })
+        });
+        const data = await res.json();
+        hideLoading();
+        if(data.success) {
+            document.getElementById("post-content").value = "";
+            document.getElementById("post-media-file").value = "";
+            loadFeed();
+        } else {
+            alert(data.message || "Failed to post");
+        }
+    } catch(e) {
+        hideLoading();
+        alert("Upload error.");
+    }
+}
+
+async function loadFeed() {
+    if(!currentUser) return;
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/feed/${currentUser.username}`);
+        const posts = await res.json();
+        const list = document.getElementById("posts-list");
+        if(posts.length === 0) {
+            list.innerHTML = `<p style="text-align:center; color:var(--muted);">No posts available.</p>`;
+            return;
+        }
+        list.innerHTML = posts.map(p => {
+            const isVideo = p.imageUrl && (p.imageUrl.includes("video") || p.imageUrl.startsWith("data:video"));
+            return `
+            <div class="post-item">
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <div class="avatar" onclick="openUserProfile('${p.username}')">${p.username.charAt(0).toUpperCase()}</div>
+                        <div>
+                            <h4 style="cursor:pointer;" onclick="openUserProfile('${p.username}')">${p.username}</h4>
+                            <p style="font-size:11px; color:var(--muted);">${new Date(p.createdAt).toLocaleString()}</p>
+                        </div>
+                    </div>
+                    <button class="post-options-btn" onclick="togglePostMenu('${p._id}')">⋮</button>
+                    <div class="post-dropdown-menu" id="post-menu-${p._id}">
+                        <div class="post-dropdown-item" onclick="copyPostText('${p.content}')">📋 Copy Text</div>
+                        <div class="post-dropdown-item" onclick="openReportModal('${p._id}')" style="color:var(--danger);">🚨 Report Post</div>
+                        ${p.username === currentUser.username ? `<div class="post-dropdown-item" onclick="deletePost('${p._id}')" style="color:var(--danger);">🗑️ Delete</div>` : ''}
+                    </div>
+                </div>
+                <p style="margin-bottom:12px; font-size:15px; line-height:1.4;">${p.content}</p>
+                ${p.imageUrl ? (isVideo ? `<video src="${p.imageUrl}" controls style="width:100%; border-radius:12px; max-height:400px; margin-bottom:12px;"></video>` : `<img src="${p.imageUrl}" style="width:100%; border-radius:12px; max-height:450px; object-fit:cover; margin-bottom:12px;">`) : ''}
+                <div style="display:flex; gap:8px; margin-bottom:10px;">
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'like')">👍 ${p.likes?.length || 0}</button>
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'love')">❤️ ${p.loves?.length || 0}</button>
+                    <button class="action-btn" onclick="reactPost('${p._id}', 'fire')">🔥 ${p.fires?.length || 0}</button>
+                </div>
+            </div>
+        `;}).join('');
+    } catch(e) {}
+}
+
+function togglePostMenu(id) {
+    document.querySelectorAll(".post-dropdown-menu").forEach(m => { if(m.id !== `post-menu-${id}`) m.classList.remove("show"); });
+    document.getElementById(`post-menu-${id}`).classList.toggle("show");
+}
+
+async function reactPost(postId, type) {
+    await fetch(`${BACKEND_URL}/api/posts/${postId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser.username, type })
+    });
+    loadFeed();
+}
+
+async function uploadReelVideo() {
+    const caption = document.getElementById("reel-caption").value.trim();
+    const fileInput = document.getElementById("reel-video-file");
+    if(fileInput.files.length === 0) { alert("Select a video for reel"); return; }
+
+    showLoading("Uploading reel video...");
+    const file = fileInput.files[0];
+    const reader = new FileReader();
+    reader.readAsDataURL(file);
+    reader.onload = async function() {
+        const videoUrl = reader.result;
+        try {
+            const res = await fetch(`${BACKEND_URL}/api/reels`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username: currentUser.username, caption, videoUrl })
+            });
+            const data = await res.json();
+            hideLoading();
+            if(data.success) {
+                document.getElementById("reel-caption").value = "";
+                document.getElementById("reel-video-file").value = "";
+                loadReels();
+            } else { alert("Failed to upload reel"); }
+        } catch(e) { hideLoading(); alert("Error"); }
+    };
+}
+
+async function loadReels() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/reels`);
+        const data = await res.json();
+        const list = document.getElementById("reels-list");
+        if(!data.success || data.reels.length === 0) {
+            list.innerHTML = `<p style="text-align:center; color:var(--muted);">No reels found.</p>`;
+            return;
+        }
+        list.innerHTML = data.reels.map(r => `
+            <div class="card-box" style="position:relative;">
+                <div class="post-header">
+                    <div class="post-user-info">
+                        <div class="avatar">${r.username.charAt(0).toUpperCase()}</div>
+                        <h4>${r.username}</h4>
+                    </div>
+                    <span style="font-size:12px; color:var(--muted);">👁️ ${r.views || 0} Views</span>
+                </div>
+                <p style="margin-bottom:10px;">${r.caption}</p>
+                <video src="${r.videoUrl}" controls onplay="incrementReelView('${r._id}')" style="width:100%; border-radius:12px; max-height:450px; background:#000;"></video>
+                <div style="display:flex; gap:8px; margin-top:10px;">
+                    <button class="action-btn" onclick="reactReel('${r._id}', 'like')">👍 ${r.likes?.length || 0}</button>
+                    <button class="action-btn" onclick="reactReel('${r._id}', 'love')">❤️ ${r.loves?.length || 0}</button>
+                    <button class="action-btn" onclick="reactReel('${r._id}', 'fire')">🔥 ${r.fires?.length || 0}</button>
+                </div>
+            </div>
+        `).join('');
+    } catch(e) {}
+}
+
+async function incrementReelView(reelId) {
+    await fetch(`${BACKEND_URL}/api/reels/${reelId}/view`, { method: 'POST' });
+}
+
+async function reactReel(reelId, type) {
+    await fetch(`${BACKEND_URL}/api/reels/${reelId}/react`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser.username, type })
+    });
+    loadReels();
+}
+
+async function loadCommunityMessages() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/community-messages`);
+        const data = await res.json();
+        const box = document.getElementById("community-chat-box");
+        if(data.success) {
+            box.innerHTML = data.messages.map(m => `
+                <div style="margin-bottom:10px; font-size:14px;">
+                    <strong>${m.username}:</strong> ${m.text}
+                    ${m.imageUrl ? `<br><img src="${m.imageUrl}" style="max-width:200px; border-radius:8px; margin-top:5px;">` : ''}
+                </div>
+            `).join('');
+            box.scrollTop = box.scrollHeight;
+        }
+    } catch(e) {}
+}
+
+async function sendCommunityMessage() {
+    const text = document.getElementById("community-msg-text").value.trim();
+    const fileInput = document.getElementById("community-img-file");
+    let imageUrl = "";
+
+    if(!text && fileInput.files.length === 0) return;
+
+    showLoading("Sending community message...");
+    if(fileInput.files.length > 0) {
+        const reader = new FileReader();
+        reader.readAsDataURL(fileInput.files[0]);
+        reader.onload = async function() {
+            imageUrl = reader.result;
+            await postCommunityMsg(text, imageUrl);
+        };
+    } else {
+        await postCommunityMsg(text, "");
+    }
+}
+
+async function postCommunityMsg(text, imageUrl) {
+    try {
+        await fetch(`${BACKEND_URL}/api/community-messages`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ username: currentUser.username, text, imageUrl })
+        });
+        hideLoading();
+        document.getElementById("community-msg-text").value = "";
+        document.getElementById("community-img-file").value = "";
+        loadCommunityMessages();
+    } catch(e) { hideLoading(); }
+}
+
+async function loadFriendsList() {
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/friends/${currentUser.username}`);
+        const data = await res.json();
+        const dropdown = document.getElementById("friend-select-dropdown");
+        if(data.success && data.friends.length > 0) {
+            dropdown.innerHTML = `<option value="">-- Select an accepted friend --</option>` + data.friends.map(f => `<option value="${f}">${f}</option>`).join('');
+        }
+    } catch(e) {}
+}
+
+async function loadPrivateChat(friend) {
+    if(!friend) return;
+    activeChatFriend = friend;
+    const res = await fetch(`${BACKEND_URL}/api/private-messages?user1=${currentUser.username}&user2=${friend}`);
+    const data = await res.json();
+    const box = document.getElementById("private-chat-box");
+    if(data.success) {
+        box.innerHTML = data.messages.map(m => `
+            <div style="margin-bottom:8px; text-align:${m.sender === currentUser.username ? 'right' : 'left'};">
+                <span style="background:${m.sender === currentUser.username ? 'var(--primary)' : '#dfe6e3'}; color:${m.sender === currentUser.username ? '#fff' : '#333'}; padding:6px 12px; border-radius:10px; display:inline-block; font-size:13px;">${m.text}</span>
+            </div>
+        `).join('');
+        box.scrollTop = box.scrollHeight;
+    }
+}
+
+async function sendPrivateMessage() {
+    const text = document.getElementById("private-msg-input").value.trim();
+    if(!text || !activeChatFriend) return;
+
+    await fetch(`${BACKEND_URL}/api/private-messages`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ sender: currentUser.username, receiver: activeChatFriend, text })
+    });
+    document.getElementById("private-msg-input").value = "";
+    loadPrivateChat(activeChatFriend);
+}
+
+function openMyProfile() {
+    openUserProfile(currentUser.username);
+}
+
+async function openUserProfile(username) {
+    switchMainView('profile-view');
+    document.getElementById("view-profile-avatar").textContent = username.charAt(0).toUpperCase();
+    document.getElementById("view-profile-name").textContent = username;
+    
+    const res = await fetch(`${BACKEND_URL}/api/user-posts/${username}`);
+    const posts = await res.json();
+    document.getElementById("user-posts-list").innerHTML = posts.map(p => `
+        <div class="post-item">
+            <p>${p.content}</p>
+            ${p.imageUrl ? `<img src="${p.imageUrl}" style="width:100%; border-radius:12px; margin-top:10px;">` : ''}
+        </div>
+    `).join('');
+}
+
+async function changePassword() {
+    const oldPassword = document.getElementById("old-pass").value;
+    const newPassword = document.getElementById("new-pass").value;
+    if(!oldPassword || !newPassword) { alert("Enter both passwords"); return; }
+
+    showLoading("Updating password...");
+    try {
+        const res = await fetch(`${BACKEND_URL}/api/user/change-password`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email: currentUser.email, oldPassword, newPassword })
+        });
+        const data = await res.json();
+        hideLoading();
+        if(data.success) {
+            alert("Password updated successfully!");
+            document.getElementById("old-pass").value = "";
+            document.getElementById("new-pass").value = "";
+        } else { alert(data.message || "Failed"); }
+    } catch(e) { hideLoading(); }
+}
+
+async function setup2FA() {
+    showLoading("Generating QR code...");
+    const res = await fetch(`${BACKEND_URL}/api/2fa/setup`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email })
+    });
+    const data = await res.json();
+    hideLoading();
+    if(data.success) {
+        document.getElementById("twofa-qr").src = data.qrCode;
+        document.getElementById("twofa-qr-box").style.display = "block";
+    }
+}
+
+async function verifyAndEnable2FA() {
+    const code = document.getElementById("twofa-code").value.trim();
+    showLoading("Verifying code...");
+    const res = await fetch(`${BACKEND_URL}/api/2fa/verify`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email, code })
+    });
+    const data = await res.json();
+    hideLoading();
+    if(data.success) {
+        alert("2FA enabled successfully!");
+        document.getElementById("twofa-status").textContent = "Status: Enabled";
+        document.getElementById("twofa-qr-box").style.display = "none";
+    } else { alert("Invalid code"); }
+}
+
+async function deleteMyAccount() {
+    const password = document.getElementById("delete-acc-pass").value;
+    if(!password) { alert("Enter password"); return; }
+    if(!confirm("Are you sure you want to permanently delete your account?")) return;
+
+    showLoading("Deleting account...");
+    const res = await fetch(`${BACKEND_URL}/api/user/delete`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: currentUser.email, password })
+    });
+    const data = await res.json();
+    hideLoading();
+    if(data.success) {
+        handleLogout();
+    } else { alert(data.message || "Failed"); }
+}
+
+function openReportModal(postId) {
+    currentReportingPostId = postId;
+    document.getElementById("report-modal").style.display = "flex";
+}
+
+async function submitReport() {
+    const reason = document.getElementById("report-reason").value;
+    await fetch(`${BACKEND_URL}/api/report-post`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ postId: currentReportingPostId, reporter: currentUser.username, reason })
+    });
+    document.getElementById("report-modal").style.display = 'none';
+    alert("Post reported successfully!");
+}
+
+async function deletePost(postId) {
+    if(!confirm("Delete this post?")) return;
+    await fetch(`${BACKEND_URL}/api/posts/${postId}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: currentUser.username })
+    });
+    loadFeed();
+}
+
+function copyPostText(text) {
+    navigator.clipboard.writeText(text);
+    alert("Post text copied to clipboard!");
+}
+
+async function verifyAdminLogin() {
+    const username = document.getElementById("admin-user-input").value.trim();
+    const password = document.getElementById("admin-pass-input").value;
+    const res = await fetch(`${BACKEND_URL}/api/admin/login`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username, password })
+    });
+    const data = await res.json();
+    if(data.success) {
+        document.getElementById("admin-login-form").style.display = "none";
+        document.getElementById("admin-content-area").style.display = "block";
+        loadAdminData();
+    } else { alert("Invalid admin credentials"); }
+}
+
+async function loadAdminData() {
+    const res1 = await fetch(`${BACKEND_URL}/api/admin/complaints`);
+    const cData = await res1.json();
+    if(cData.success) {
+        document.getElementById("admin-complaints-list").innerHTML = cData.complaints.map(c => `
+            <div class="ticket-card">
+                <strong>User:</strong> ${c.username || c.email}<br>
+                <strong>Message:</strong> ${c.message}<br>
+                <button class="btn btn-sm btn-green" onclick="resolveComplaint('${c._id}')" style="margin-top:5px;">Resolve</button>
+            </div>
+        `).join('');
+    }
+
+    const res2 = await fetch(`${BACKEND_URL}/api/admin/users`);
+    const uData = await res2.json();
+    if(uData.success) {
+        document.getElementById("admin-user-list").innerHTML = uData.users.map(u => `
+            <div style="background:#f4f6fb; padding:10px; border-radius:8px; margin-bottom:8px; font-size:13px;">
+                <strong>${u.username}</strong> (${u.email}) | Strikes: ${u.strikes} | Banned: ${u.isPermanentBanned ? 'Yes' : 'No'}
+            </div>
+        `).join('');
+    }
+}
+
+async function resolveComplaint(complaintId) {
+    await fetch(`${BACKEND_URL}/api/admin/resolve-complaint`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ complaintId })
+    });
+    loadAdminData();
 }
 </script>
 </body>
