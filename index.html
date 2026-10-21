@@ -1153,7 +1153,7 @@ async function loadAdminData() {
     const cData = await res1.json();
     if(cData.success) {
         document.getElementById("admin-complaints-list").innerHTML = cData.complaints.map(c => `
-            <div class="ticket-card">
+            <div class="ticket-card" style="background:#fffde7; border:1px solid #ffe082; padding:12px 15px; border-radius:12px; margin-bottom:10px; font-size:13px;">
                 <strong>User:</strong> ${c.username || c.email}<br>
                 <strong>Message:</strong> ${c.message}<br>
                 <button class="btn btn-sm btn-green" onclick="resolveComplaint('${c._id}')" style="margin-top:5px;">Resolve</button>
